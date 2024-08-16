@@ -1,0 +1,37 @@
+<div class="search">
+    <form class="form-inline">
+        创建日期<input placeholder="创建时间" autocomplete="off" value="{$req['startDate']?? ''}" name="startDate" class="form-control layer-date" id="start">
+        目标日期
+        <input placeholder="目标日期" autocomplete="off" value="{$req['todayDate']??''}" name="todayDate" class="form-control layer-date" id="end">
+        <input class="btn btn-flat btn-primary m_10" type="submit" value="确定">
+    </form>
+</div>
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="box">
+            状态 {$stext}<br/>
+            {foreach($process as $key=>$val)}
+                <strong>{$val['name']}</strong> <span>{$val['status']}</span><br/>
+            {/foreach}
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        //日期范围限制
+        var start = {
+            elem: '#start',
+            format: 'yyyy-MM-dd HH:mm:ss',
+            type:'datetime'
+        };
+        var end = {
+            elem: '#end',
+            format: 'yyyy-MM-dd HH:mm:ss',
+            type:'datetime'
+        };
+        laydate.render(start);
+        laydate.render(end);
+    });
+</script>
