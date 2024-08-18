@@ -104,11 +104,11 @@ return array(
                             'icon' => 'fa-circle-o',
                             'url' => 'admin/PaymentConfig/paymentConfigList',
                         ),
-                    '股权K线图' =>
+/*                     '股权K线图' =>
                         array(
                             'icon' => 'fa-circle-o',
                             'url' => 'admin/KlineChart/klineChart',
-                        ),
+                        ), */
                     '会员等级管理' =>
                         array(
                             'icon' => 'fa-circle-o',
@@ -119,11 +119,11 @@ return array(
                             'icon' => 'fa-circle-o',
                             'url' => 'admin/Banner/bannerList',
                         ),
-                    '公司动态' =>
+/*                     '公司动态' =>
                         array(
                             'icon' => 'fa-circle-o',
                             'url' => 'admin/SystemInfo/companyInfoList',
-                        ),
+                        ), */
                     '系统信息设置' =>
                         array(
                             'icon' => 'fa-circle-o',
