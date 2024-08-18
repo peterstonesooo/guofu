@@ -307,7 +307,7 @@ if (!function_exists('upload_file')) {
                             // 限制文件大小(单位b)，这里限制为4M
                             'fileSize' => 2 * 1024 * 1024,
                             // 限制文件后缀，多个后缀以英文逗号分割
-                            'fileExt'  => 'png,jpg',
+                            'fileExt'  => 'png,jpg,webp',
                         ]
                     ],
                     [
@@ -349,7 +349,7 @@ if (!function_exists('upload_file2')) {
                             // 限制文件大小(单位b)，这里限制为4M
                             'fileSize' => 5 * 1024 * 1024,
                             // 限制文件后缀，多个后缀以英文逗号分割
-                            'fileExt'  => 'png,jpg',
+                            'fileExt'  => 'png,jpg,webp',
                         ]
                     ],
                     [
