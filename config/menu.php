@@ -82,11 +82,11 @@ return array(
                             'icon' => 'fa-circle-o',
                             'url' => 'admin/Order/assetOrderList',
                         ), */
-               	    '流程审核' =>
+/*                	    '流程审核' =>
                         array(
                             'icon' => 'fa-circle-o',
                             'url' => 'admin/Process/processList',
-                        ),
+                        ), */
 /*                	    'eny存银行测试' =>
                         array(
                             'icon' => 'fa-circle-o',
@@ -134,11 +134,11 @@ return array(
                             'icon' => 'fa-circle-o',
                             'url' => 'admin/Setting/settingList',
                         ),
-                    '站内信' =>
+/*                     '站内信' =>
                         array(
                             'icon' => 'fa-circle-o',
                             'url' => 'admin/Notice/noticeList',
-                        ),
+                        ), */
                 ),
         ),
     '后台账号管理' =>
