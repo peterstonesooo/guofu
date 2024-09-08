@@ -27,346 +27,7 @@ use think\facade\Db;
 
 class OrderController extends AuthController
 {
-    public function authPlaceOrder()
-    {
-        $req = $this->validate(request(), [
-            'pay_password|支付密码' => 'require',
-        ]);
 
-        $user = $this->user;
-
-        if (empty($user['pay_password'])) {
-            return out(null, 10001, '请先设置支付密码');
-        }
-        if (!empty($req['pay_password']) && $user['pay_password'] !== sha1(md5($req['pay_password']))) {
-            return out(null, 10001, '支付密码错误');
-        }
-
-        $data = AuthOrder::where('status', 2)->where('user_id', $user['id'])->find();
-        if($data){
-            exit_out(null, 10002, '您已经进行过资产认领');
-        } 
-
-        Db::startTrans();
-        try {
-            $user = User::where('id', $user['id'])->lock(true)->find();
-
-            $pay_amount = 2000;
-            $userAmount = $user['topup_balance'] + $user['team_bonus_balance'];
-            if ($pay_amount >  $userAmount) {
-                exit_out(null, 10090, '余额不足');
-            }
-
-            $order_sn = build_order_sn($user['id'], 'RZ');
-
-
-            $project['user_id'] = $user['id'];
-            $project['order_sn'] = $order_sn;
-            $project['single_amount'] = $pay_amount;
-            $order = AuthOrder::create($project);
-            // 扣余额
-            if($user['topup_balance'] >= $pay_amount) {
-                User::changeInc($user['id'],-$pay_amount,'topup_balance',40,$order['id'],1);
-            } else {
-                User::changeInc($user['id'],-$user['topup_balance'],'topup_balance',40,$order['id'],1);
-                $topup_amount = bcsub($pay_amount, $user['topup_balance'],2);
-                if($user['team_bonus_balance'] >= $topup_amount) {
-                    User::changeInc($user['id'],-$topup_amount,'team_bonus_balance',40,$order['id'],1);
-                } else {
-                    User::changeInc($user['id'],-$user['team_bonus_balance'],'team_bonus_balance',40,$order['id'],1);
-                }
-            }
-            //User::changeInc($user['id'],-$pay_amount,'topup_balance',40,$order['id'],1);
-            if ($user['is_active'] == 0 ) {
-                User::where('id', $user['id'])->update(['is_active' => 1, 'active_time' => time()]);
-                // 下级用户激活
-                UserRelation::where('sub_user_id', $user['id'])->update(['is_active' => 1]);
-            }
-            User::where('id',$user['id'])->inc('3_1_invest_amount',$project['single_amount'])->update();
-            User::where('id',$user['id'])->inc('invest_amount',$project['single_amount'])->update();
-            User::where('id',$user['id'])->update(['auth_time' => time()]);
-            User::upLevel($user['id']);
-
-            Db::commit();
-        } catch (Exception $e) {
-            Db::rollback();
-            throw $e;
-        }
-
-        return out(['order_id' => $order['id'] ?? 0, 'trade_sn' => $trade_sn ?? '', 'type' => $ret['type'] ?? '', 'data' => $ret['data'] ?? ''], 200, '成功');
-    }
-
-    public function authOrderList()
-    {
-        $user = $this->user;
-        $data = AuthOrder::where('status', 2)->where('user_id', $user['id'])->find();
-        if(!$data){
-            exit_out(null, 10002, '您还没有进行资产认领');
-        } 
-        return out($data);
-    }
-
-    public function taxOrderList()
-    {
-        $data = ProjectTax::where('status', 1)->append(['receive_card_text'])->paginate();
-        foreach($data as $item){
-            if($item['rate_time']) {
-                $item['virtually_progress'] = $item['realtime_rate'];
-            } else {
-                $timestampStart = strtotime($item['created_at']);
-                $timestampEnd = time();
-                // 计算两个日期之间相隔的天数
-                $daysDiff = floor(($timestampEnd - $timestampStart) / (60 * 60) + 1);
-                $item['virtually_progress'] = floatval(round($daysDiff * $item['virtually_progress'], 2));
-            }
-            $item['limit_asset'] = $this->convertNumber($item['limit_asset']);
-            if( $item['virtually_progress'] > 100) {
-                $item['virtually_progress'] = 100;
-            }
-            $item['virtually_progress'] = 0;
-        }
-        return out($data);
-    }
-
-    public function taxPlaceOrder()
-    {
-        $req = $this->validate(request(), [
-            'id' => 'require|number',
-            'pay_password|支付密码' => 'require',
-        ]);
-
-        $user = $this->user;
-
-        if (empty($user['pay_password'])) {
-            return out(null, 10001, '请先设置支付密码');
-        }
-        if (!empty($req['pay_password']) && $user['pay_password'] !== sha1(md5($req['pay_password']))) {
-            return out(null, 10001, '支付密码错误');
-        }
-
-        //$tax = TaxOrder::where('user_id', $user['id'])->count();
-        // if($tax) {
-        //     return out(null, 10001, '您已经领取过税务抵用券');
-        // }
-
-        Db::startTrans();
-        try {
-            $user = User::where('id', $user['id'])->lock(true)->find();
-
-            if($user['digit_balance'] <= 0) {
-                return out(null, 10001, '您的总资产不足抵用范围');
-            }
-
-            $project = ProjectTax::where('id', $req['id'])->find()->toArray();
-            if($project['limit_direction'] == 'down') {
-                if($user['digit_balance'] > $project['limit_asset']) {
-                    return out(null, 10001, '您的总资产超过抵用范围');
-                }
-            } else {
-                if($user['digit_balance'] < $project['limit_asset']) {
-                    return out(null, 10001, '您的总资产不足抵用范围');
-                }
-            }
-
-            $pay_amount = $project['single_amount'];
-
-            if ($pay_amount >  ($user['topup_balance'] + $user['signin_balance'] + $user['team_bonus_balance'])) {
-                exit_out(null, 10090, '余额不足');
-            }
-
-            $order_sn = build_order_sn($user['id'], 'SW');
-
-
-            $project['user_id'] = $user['id'];
-            $project['order_sn'] = $order_sn;
-            unset($project['id']);
-            $order = TaxOrder::create($project);
-            // 扣余额
-            if($user['topup_balance'] >= $pay_amount) {
-                User::changeInc($user['id'],-$pay_amount,'topup_balance',35,$order['id'],1,$project['name'],0,1,'GF');
-            } else {
-                User::changeInc($user['id'],-$user['topup_balance'],'topup_balance',35,$order['id'],1,$project['name'],0,1,'GF');
-                $topup_amount = bcsub($pay_amount, $user['topup_balance'],2);
-                if($user['signin_balance'] >= $topup_amount) {
-                    User::changeInc($user['id'],-$topup_amount,'signin_balance',35,$order['id'],1,$project['name'],0,1,'GF');
-                } else {
-                    User::changeInc($user['id'],-$user['signin_balance'],'signin_balance',35,$order['id'],1,$project['name'],0,1,'GF');
-                    $signin_amount = bcsub($topup_amount, $user['signin_balance'],2);
-                    User::changeInc($user['id'],-$signin_amount,'team_bonus_balance',35,$order['id'],1,$project['name'],0,1,'GF');
-                    // if($user['team_bonus_balance'] >= $signin_amount) {
-                        
-                    // } else {
-                    //     User::changeInc($user['id'],-$user['team_bonus_balance'],'team_bonus_balance',3,$order['id'],1,$project['name'],0,1,'GF');
-                    //     $team_amount = bcsub($signin_amount, $user['team_bonus_balance'],2);
-                    //     // User::changeInc($user['id'],-$team_amount,'gf_purse',3,$order['id'],1,$project['name'],0,1,'GF');
-                    // }
-                   
-                }
-            }
-
-            User::changeInc($user['id'],-$user['digit_balance'],'digit_balance',36,$order['id'],6, '数字E钱包金额');
-            User::changeInc($user['id'],$user['digit_balance'],'assessment_amount',36,$order['id'],6, '已纳税金额');
-            User::where('id',$user['id'])->update(['assessment_time'=>strtotime(date('Y-m-d H:i:s'))]);
-            if ($user['is_active'] == 0 ) {
-                User::where('id', $user['id'])->update(['is_active' => 1, 'active_time' => time()]);
-                // 下级用户激活
-                UserRelation::where('sub_user_id', $user['id'])->update(['is_active' => 1]);
-            }
-            User::where('id',$user['id'])->inc('3_1_invest_amount',$project['single_amount'])->update();
-            User::where('id',$user['id'])->inc('invest_amount',$project['single_amount'])->update();
-            User::upLevel($user['id']);
-
-            Db::commit();
-        } catch (Exception $e) {
-            Db::rollback();
-            throw $e;
-        }
-
-        return out(['order_id' => $order['id'] ?? 0, 'trade_sn' => $trade_sn ?? '', 'type' => $ret['type'] ?? '', 'data' => $ret['data'] ?? ''], 200, '成功');
-
-    }
-
-    public function cardPlaceOrderCheck()
-    {
-        $req = $this->validate(request(), [
-            'id' => 'require|number',
-        ]);
-        $user = $this->user;
-
-        $user = User::where('id', $user['id'])->find();
-
-        $recive = TaxOrder::where('user_id', $user['id'])->order('created_at', 'asc')->find();
-        if(!$recive) {
-            return out(null, 10001, '请先领取税务抵用券');
-        }
-
-        if($recive['receive_card'] > $req['id']) {
-            return out(null, 10001, '请领取您对应等级或高于当前等级的卡片');
-        }
-
-
-        $card = ProjectCard::where('id', $req['id'])->find();
-        $order = CardOrder::where('user_id', $user['id'])->find();
-        if($order && $order['receive_card'] >= $card['id']) {
-            return out(null, 10001, '您已经领取过此等级或高于此等级的专属卡');
-        }
-
-        return out();
-    }
-
-    public function cardPlaceOrder()
-    {
-        $req = $this->validate(request(), [
-            'id' => 'require|number',
-            'pay_password|支付密码' => 'require',
-        ]);
-        $user = $this->user;
-
-        if (empty($user['pay_password'])) {
-            return out(null, 801, '请先设置支付密码');
-        }
-        if (!empty($req['pay_password']) && $user['pay_password'] !== sha1(md5($req['pay_password']))) {
-            return out(null, 10001, '支付密码错误');
-        }
-
-        Db::startTrans();
-        try {
-            $user = User::where('id', $user['id'])->lock(true)->find();
-
-            $recive = TaxOrder::where('user_id', $user['id'])->order('created_at', 'asc')->find();
-            if(!$recive) {
-                return out(null, 10001, '请先领取税务抵用券');
-            }
-
-            if($recive['receive_card'] > $req['id']) {
-                return out(null, 10001, '请领取您对应等级或高于当前等级的卡片');
-            }
-
-
-            $card = ProjectCard::where('id', $req['id'])->find();
-            $order = CardOrder::where('user_id', $user['id'])->find();
-            if($order && $order['receive_card'] >= $card['id']) {
-                return out(null, 10001, '您已经领取过此等级或高于此等级的专属卡');
-            }
-
-            $pay_amount = $card['single_amount'];
-
-            if ($pay_amount >  ($user['topup_balance'] + $user['signin_balance'] + $user['team_bonus_balance'])) {
-                exit_out(null, 10090, '余额不足');
-            }
-
-            if($order) {
-                CardOrder::where('id', $order['id'])->update(['receive_card' => $card['id']]);
-            } else {
-                $order_sn = build_order_sn($user['id'], 'Ca');
-                $order = CardOrder::create([
-                    'user_id' => $user['id'],
-                    'order_sn' => $order_sn,
-                    'receive_card' => $card['id']
-                ]);
-            }
-            // 扣余额
-            if($user['topup_balance'] >= $pay_amount) {
-                User::changeInc($user['id'],-$pay_amount,'topup_balance',37,$order['id'],1,'预存'.$card['name'],0,1,'GF');
-            } else {
-                User::changeInc($user['id'],-$user['topup_balance'],'topup_balance',37,$order['id'],1,'预存'.$card['name'],0,1,'GF');
-                $topup_amount = bcsub($pay_amount, $user['topup_balance'],2);
-                if($user['signin_balance'] >= $topup_amount) {
-                    User::changeInc($user['id'],-$topup_amount,'signin_balance',37,$order['id'],1,'预存'.$card['name'],0,1,'GF');
-                } else {
-                    User::changeInc($user['id'],-$user['signin_balance'],'signin_balance',37,$order['id'],1,'预存'.$card['name'],0,1,'GF');
-                    $signin_amount = bcsub($topup_amount, $user['signin_balance'],2);
-                    User::changeInc($user['id'],-$signin_amount,'team_bonus_balance',37,$order['id'],1,'预存'.$card['name'],0,1,'GF');
-                    // if($user['team_bonus_balance'] >= $signin_amount) {
-                    //     User::changeInc($user['id'],-$signin_amount,'team_bonus_balance',37,$order['id'],1,'预存'.$card['name'],0,1,'GF');
-                    // } else {
-                    //     User::changeInc($user['id'],-$user['team_bonus_balance'],'team_bonus_balance',37,$order['id'],1,'预存'.$card['name'],0,1,'GF');
-                    //     $team_amount = bcsub($signin_amount, $user['team_bonus_balance'],2);
-                    //     User::changeInc($user['id'],-$team_amount,'gf_purse',37,$order['id'],1,'预存'.$card['name'],0,1,'GF');
-                    // }
-                }
-            }
-            if ($user['is_active'] == 0 ) {
-                User::where('id', $user['id'])->update(['is_active' => 1, 'active_time' => time()]);
-                // 下级用户激活
-                UserRelation::where('sub_user_id', $user['id'])->update(['is_active' => 1]);
-            }
-            User::changeInc($user['id'],$card['single_amount'],'assessment_amount',37,$order['id'],6, '已纳税金额');
-            User::where('id',$user['id'])->inc('3_1_invest_amount',$card['single_amount'])->update();
-            User::where('id',$user['id'])->inc('invest_amount',$card['single_amount'])->update();
-            User::upLevel($user['id']);
-
-            Db::commit();
-        } catch (Exception $e) {
-            Db::rollback();
-            throw $e;
-        }
-
-        return out(['order_id' => $order['id'] ?? 0, 'trade_sn' => $trade_sn ?? '', 'type' => $ret['type'] ?? '', 'data' => $ret['data'] ?? ''], 200, '成功');
-    }
-
-    public function gongfuCard()
-    {
-        $user = $this->user;
-        $order = CardOrder::where('user_id', $user['id'])->find();
-        if($order) {
-            $card = ProjectCard::where('id', $order['receive_card'])->find();
-            if($card) {
-                $card['limit_tax'] = $this->convertNumber($card['limit_tax']);
-            }
-        }
-
-        return out($card ?? []);
-    }
-
-    public function gongfuCardList()
-    {
-        $card = ProjectCard::where('status', 1)->select();
-        foreach ($card as $key => $value) {
-            $card[$key]['limit_tax'] = $this->convertNumber($value['limit_tax']);
-        }
-        return out($card);
-    }
 
     public function placeOrder()
     {
@@ -399,47 +60,11 @@ class OrderController extends AuthController
             return out(null, 10001, '不支持该支付方式');
         }
 
-        if($project['project_group_id'] == 1 || $project['project_group_id'] == 5) {
-            return out(null, 10001, '未知错误,请联系客服');
-        }
-
-        if($project['project_group_id'] == 3) {
-            $repeat = Order::where('user_id', $user['id'])->where('project_group_id', 3)->count();
-            if($repeat) {
-                return out(null, 10001, '您已经激活过账单');
-            }
-        }
-        if($project['project_group_id'] == 6) {
-            $repeat = Order::where('user_id', $user['id'])->where('project_group_id', 6)->where('status',2)->find();
-            if($repeat) {
-                return out(null, 10001, '已完成申报，请耐心等候');
-            }
-        } 
-
-        if($project['project_group_id'] == 6) {
-            $repeat = Order::where('user_id', $user['id'])->where('project_group_id', 6)->where('status',2)->find();
-            if($repeat) {
-                return out(null, 10001, '已完成申报，请耐心等候');
-            }
-        }
-
-        if($project['project_group_id'] == 8) {
-            $repeat = Order::where('user_id', $user['id'])->where('project_group_id', 8)->where('status',2)->find();
-            if($repeat) {
-                return out(null, 10001, '已缴纳保证金，请耐心等候');
-            }
-        } 
-
-/*         $redis = new \Predis\Client(config('cache.stores.redis'));
-        $ret = $redis->set('order_'.$user['id'],1,'EX',5,'NX');
-        if(!$ret){
-            return out("服务繁忙，请稍后再试");
-        } */
 
         Db::startTrans();
         try {
             $user = User::where('id', $user['id'])->lock(true)->find();
-            $project = Project::field('id project_id,name project_name,class,project_group_id,cover_img,single_amount,single_integral,total_num,daily_bonus_ratio,sum_amount,dividend_cycle,period,single_gift_equity,single_gift_digital_yuan,sham_buy_num,progress_switch,bonus_multiple,settlement_method,withdrawal_limit,digital_red_package,review_period,single_gift_gf_purse')
+            $project = Project::field('id project_id,name project_name,class,project_group_id,cover_img,single_amount,single_integral,total_num,daily_bonus_ratio,sum_amount,dividend_cycle,period,single_gift_equity,single_gift_digital_yuan,sham_buy_num,progress_switch,bonus_multiple,settlement_method,withdrawal_limit,digital_red_package,review_period,single_gift_gf_purse,poverty_subsidy_amount')
                         ->where('id', $req['project_id'])
                         //->lock(true)
                         ->append(['all_total_buy_num'])
@@ -449,16 +74,11 @@ class OrderController extends AuthController
             $pay_amount = $project['single_amount'];
             $pay_integral = 0;
 
-            if($project['project_group_id'] == 8) {
-                if ($req['pay_method'] == 1 && $pay_amount >  ($user['topup_balance'] + $user['team_bonus_balance'] )) {
-                    exit_out(null, 10090, '余额不足');
-                }
-            } else {
-                if ($req['pay_method'] == 1 && $pay_amount >  ($user['topup_balance'] + $user['signin_balance'] + $user['team_bonus_balance'] )) {
-                    exit_out(null, 10090, '余额不足');
-                }
+            //if ($req['pay_method'] == 1 && $pay_amount >  ($user['topup_balance'] + $user['team_bonus_balance'] )) {
+            if ($req['pay_method'] == 1 && $pay_amount >  ($user['topup_balance'] )) {
+                exit_out(null, 10090, '余额不足');
             }
-
+ 
             //没有团队奖励支付方式先屏蔽
             // if ($req['pay_method'] == 5) {
             //     $pay_integral = $project['single_amount'];
@@ -483,7 +103,7 @@ class OrderController extends AuthController
                 exit_out(null, 10005, '支付渠道不存在');
             }
 
-            $order_sn = 'GF'.build_order_sn($user['id']);
+            $order_sn = 'OD'.build_order_sn($user['id']);
 
 
             $project['user_id'] = $user['id'];
@@ -497,7 +117,7 @@ class OrderController extends AuthController
 
             if ($req['pay_method']==1) {
 
-                if($project['project_group_id'] == 8) {//不使用签到金
+/*                 if($project['project_group_id'] == 8) {//不使用签到金
                     // 扣余额
                     if($user['topup_balance'] >= $pay_amount) {
                         User::changeInc($user['id'],-$pay_amount,'topup_balance',3,$order['id'],1,$project['project_name'],0,1,'GF');
@@ -522,8 +142,11 @@ class OrderController extends AuthController
                                 User::changeInc($user['id'],-$signin_amount,'team_bonus_balance',3,$order['id'],1,$project['project_name'],0,1,'GF');
                             } 
                         }
+                    }*/
+                    if($user['topup_balance'] >= $pay_amount) {
+                        User::changeInc($user['id'],-$pay_amount,'topup_balance',3,$order['id'],1,$project['project_name'],0,1,'OD');
                     }
-                }
+                
 
                 // 累计总收益和赠送数字人民币  到期结算
                 // 订单支付完成

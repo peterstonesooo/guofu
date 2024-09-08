@@ -224,91 +224,18 @@ class Order extends Model
 
         if ($project['project_group_id'] == 1) {
             $end_time = strtotime("+{$project['period']} day", strtotime(date('Y-m-d')));
-            $next_bonus_time = $project['review_period'] * 3600;
+            //$next_bonus_time = $project['review_period'] * 3600;
+            $next_bonus_time = strtotime("+1 day", strtotime(date('Y-m-d')));
             Order::where('id', $order['id'])->update([
                 'status' => 2,
                 'pay_time' => time(),
                 'end_time' => $end_time,
                 'gain_bonus' => 0,
-                'next_bonus_time' => $next_bonus_time + time(), //$next_bonus_time + $order['period']*24*3600,
+                'next_bonus_time' => $next_bonus_time, //$next_bonus_time + $order['period']*24*3600,
                 //'equity_status' => 2,
                 //'digital_yuan_status' => 2
             ]);
-        } elseif ($project['project_group_id'] == 2) {
-            User::changeInc($user_id, $project['withdrawal_limit'], 'withdrawal_limit', 22, $order['id'], 5, '', 0, 1, 'ZS');
-            User::changeInc($user_id, $project['digital_red_package'], 'digital_yuan_amount', 23, $order['id'], 3, '', 0, 1, 'ZS');
-            Order::where('id', $order['id'])->update([
-                'status' => 4,
-                'pay_time' => time(),
-                'end_time' => time(),    //$next_bonus_time + $order['period']*24*3600,
-                'gain_bonus' => 0,
-                'next_bonus_time' => time(),
-            ]);
-        } elseif ($project['project_group_id'] == 3) {
-            User::where('id', $user_id)->update(['can_open_digital' => 1]);
-            User::changeInc($user_id, $project['single_amount'], 'digital_yuan_amount', 12, $order['id'], 3, '激活账单返还本金', '', 1, 'JH');
-            Order::where('id', $order['id'])->update([
-                'status' => 4,
-                'pay_time' => time(),
-                'end_time' => time(),    //$next_bonus_time + $order['period']*24*3600,
-                'gain_bonus' => 0,
-                'next_bonus_time' => time(),
-            ]);
-        } elseif ($project['project_group_id'] == 5) {
-            //$end_time = strtotime("+{$project['period']} day", strtotime(date('Y-m-d')));
-            if (time() >= 1718035200) {
-                $end_time = 1721923200;
-            } else {
-                $end_time = 1718035200;
-            }
-            $next_bonus_time = strtotime(date('Y-m-d 00:00:00', strtotime('+ 1day')));
-            Order::where('id', $order['id'])->update([
-                'status' => 2,
-                'pay_time' => time(),
-                'end_time' => $end_time,
-                'gain_bonus' => 0,
-                'next_bonus_time' => $next_bonus_time,
-                //'equity_status' => 2,
-                //'digital_yuan_status' => 2
-            ]);
-        } elseif ($project['project_group_id'] == 6) {
-            $end_time = strtotime("+{$project['period']} day", strtotime(date('Y-m-d')));
-            $next_bonus_time = strtotime(date('Y-m-d 00:00:00', strtotime('+ 1day')));
-            Order::where('id', $order['id'])->update([
-                'status' => 2,
-                'pay_time' => time(),
-                'end_time' => $end_time,
-                'gain_bonus' => 0,
-                'next_bonus_time' => $next_bonus_time,
-                //'equity_status' => 2,
-                //'digital_yuan_status' => 2
-            ]);
-        } elseif ($project['project_group_id'] == 7) {
-            $end_time = strtotime("+{$project['period']} day", strtotime(date('Y-m-d')));
-            $next_bonus_time = strtotime(date('Y-m-d 00:00:00', strtotime('+ 1day')));
-            Order::where('id', $order['id'])->update([
-                'status' => 2,
-                'pay_time' => time(),
-                'end_time' => $end_time,
-                'gain_bonus' => 0,
-                'next_bonus_time' => $next_bonus_time,
-                //'equity_status' => 2,
-                //'digital_yuan_status' => 2
-            ]);
-        } elseif ($project['project_group_id'] == 8) {
-            $end_time = strtotime("+{$project['period']} day", strtotime(date('Y-m-d')));
-            $next_bonus_time = strtotime(date('Y-m-d 00:00:00', strtotime('+ 1day')));
-            Order::where('id', $order['id'])->update([
-                'status' => 2,
-                'pay_time' => time(),
-                'end_time' => $end_time,    
-                'gain_bonus' => 0,
-                'next_bonus_time' => $next_bonus_time,
-                //'equity_status' => 2,
-                //'digital_yuan_status' => 2
-            ]);
-
-         }
+        }
         //购买产品和恢复资产用户激活
         if ($order['user']['is_active'] == 0) {
             User::where('id', $order['user_id'])->update(['is_active' => 1, 'active_time' => time()]);
@@ -317,7 +244,6 @@ class Order extends Model
         }
 
         User::where('id', $user_id)->inc('invest_amount', $order['single_amount'])->update();
-        User::where('id', $user_id)->inc('3_1_invest_amount', $order['single_amount'])->update();
         User::upLevel($user_id);
         return !0;
 
