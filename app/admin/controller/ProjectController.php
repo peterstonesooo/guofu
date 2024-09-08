@@ -67,6 +67,7 @@ class ProjectController extends AuthController
             //'total_num|总份数' => 'require|integer',
  /*            'single_gift_digital_yuan|数字人民币' => 'integer',
             'single_gift_gf_purse|共富钱包' => 'integer', */
+            'poverty_subsidy_amount|养老金'=>'integer',
             'daily_bonus_ratio|单份日分红金额' => 'require|float',
             'period|周期' => 'require',
             //'review_period|周期' => 'requireIf:project_group_id,1',
@@ -119,8 +120,9 @@ class ProjectController extends AuthController
             //'single_integral|单份积分' => 'integer',
             //'total_num|总份数' => 'require|integer',
             //'sham_buy_num|虚拟购买份数' => 'integer',
-            'single_gift_digital_yuan|数字人民币' => 'integer',
-            'single_gift_gf_purse|共富钱包' => 'integer',
+/*             'single_gift_digital_yuan|数字人民币' => 'integer',
+            'single_gift_gf_purse|共富钱包' => 'integer', */
+            'poverty_subsidy_amount|养老金'=>'integer',
 
             'daily_bonus_ratio|单份日分红金额' => 'require|float',
             'period|周期' => 'require',
@@ -163,12 +165,12 @@ class ProjectController extends AuthController
         if($img = upload_file('details_img', false,false)){
             $req['details_img'] = $img;
         }
-        if($req['project_group_id'] == 4 || $req['project_group_id'] == 1 || $req['project_group_id'] == 5 || $req['project_group_id'] == 7) {
+/*         if($req['project_group_id'] == 4 || $req['project_group_id'] == 1 || $req['project_group_id'] == 5 || $req['project_group_id'] == 7) {
             $p = Project::where('id', $req['id'])->find();
             if($p['virtually_progress'] != $req['virtually_progress']) {
                 $req['rate_time'] = time();
             }
-        }
+        } */
         Project::where('id', $req['id'])->update($req);
 
         return out();
