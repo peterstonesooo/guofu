@@ -65,11 +65,11 @@ class ProjectController extends AuthController
             'single_amount|单份金额' => 'require|float',
             //'single_integral|单份积分' => 'integer',
             //'total_num|总份数' => 'require|integer',
-            'single_gift_digital_yuan|数字人民币' => 'integer',
-            'single_gift_gf_purse|共富钱包' => 'integer',
+ /*            'single_gift_digital_yuan|数字人民币' => 'integer',
+            'single_gift_gf_purse|共富钱包' => 'integer', */
             'daily_bonus_ratio|单份日分红金额' => 'require|float',
-            'period|周期' => 'requireIf:project_group_id,1',
-            'review_period|周期' => 'requireIf:project_group_id,1',
+            'period|周期' => 'require',
+            //'review_period|周期' => 'requireIf:project_group_id,1',
             //'single_gift_equity|单份赠送股权' => 'integer',
             // 'single_gift_digital_yuan|单份赠送国家津贴' => 'integer',
             'is_recommend|是否推荐' => 'require|integer',
@@ -77,7 +77,7 @@ class ProjectController extends AuthController
             'support_pay_methods|支付方式' => 'require|max:100',
             'sort|排序号' => 'integer',
             'sum_amount|总补贴金额' => 'requireIf:project_group_id,1|float',
-            'virtually_progress|虚拟进度' => 'float',
+/*             'virtually_progress|虚拟进度' => 'float',
             'withdrawal_limit|赠送日提现额度' => 'integer',
             'digital_red_package|赠送数字红包' => 'integer',
             'total_quota|总名额' => 'max:32',
@@ -88,7 +88,7 @@ class ProjectController extends AuthController
             'ensure|保障项目' => 'max:32',
             'flow_type|流转方式' => 'max:100',
             'allowed|流转名额' => 'integer',
-            'underline_price|划线价' => 'float',
+ */           // 'underline_price|划线价' => 'float',
         ]);
         $req['intro'] = request()->param('intro', '');
         $methods = explode(',', $req['support_pay_methods']);
@@ -123,8 +123,8 @@ class ProjectController extends AuthController
             'single_gift_gf_purse|共富钱包' => 'integer',
 
             'daily_bonus_ratio|单份日分红金额' => 'require|float',
-            'period|周期' => 'requireIf:project_group_id,1',
-            'review_period|周期' => 'requireIf:project_group_id,1',
+            'period|周期' => 'require',
+            //'review_period|周期' => 'requireIf:project_group_id,1',
             //'single_gift_equity|单份赠送股权' => 'integer',
             'single_gift_digital_yuan|单份赠送国家津贴' => 'integer',
             'is_recommend|是否推荐' => 'require|integer',
@@ -133,7 +133,7 @@ class ProjectController extends AuthController
             'sort|排序号' => 'integer',
             'sum_amount|总补贴金额' => 'requireIf:project_group_id,1|float',
             //'bonus_multiple|奖励倍数' => 'require|>=:0',
-            'virtually_progress|虚拟进度' => 'float',
+/*             'virtually_progress|虚拟进度' => 'float',
             'withdrawal_limit|赠送日提现额度' => 'integer',
             'digital_red_package|赠送数字红包' => 'integer',
             'total_quota|总名额' => 'max:32',
@@ -143,8 +143,8 @@ class ProjectController extends AuthController
             'shop_profit|商城盈利' => 'integer',
             'ensure|保障项目' => 'max:32',
             'flow_type|流转方式' => 'max:100',
-            'allowed|流转名额' => 'integer',
-            'underline_price|划线价' => 'float',
+            'allowed|流转名额' => 'integer', */
+            //'underline_price|划线价' => 'float',
         ]);
         $req['intro'] = request()->param('intro', '');
         $methods = explode(',', $req['support_pay_methods']);
