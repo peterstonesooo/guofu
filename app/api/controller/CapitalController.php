@@ -233,7 +233,7 @@ class CapitalController extends AuthController
                 'bank_branch' => $payAccount['bank_branch'],
             ]);
             // 扣减用户余额
-            User::changeInc($user['id'],$change_amount,$field,2,$capital['id'],$log_type,'',0,1,'TX');
+            User::changeInc($user['id'],$change_amount,$field,2,$capital['id'],$log_type,'',0,1,'WD');
             //User::changeInc($user['id'],$change_amount,'invite_bonus',2,$capital['id'],1);
             //User::changeBalance($user['id'], $change_amount, 2, $capital['id']);
 
