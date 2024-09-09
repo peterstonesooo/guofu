@@ -765,7 +765,7 @@ class UserController extends AuthController
             return $item;
         });
 
-        $temp = $list->toArray();
+        $temp = $list;
         $data = [
             'current_page' => $temp['current_page'],
             'last_page' => $temp['last_page'],
