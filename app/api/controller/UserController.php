@@ -741,13 +741,10 @@ class UserController extends AuthController
             'log_type' => 'require|number|in:1,2,3,6',
         ]);
         $map = config('map.user_balance_log')['type_map'];
-        //$log_type = [0,1,2,3,6];
-        $log_type = $req['log_type'];
-        $list = UserBalanceLog::where('user_id', $user['id']);
-        if($log_type!=''){
-            $list->where('log_type', $log_type);
-        }
-       $list->order('id', 'desc')
+        $log_type = [0,1,2,3,6];
+        $list = UserBalanceLog::where('user_id', $user['id'])
+        ->whereIn('log_type', $log_type)
+        ->order('id', 'desc')
         ->paginate(10)
         ->each(function ($item, $key) use ($map) {
             $typeText = $map[$item['type']];
@@ -765,7 +762,7 @@ class UserController extends AuthController
             return $item;
         });
 
-        $temp = $list;
+        $temp = $list->toArray();
         $data = [
             'current_page' => $temp['current_page'],
             'last_page' => $temp['last_page'],
