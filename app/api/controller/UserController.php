@@ -740,12 +740,12 @@ class UserController extends AuthController
             'log_type' => 'require|number|in:1,2,3,4,5,6',
         ]);
         $map = config('map.user_balance_log')['type_map'];
-        //$log_type = [1,2,3,4,5,6];
-        if($req['log_type'] == 0){
+        $log_type = [1,2,3,4,5,6];
+/*         if($req['log_type'] == ''){
             $log_type = [1,2,3,4,5,6];
         }else{
             $log_type = [$req['log_type']];
-        }
+        } */
 
         $list = UserBalanceLog::where('user_id', $user['id'])
         ->whereIn('log_type', $log_type)
