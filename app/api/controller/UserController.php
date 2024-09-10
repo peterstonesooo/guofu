@@ -663,7 +663,7 @@ class UserController extends AuthController
 
         $total_num = UserRelation::where('user_id', $user['id'])->where('level', $req['level'])->count();
         $active_num = UserRelation::where('user_id', $user['id'])->where('level', $req['level'])->where('is_active', 1)->count();
-        $realname_num = UserRelation::alias('r')->join('mp_user u','r.user_id = u.id')->where('user_id',$user['id'])->where('r.level', $req['level'])->where('u.realname','<>','')->count();
+        $realname_num = UserRelation::alias('r')->join('mp_user u','r.sub_user_id = u.id')->where('user_id',$user['id'])->where('r.level', $req['level'])->where('u.realname','<>','')->count();
 
 
         $list = UserRelation::where('user_id', $user['id'])->where('level', $req['level'])->field('sub_user_id')->paginate(50);
@@ -737,11 +737,16 @@ class UserController extends AuthController
         $user = $this->user;
         $req = $this->validate(request(), [
             //'type' => 'require|number|in:1,2,3,4,5',
-            //充值 1  团队奖励2  3国家津贴  6收益
-            'log_type' => 'require|number|in:1,2,3,6',
+            'log_type' => 'require|number|in:1,2,3,4,5,6',
         ]);
         $map = config('map.user_balance_log')['type_map'];
-        $log_type = [0,1,2,3,6];
+        //$log_type = [1,2,3,4,5,6];
+        if($req['log_type'] == 0){
+            $log_type = [1,2,3,4,5,6];
+        }else{
+            $log_type = [$req['log_type']];
+        }
+
         $list = UserBalanceLog::where('user_id', $user['id'])
         ->whereIn('log_type', $log_type)
         ->order('id', 'desc')
