@@ -199,7 +199,7 @@ class CapitalController extends AuthController
         try {
 
             $field = 'team_bonus_balance';
-            $log_type =2;
+            $log_type =3;
             if ($user[$field] < $req['amount']) {
                 return out(null, 10001, '可提现金额不足');
             }

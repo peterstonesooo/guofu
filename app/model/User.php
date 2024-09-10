@@ -457,7 +457,7 @@ class User extends Model
                     if($reward > 0){
                         //User::changeBalance($v['user_id'], $reward, 8, $order_id);
                         //User::changeInc($up_user_id,$reward,'invite_bonus',8,$order_id,3,'推荐奖励');
-                        User::changeInc($v['user_id'],$reward,'team_bonus_balance',8,$paymentId,2,'团队奖励',0,2,'TD');
+                        User::changeInc($v['user_id'],$reward,'team_bonus_balance',8,$paymentId,3,'团队奖励',0,2,'TD');
                         //User::changeInc($v['user_id'],$reward,'balance',8,$order_id,1,'团队奖励',0,2);
                     }
                 }
