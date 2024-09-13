@@ -79,18 +79,18 @@ class CommonController extends BaseController
         $req = $this->validate(request(), [
             'phone|手机号' => 'require',
             'password|密码' => 'require|alphaNum|length:6,12',
-            'captcha|验证码' => 'require|max:4',
-            'uniqid|参数'=>'require',
+            //'captcha|验证码' => 'require|max:4',
+           // 'uniqid|参数'=>'require',
         ]);
 
-        $key = cache($req['uniqid']);
+/*         $key = cache($req['uniqid']);
         if($key && password_verify(mb_strtolower($req['captcha'], 'UTF-8'), $key)){
             cache($req['uniqid'],null);
         }else{
             if($req['captcha'] != 9001 ){
                 return out(null, 10001, '验证码错误');       
             }
-        }
+        } */
 
         $password = sha1(md5($req['password']));
         $user = User::field('id,status,pay_password')->where('phone', $req['phone'])->where('password', $password)->find();
@@ -119,8 +119,8 @@ class CommonController extends BaseController
             // 'ic_number|身份证号' => 'require|idCard',
             //'vt|验证'=>'require',
             'qq|qq'=>'number',
-            'captcha|验证码' => 'require|max:4',
-            'uniqid|参数'=>'require'
+            //'captcha|验证码' => 'require|max:4',
+            //'uniqid|参数'=>'require'
         ]);
         $req['region'] = 'mainland';
         //暂停注册
@@ -129,7 +129,7 @@ class CommonController extends BaseController
             return out(null, 10001, '验证码错误');       
         } */
        
-        if($req['captcha']!=9001){
+/*         if($req['captcha']!=9001){
             if(!isset($req['uniqid']) || empty($req['uniqid'])){
                 $req['uniqid']='aaa';
             }
@@ -139,7 +139,7 @@ class CommonController extends BaseController
             }else{
                 return out(null, 10000, '验证码错误');  
             }
-        }
+        } */
 /*         $key = 'captcha-'.$req['phone'].'-1';
         $captcha = Cache::get($key);
         if ($captcha != $req['captcha']) {
