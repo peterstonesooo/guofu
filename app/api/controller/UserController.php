@@ -46,6 +46,7 @@ class UserController extends AuthController
             $user['address']=$delivery['address'];
         }
 
+        $user['realname_mark'] = '';
         if($user['is_realname']==0){
             $realnameData = Realname::where('user_id',$user['id'])->find();
             if($realnameData && $realnameData['status']==2){
@@ -1047,5 +1048,11 @@ class UserController extends AuthController
         $auth = new \Qiniu\Auth($conf['accessKey'], $conf['secretKey']);
         $upToken = $auth->uploadToken($conf['bucket']);
         return out(['upToken'=>$upToken]);
+    }
+
+    public function realnameDetail(){
+        $user = $this->user;
+        $realname = Realname::where('user_id',$user['id'])->find();
+        return out($realname);
     }
 }
