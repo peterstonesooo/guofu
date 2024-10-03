@@ -63,11 +63,11 @@ class ProjectController extends AuthController
             'project_group_id|项目分组ID' => 'require|integer',
             'name|项目名称' => 'require|max:100',
             'single_amount|单份金额' => 'require|float',
-            //'single_integral|单份积分' => 'integer',
+            'gift_integral|赠送积分' => 'integer',
             //'total_num|总份数' => 'require|integer',
  /*            'single_gift_digital_yuan|数字人民币' => 'integer',
             'single_gift_gf_purse|共富钱包' => 'integer', */
-            'poverty_subsidy_amount|养老金'=>'integer',
+            'bonus_multiple|养老金倍数'=>'integer',
             'daily_bonus_ratio|单份日分红金额' => 'require|float',
             'period|周期' => 'require',
             //'review_period|周期' => 'requireIf:project_group_id,1',
@@ -93,7 +93,7 @@ class ProjectController extends AuthController
         ]);
         $req['intro'] = request()->param('intro', '');
         $methods = explode(',', $req['support_pay_methods']);
-/*         if (in_array(5, $methods) && empty($req['single_integral'])) {
+/*         if (in_array(5, $methods) && empty($req['gift_integral'])) {
             return out(null, 10001, '支付方式包含积分兑换，单份积分必填');
         } */
         $req['support_pay_methods'] = json_encode($methods);
@@ -117,18 +117,17 @@ class ProjectController extends AuthController
             'project_group_id|项目分组ID' => 'require|integer',
             'name|项目名称' => 'require|max:100',
             'single_amount|单份金额' => 'require|float',
-            //'single_integral|单份积分' => 'integer',
+            'gift_integral|赠送积分' => 'integer',
             //'total_num|总份数' => 'require|integer',
-            //'sham_buy_num|虚拟购买份数' => 'integer',
-/*             'single_gift_digital_yuan|数字人民币' => 'integer',
+ /*            'single_gift_digital_yuan|数字人民币' => 'integer',
             'single_gift_gf_purse|共富钱包' => 'integer', */
-            'poverty_subsidy_amount|养老金'=>'integer',
+            'bonus_multiple|养老金倍数'=>'integer',
 
             'daily_bonus_ratio|单份日分红金额' => 'require|float',
             'period|周期' => 'require',
             //'review_period|周期' => 'requireIf:project_group_id,1',
             //'single_gift_equity|单份赠送股权' => 'integer',
-            'single_gift_digital_yuan|单份赠送国家津贴' => 'integer',
+            //'single_gift_digital_yuan|单份赠送国家津贴' => 'integer',
             'is_recommend|是否推荐' => 'require|integer',
             //'give|赠送项目' => 'max:100',
             'support_pay_methods|支持的支付方式' => 'require|max:100',
@@ -150,7 +149,7 @@ class ProjectController extends AuthController
         ]);
         $req['intro'] = request()->param('intro', '');
         $methods = explode(',', $req['support_pay_methods']);
-/*         if (in_array(5, $methods) && empty($req['single_integral'])) {
+/*         if (in_array(5, $methods) && empty($req['gift_integral'])) {
             return out(null, 10001, '支付方式包含积分兑换，单份积分必填');
         } */
         $req['support_pay_methods'] = json_encode($methods);
@@ -171,7 +170,7 @@ class ProjectController extends AuthController
                 $req['rate_time'] = time();
             }
         } */
-        Project::where('id', $req['id'])->update($req);
+        $ret = Project::where('id', $req['id'])->update($req);
 
         return out();
     }

@@ -16,6 +16,11 @@ return array(
                             'icon' => 'fa-circle-o',
                             'url' => 'admin/User/userList',
                         ),
+                    '实名认证' =>
+                        array(
+                            'icon' => 'fa-circle-o',
+                            'url' => 'admin/Realname/realnameList',
+                        ),
                     '会员资金明细' =>
                         array(
                             'icon' => 'fa-circle-o',

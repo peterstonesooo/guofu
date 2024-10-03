@@ -246,6 +246,44 @@ class CapitalController extends AuthController
         return out();
     }
 
+    //积分兑换
+    public function integralExchange(){
+        $req = $this->validate(request(), [
+            'amount|兑换积分' => 'require|integer',
+            //'pay_password|支付密码' => 'require',
+        ]);
+        $user = $this->user;
+        if (empty($user['ic_number'])) {
+            return out(null, 10001, '请先完成实名认证');
+        }
+        if (empty($user['pay_password'])) {
+            return out(null, 10001, '请先设置支付密码');
+        }
+/*         $user = User::where('id', $user['id'])->find();
+        if (sha1(md5($req['pay_password'])) !== $user['pay_password']) {
+            return out(null, 10001, '支付密码错误');
+        } */
+        if($user['integral']<$req['amount']){
+            return out(null, 10001, '积分不足');
+        }
+        $integral = $req['amount'];
+        $amount = bcmul($integral,0.01,2);
+        Db::startTrans();
+        try{
+            User::changeInc($user['id'],-$integral,'integral',26,0,2,'积分兑换',0,1,'SE');
+            User::changeInc($user['id'],-$integral,'income_balance',26,0,4,'积分兑换',0,1,'SE');
+            User::changeInc($user['id'],$integral,'team_bonus_balance',26,0,3,'积分兑换',0,1,'SE');
+
+            //User::changeInc($user['id'],$amount,'balance',22,0,1,'积分兑换');
+            Db::commit();
+        }catch(Exception $e){
+            Db::rollback();
+            throw $e;
+        }
+
+        return out();
+    }
+
     public function applyWithdrawPurse()
     {
         return out(null, 10001, '请先办理共富工程项目收益申报');

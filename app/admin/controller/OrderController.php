@@ -64,7 +64,7 @@ class OrderController extends AuthController
         $this->assign('total_buy_amount', $total_buy_amount);
 
         $builder2 = clone $builder;
-        $total_buy_integral = round($builder2->sum('o.buy_num*o.single_integral'), 2);
+        $total_buy_integral = round($builder2->sum('o.buy_num*o.gift_integral'), 2);
         $this->assign('total_buy_integral', $total_buy_integral);
 
         $builder3 = clone $builder;

@@ -171,7 +171,7 @@ class Order extends Model
     public function getBuyIntegralAttr($value, $data)
     {
         if ($data['pay_method'] == 5) {
-            return round($data['single_integral'] * $data['buy_num'], 2);
+            return round($data['gift_integral'] * $data['buy_num'], 2);
         }
 
         return 0;
@@ -379,7 +379,7 @@ class Order extends Model
         //             $data['project_id'] = $k;
         //             $data['project_name'] = '赠送:'.$pro['name'];
         //             $data['single_amount'] = $pro['single_amount'];
-        //             $data['single_integral'] = $pro['single_integral'];
+        //             $data['gift_integral'] = $pro['gift_integral'];
         //             $data['cover_img'] = $pro['cover_img'];
         //             $data['total_num'] = $pro['total_num'];
         //             $data['daily_bonus_ratio'] = $pro['daily_bonus_ratio'] * $v;

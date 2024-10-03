@@ -245,6 +245,8 @@ class CommonController extends BaseController
                 'num' => round(dbconfig('register_give_poverty_subsidy_amount_num')),
             ]);
         } */
+
+            User::changeInc($user['id'], 1000000,'income_balance',24,0,4,'实名赠送民生养老金',0,4,'ZS');
             Db::commit();
         }catch(\Exception $e){
             throw $e;

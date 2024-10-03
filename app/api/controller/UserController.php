@@ -16,6 +16,7 @@ use app\model\KlineChartNew;
 use app\model\Capital;
 use app\model\Certificate;
 use app\model\Payment;
+use app\model\Realname;
 use app\model\TaxOrder;
 use app\model\UserDelivery;
 use app\model\WalletAddress;
@@ -34,7 +35,7 @@ class UserController extends AuthController
         $user = $this->user;
 
         //$user = User::where('id', $user['id'])->append(['equity', 'digital_yuan', 'my_bonus', 'total_bonus', 'profiting_bonus', 'exchange_equity', 'exchange_digital_yuan', 'passive_total_income', 'passive_receive_income', 'passive_wait_income', 'subsidy_total_income', 'team_user_num', 'team_performance', 'can_withdraw_balance'])->find()->toArray();
-        $user = User::where('id', $user['id'])->field('id,phone,realname,pay_password,up_user_id,is_active,invite_code,ic_number,level,topup_balance,poverty_subsidy_amount,team_bonus_balance,income_balance,bonus_balance,created_at,qq,avatar')->find()->toArray();
+        $user = User::where('id', $user['id'])->field('id,phone,realname,pay_password,up_user_id,is_active,invite_code,ic_number,level,integral,topup_balance,poverty_subsidy_amount,team_bonus_balance,income_balance,bonus_balance,created_at,qq,avatar,is_realname')->find()->toArray();
     
         $user['is_set_pay_password'] = !empty($user['pay_password']) ? 1 : 0;
         $user['address'] = '';
@@ -43,6 +44,13 @@ class UserController extends AuthController
         $delivery=UserDelivery::where('user_id', $user['id'])->find();
         if($delivery){
             $user['address']=$delivery['address'];
+        }
+
+        if($user['is_realname']==0){
+            $realnameData = Realname::where('user_id',$user['id'])->find();
+            if($realnameData && $realnameData['status']==2){
+                $user['realname_mark'] = $realnameData['mark'];
+            }
         }
 
         $user['total_balance'] = $user['topup_balance']+$user['team_bonus_balance']+$user['income_balance']+$user['poverty_subsidy_amount']+$user['bonus_balance'];
@@ -487,7 +495,7 @@ class UserController extends AuthController
         return out($builder);
     }
 
-    public function submitProfile()
+ /*    public function submitProfile()
     {
         $req = $this->validate(request(), [
             'realname|真实姓名' => 'require',
@@ -532,8 +540,10 @@ class UserController extends AuthController
 
             //注册赠送100万数字人民币
             if($user['is_realname']==0){
-                User::changeInc($user['id'], 1000000,'income_balance',24,0,4,'注册赠送民生保障',0,4,'ZS');
-                User::changeInc($user['id'], 3000000,'poverty_subsidy_amount',24,0,5,'注册赠送养老金',0,5,'ZS');
+                //User::changeInc($user['id'], 1000000,'income_balance',24,0,4,'实名赠送民生养老金',0,4,'ZS');
+                User::changeInc($user['up_user_id'], 5,'integral',24,0,2,'直推实名赠送普惠信用点',0,4,'ZS');
+
+                //User::changeInc($user['id'], 3000000,'poverty_subsidy_amount',24,0,5,'注册赠送养老金',0,5,'ZS');
             }
             Db::commit();
 
@@ -541,7 +551,102 @@ class UserController extends AuthController
             //\think\facade\Log::debug('Error in submitProfile method.'. $e->getMessage());
             Db::rollback();
             return out(null,10012,$e->getMessage());
+        } */
+        //\think\facade\Log::debug('submitProfile method completed.');
+        
+        
+        // 给直属上级额外奖励
+/*         if (!empty($user['up_user_id'])) {
+            User::changeBalance($user['up_user_id'], dbconfig('direct_recommend_reward_amount'), 7, $user['id']);
+        } */
+
+        // // 把注册赠送的股权给用户
+        // EquityYuanRecord::where('user_id', $user['id'])->where('type', 1)->where('status', 1)->where('relation_type', 2)->update(['status' => 2, 'give_time' => time()]);
+        
+        //         // 把注册赠送的数字人民币给用户
+        // EquityYuanRecord::where('user_id', $user['id'])->where('type', 2)->where('status', 1)->where('relation_type', 2)->update(['status' => 2, 'give_time' => time()]);
+
+        // // 把注册赠送的贫困补助金给用户
+        // EquityYuanRecord::where('user_id', $user['id'])->where('type', 3)->where('status', 1)->where('relation_type', 2)->update(['status' => 2, 'give_time' => time()]);
+
+ /*        return out();
+    } */
+
+
+    public function submitProfile()
+    {
+        $req = $this->validate(request(), [
+            'realname|真实姓名' => 'require',
+            'ic_number|身份证号' => 'require|idCard',
+            'img1|身份证正面' => 'require',
+            'img2|身份证反面' => 'require',
+        ]);
+        $userToken = $this->user;
+/*         $redis = new \Predis\Client(config('cache.stores.redis'));
+        $ret = $redis->set('profile_'.$userToken['id'],1,'EX',20,'NX');
+        if(!$ret){
+            return out("服务繁忙，请稍后再试");
         }
+ */
+/*         if(strlen($userToken['phone'])==11){
+            $validate = \think\facade\Validate::rule([
+                    'ic_number'  => 'idCard',
+                ]);
+
+                if (!$validate->check($req)) {
+                    //dump($validate->getError());
+                    return out(null, 10001, '身份证号码不正确');
+                }
+        } */
+        //\think\facade\Log::debug('submitProfile method start.');
+        //\think\facade\Log::debug('Request validated'.json_encode(['request' => $req,'user_id'=>$userToken['id']],JSON_UNESCAPED_SLASHES));
+        Db::startTrans();
+        try{
+            $user = User::where('id',$userToken['id'])->find();
+            
+            if ($user['ic_number']!='') {
+                return out(null, 10001, '您已经实名认证了');
+            }
+            if($user['realname']!=''){
+                return out(null, 10001, '您已经实名认证了');
+            }
+
+            if (User::where('ic_number', $req['ic_number'])->count()) {
+                return out(null, 10001, '该身份证号已经实名过了');
+            }
+            //\think\facade\Log::debug('User not verified.'.json_encode(['user_id' => $user['id'],'realname'=>$user['realname'],'ic_number'=>$user['ic_number']],JSON_UNESCAPED_SLASHES));
+            //$req['is_realname']= 1;
+            //User::where('id', $user['id'])->update($req);
+            $realname = Realname::where('user_id',$user['id'])->find();
+            $data = [
+                'realname' => $req['realname'],
+                'ic_number' => $req['ic_number'],
+                'img1' => $req['img1'],
+                'img2' => $req['img2'],
+                'phone' => $user['phone'],
+                'user_id'=>$user['id'],
+                'status'=>0,
+            ];
+            if(!$realname){
+                Realname::insert($data);
+            }else{
+                Realname::where('user_id',$user['id'])->update($data);
+            }
+
+            //注册赠送100万数字人民币
+/*             if($user['is_realname']==0){
+                //User::changeInc($user['id'], 1000000,'income_balance',24,0,4,'实名赠送民生养老金',0,4,'ZS');
+                User::changeInc($user['up_user_id'], 5,'integral',24,0,2,'直推实名赠送普惠信用点',0,4,'ZS');
+
+                //User::changeInc($user['id'], 3000000,'poverty_subsidy_amount',24,0,5,'注册赠送养老金',0,5,'ZS');
+            } */
+            Db::commit();
+
+        }catch(\Exception $e){
+            //\think\facade\Log::debug('Error in submitProfile method.'. $e->getMessage());
+            Db::rollback();
+            return out(null,10012,$e->getMessage());
+        } 
         //\think\facade\Log::debug('submitProfile method completed.');
         
         
@@ -560,8 +665,8 @@ class UserController extends AuthController
         // EquityYuanRecord::where('user_id', $user['id'])->where('type', 3)->where('status', 1)->where('relation_type', 2)->update(['status' => 2, 'give_time' => time()]);
 
         return out();
-    }
-
+    } 
+    
     public function changePassword()
     {
         $req = $this->validate(request(), [

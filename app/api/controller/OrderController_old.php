@@ -42,7 +42,7 @@ class OrderController extends AuthController
         Db::startTrans();
         try {
             $user = User::where('id', $user['id'])->lock(true)->find();
-            $project = Project::field('id project_id,name project_name,cover_img,single_amount,single_integral,total_num,daily_bonus_ratio,period,single_gift_equity,single_gift_digital_yuan,sham_buy_num,progress_switch,bonus_multiple')->where('id', $req['project_id'])->lock(true)->append(['all_total_buy_num'])->find()->toArray();
+            $project = Project::field('id project_id,name project_name,cover_img,single_amount,gift_integral,total_num,daily_bonus_ratio,period,single_gift_equity,single_gift_digital_yuan,sham_buy_num,progress_switch,bonus_multiple')->where('id', $req['project_id'])->lock(true)->append(['all_total_buy_num'])->find()->toArray();
 
             $pay_amount = round($project['single_amount']*$req['buy_num'], 2);
             $pay_integral = 0;
@@ -51,7 +51,7 @@ class OrderController extends AuthController
                 exit_out(null, 10002, '余额不足');
             }
             if ($req['pay_method'] == 5) {
-                $pay_integral = $project['single_integral'] * $req['buy_num'];
+                $pay_integral = $project['gift_integral'] * $req['buy_num'];
                 if ($pay_integral > $user['integral']) {
                     exit_out(null, 10003, '积分不足');
                 }

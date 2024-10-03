@@ -41,16 +41,18 @@
                         <tbody>
                         <tr>
                             <th>ID</th>
-                            <th>分组ID</th>
+                            <th>分组</th>
                             <th>封面图</th>
-                            <th>项目名称</th>
-                            <th>单份金额</th>
+                            <th>名称</th>
+                            <th>金额</th>
 <!--                             <th>单份积分</th>
                             <th>总份数</th>
                             <th>日分红比例</th>
                             <th>分红周期(时间)</th>
- -->                            <th>分红总次数(天)</th>
+ -->                            <th>天数</th>
                             <th>总收益金额</th>
+                            <th>养老金倍数</th>
+                            <th>积分</th>
                             <!-- <th>国务院津贴</th> -->
 <!--                             <th>已购买份数</th>
                             <th>虚拟购买份数</th> -->
@@ -59,7 +61,7 @@
                             <th>是否推荐</th>
                             <th>支付方式</th>
 <!--                             <th>倍数</th>
- -->                            <th>虚拟进度</th>
+ -->                           <!--  <th>虚拟进度</th> -->
                              <th>排序号</th>
                             <th>创建时间</th>
                             <th>操作</th>
@@ -71,12 +73,14 @@
                                 <td><img src="{$v['cover_img']}" onclick="seePhoto('{$v["cover_img"]}')" style="max-width: 80px;"></td>
                                 <td>{$v['name']}</td>
                                 <td>{$v['single_amount']}</td>
-<!--                                 <td>{$v['single_integral']}</td>
+<!--                                 <td>{$v['gift_integral']}</td>
                                 <td>{$v['total_num']}</td>
                                 <td>{$v['daily_bonus_ratio']}</td>
                                 <td>{$v['dividend_cycle']}</td>
  -->                                <td>{$v['period']}</td>
                                 <td>{$v['sum_amount']}</td>
+                                <td>{$v['bonus_multiple']}</td>
+                                <td>{$v['gift_integral']}</td>
                                 <!-- <td>{$v['single_gift_digital_yuan']}</td> -->
 <!--                                 <td>{$v['total_buy_num']}</td>
                                 <td>{$v['sham_buy_num']}</td>

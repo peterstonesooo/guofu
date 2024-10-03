@@ -81,7 +81,7 @@ class SigninController extends AuthController
             // 签到奖励数码货币
             //User::changeBalance($user['id'], dbconfig('signin_digital_yuan'), 17, $signin['id'], 3);
 
-            User::changeInc($user['id'],5,'income_balance',17,$signin['id'],3,'每日签到奖励',0,1,'QD');
+            User::changeInc($user['id'],1,'integral',17,$signin['id'],3,'每日签到奖励',0,1,'QD');
            // User::changeInc($user['id'],$level_config['cash_reward_amount'],'signin_balance',17,$signin['id'],3,'等级签到奖励',0,1,'QD');
 
             Db::commit();
