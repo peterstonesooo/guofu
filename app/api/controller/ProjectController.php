@@ -118,19 +118,19 @@ class ProjectController extends AuthController
         $user = $this->user;
 
         $data = Project::where('project_group_id', $req['project_group_id'])->where('status', 1)->append(['total_amount', 'daily_bonus', 'passive_income', 'progress','day_amount'])->select()->toArray();
-        $withdrawSum = \app\model\User::cardWithdrawSum($user['id']);
-        $recommendId = \app\model\User::cardRecommend($withdrawSum);
+        //$withdrawSum = \app\model\User::cardWithdrawSum($user['id']);
+        //$recommendId = \app\model\User::cardRecommend($withdrawSum);
 
         foreach($data as &$item){
             //$item['intro']="";
             $item['card_recommend']=0;
             $item['cover_img']=get_img_api($item['cover_img']);
             $item['details_img']=get_img_api($item['details_img']);
-            if($item['project_group_id']==5){
+/*             if($item['project_group_id']==5){
                 if($recommendId == $item['id']){
                     $item['card_recommend']=1;
                 }
-            }
+            } */
         }
         if($req['project_group_id']==5){
             array_multisort(array_column($data, 'card_recommend'), SORT_DESC, $data);
