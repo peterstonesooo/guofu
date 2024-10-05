@@ -106,10 +106,10 @@ class UserController extends AuthController
                 return out(null, 10001, '该身份证号已经实名过了');
             }
             
-            $user = User::where('id', $req['id'])->find();
+/*             $user = User::where('id', $req['id'])->find();
             if (!empty($user['up_user_id']) && empty($user['ic_number'])) {
                 User::changeBalance($user['up_user_id'], dbconfig('direct_recommend_reward_amount'), 7, $user['id']);
-            }
+            } */
             //$req['is_realname']=1;
         }
 
@@ -117,7 +117,7 @@ class UserController extends AuthController
         User::where('id', $req['id'])->update($req);
 
         // 把注册赠送的股权给用户
-        EquityYuanRecord::where('user_id', $req['id'])->where('type', 1)->where('status', 1)->where('relation_type', 2)->update(['status' => 2, 'give_time' => time()]);
+        //EquityYuanRecord::where('user_id', $req['id'])->where('type', 1)->where('status', 1)->where('relation_type', 2)->update(['status' => 2, 'give_time' => time()]);
 
         return out();
     }
@@ -222,7 +222,7 @@ class UserController extends AuthController
                 break;
              case 4:
                 $filed = 'team_bonus_balance';
-                $log_type = 2;
+                $log_type = 3;
                 $balance_type = 8;
                 $text = '团队奖励';
                 break;
@@ -285,7 +285,7 @@ class UserController extends AuthController
                 break;
             case 9:
                 $filed = 'signin_balance';
-                $log_type = 3;
+                $log_type = 2;
                 $balance_type = 17;
                 $text = '签到奖励';
                 break;
