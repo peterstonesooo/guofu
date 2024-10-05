@@ -843,11 +843,11 @@ class UserController extends AuthController
         $user = $this->user;
         $req = $this->validate(request(), [
             //'type' => 'require|number|in:1,2,3,4,5',
-            'log_type' => 'number|in:0,1,2,3,4,5,6',
+            'log_type' => 'require|number|in:0,1,2,3,4,5,6',
         ]);
         $map = config('map.user_balance_log')['type_map'];
         $log_type = [1,2,3,4,5,6];
-        if(isset($req['log_tyep']) && ($req['log_type'] == '' || $req['log_type']==0)){
+        if(($req['log_type'] == '' || $req['log_type']==0)){
             $log_type = [1,2,3,4,5,6];
         }else{
             $log_type = [$req['log_type']];
