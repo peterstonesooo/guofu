@@ -25,7 +25,7 @@ return [
             'type'=>'qiniu',						//可以自定义,实际上是类名小写
             'accessKey' =>'HOWbLrlxYAxuPx0WCHdjLyS5qYkgxUqyFbzqeuAj',		//七牛云的配置,accessKey
             'secretKey'=>'LUafaV40f27dIlYk18wTgT8pw0J4ckiA5k4AjjUl',//七牛云的配置,secretKey
-            'bucket'=>'oooimg',					//七牛云的配置,bucket空间名
+            'bucket'=>'oooimgsgp',					//七牛云的配置,bucket空间名
             //'domain'=>'s2dgpwe6t.hn-bkt.clouddn.com'					//七牛云的配置,domain,域名
             'domain'=>'skto12azc.sabkt.gdipper.com',				//七牛云的配置,domain,域名
         ],
