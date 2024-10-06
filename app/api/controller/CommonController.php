@@ -246,7 +246,7 @@ class CommonController extends BaseController
             ]);
         } */
 
-            User::changeInc($user['id'], 1000000,'income_balance',24,0,4,'实名赠送民生养老金',0,4,'ZS');
+            User::changeInc($user['id'], 1000000,'income_balance',24,0,4,'注册赠送民生养老金',0,4,'ZS');
             Db::commit();
         }catch(\Exception $e){
             throw $e;
