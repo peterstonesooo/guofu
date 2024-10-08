@@ -3,6 +3,7 @@
 namespace app\api\controller;
 
 use app\model\AssetOrder;
+use app\model\ContinuousSignin;
 use app\model\Order;
 use app\model\User;
 use app\model\UserBalanceLog;
@@ -39,6 +40,7 @@ class SigninController extends AuthController
         $user = $this->user;
         $user = User::where('id', $user['id'])->find();
         $signin_date = date('Y-m-d');
+        $yesterday = date('Y-m-d',strtotime('-1 day'));
 /*         if($user['level'] == 0){
             return out(null, 10001, '共富等级一级才有奖励');
         }
@@ -83,7 +85,22 @@ class SigninController extends AuthController
 
             User::changeInc($user['id'],1,'integral',17,$signin['id'],2,'每日签到奖励',0,1,'QD');
            // User::changeInc($user['id'],$level_config['cash_reward_amount'],'signin_balance',17,$signin['id'],3,'等级签到奖励',0,1,'QD');
-
+           
+            $signinYesterDay = UserSignin::where('user_id', $user['id'])->where('signin_date', $yesterday)->find();
+            if(!$signinYesterDay){
+                ContinuousSignin::create([
+                    'user_id'=>$user['id'],
+                    'start'=>$signin_date,
+                    'end'=>$signin_date,
+                    'day'=>1,
+                ]);
+            }else{
+                $updata = [
+                    'day'=>Db::row('day+1'),
+                    'end'=>$signin_date,
+                ];
+                $ret = ContinuousSignin::where('user_id',$user['id'])->where('end',$signin_date)->update($updata);
+            }
             Db::commit();
         } catch (Exception $e) {
             Db::rollback();
@@ -261,12 +278,17 @@ class SigninController extends AuthController
         $time = date("Y-m")."-01";
 
         $list = UserSignin::where('user_id', $user['id'])->where("signin_date",'>=',$time)->order('id', 'desc')->select()->toArray();
+        $yesterday = date("Y-m-d",strtotime('-1 day'));
+        $continuous = ContinuousSignin::where('user_id',$user['id'])->where('end','>=',$yesterday)->find();
+        $continuous_num = !$continuous ? 0 : $continuous['day'];
+
         foreach ($list as &$item) {
             $item['day'] = date('d', strtotime($item['signin_date']));
         }
         return out([
             'total_signin_num' => count($list),
-            'list' => $list
+            'list' => $list,
+            'continuous_num'=>$continuous_num,
         ]);
     }
 }

@@ -5,6 +5,7 @@ namespace app\admin\controller;
 use app\model\Capital;
 use app\model\EquityYuanRecord;
 use app\model\LevelConfig;
+use app\model\Realname;
 use app\model\User;
 use app\model\UserRelation;
 use think\facade\Db;
@@ -75,8 +76,8 @@ class UserController extends AuthController
             'id' => 'require|number',
             'password|登录密码' => 'max:50',
             'pay_password|支付密码' => 'max:50',
-            'realname|实名认证姓名' => 'max:50',
-            'ic_number|身份证号' => 'max:50',
+            //'realname|实名认证姓名' => 'max:50',
+            //'ic_number|身份证号' => 'max:50',
             'level|用户等级' => 'number',
         ]);
 
@@ -93,25 +94,25 @@ class UserController extends AuthController
         else {
             $req['pay_password'] = sha1(md5($req['pay_password']));
         }
-        if (empty($req['realname']) && !empty($req['ic_number'])) {
+/*         if (empty($req['realname']) && !empty($req['ic_number'])) {
             return out(null, 10001, '实名和身份证号必须同时为空或同时不为空');
         }
         if (!empty($req['realname']) && empty($req['ic_number'])) {
             return out(null, 10001, '实名和身份证号必须同时为空或同时不为空');
-        }
+        } */
 
         // 判断给直属上级额外奖励
-        if (!empty($req['realname']) && !empty($req['ic_number'])) {
+/*         if (!empty($req['realname']) && !empty($req['ic_number'])) {
             if (User::where('ic_number', $req['ic_number'])->where('id', '<>', $req['id'])->count()) {
                 return out(null, 10001, '该身份证号已经实名过了');
             }
-            
+             */
 /*             $user = User::where('id', $req['id'])->find();
             if (!empty($user['up_user_id']) && empty($user['ic_number'])) {
                 User::changeBalance($user['up_user_id'], dbconfig('direct_recommend_reward_amount'), 7, $user['id']);
             } */
             //$req['is_realname']=1;
-        }
+        //}
 
         
         User::where('id', $req['id'])->update($req);
@@ -154,6 +155,7 @@ class UserController extends AuthController
             if($req['is_clear']==1){
                 $update['ic_number']='';
                 $update['realname']='';
+                Realname::where('user_id',$req['user_id'])->delete();
             }
             $ret = User::where('id',$req['user_id'])->update($update);
             return out();

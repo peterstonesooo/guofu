@@ -75,7 +75,7 @@ class ProjectController extends AuthController
             // 'single_gift_digital_yuan|单份赠送国家津贴' => 'integer',
             'is_recommend|是否推荐' => 'require|integer',
             //'give|赠送项目' => 'max:100',
-            'support_pay_methods|支付方式' => 'require|max:100',
+            //'support_pay_methods|支付方式' => 'require|max:100',
             'sort|排序号' => 'integer',
             'sum_amount|总补贴金额' => 'requireIf:project_group_id,1|float',
 /*             'virtually_progress|虚拟进度' => 'float',
@@ -92,7 +92,8 @@ class ProjectController extends AuthController
  */           // 'underline_price|划线价' => 'float',
         ]);
         $req['intro'] = request()->param('intro', '');
-        $methods = explode(',', $req['support_pay_methods']);
+        //$methods = explode(',', $req['support_pay_methods']);
+        $methods =[1];
 /*         if (in_array(5, $methods) && empty($req['gift_integral'])) {
             return out(null, 10001, '支付方式包含积分兑换，单份积分必填');
         } */
@@ -104,7 +105,7 @@ class ProjectController extends AuthController
         } */
         
         $req['cover_img'] = upload_file2('cover_img');
-        $req['details_img'] = upload_file2('details_img');
+        $req['details_img'] = upload_file2('details_img',false);
         Project::create($req);
 
         return out();
@@ -130,7 +131,7 @@ class ProjectController extends AuthController
             //'single_gift_digital_yuan|单份赠送国家津贴' => 'integer',
             'is_recommend|是否推荐' => 'require|integer',
             //'give|赠送项目' => 'max:100',
-            'support_pay_methods|支持的支付方式' => 'require|max:100',
+            //'support_pay_methods|支持的支付方式' => 'require|max:100',
             'sort|排序号' => 'integer',
             'sum_amount|总补贴金额' => 'requireIf:project_group_id,1|float',
             //'bonus_multiple|奖励倍数' => 'require|>=:0',
@@ -148,7 +149,8 @@ class ProjectController extends AuthController
             //'underline_price|划线价' => 'float',
         ]);
         $req['intro'] = request()->param('intro', '');
-        $methods = explode(',', $req['support_pay_methods']);
+        $methods =[1];
+        //$methods = explode(',', $req['support_pay_methods']);
 /*         if (in_array(5, $methods) && empty($req['gift_integral'])) {
             return out(null, 10001, '支付方式包含积分兑换，单份积分必填');
         } */
@@ -158,10 +160,10 @@ class ProjectController extends AuthController
         }else{
             $req['give'] = 0;
         } */
-        if ($img = upload_file('cover_img', false,false)) {
+        if ($img = upload_file2('cover_img', false,false)) {
             $req['cover_img'] = $img;
         }
-        if($img = upload_file('details_img', false,false)){
+        if($img = upload_file2('details_img', false,false)){
             $req['details_img'] = $img;
         }
 /*         if($req['project_group_id'] == 4 || $req['project_group_id'] == 1 || $req['project_group_id'] == 5 || $req['project_group_id'] == 7) {
