@@ -36,7 +36,7 @@ class CheckBonus extends Command
             }
         });
 
-        $data = Order::whereIn('project_group_id',[7])->where('status',2)->where('end_time', '<=', $cur_time)
+/*         $data = Order::whereIn('project_group_id',[7])->where('status',2)->where('end_time', '<=', $cur_time)
         ->chunk(100, function($list) {
            foreach ($list as $item) {
                $this->bonus_7($item);
@@ -48,16 +48,16 @@ class CheckBonus extends Command
           foreach ($list as $item) {
               $this->bonus_5($item);
           }
-      });
+      }); */
        
 
-        //资产恢复
+/*         //资产恢复
         $data = AssetOrder::where('status',2)->where('next_return_time', '<=', $time)
         ->chunk(100, function($list) {
            foreach ($list as $item) {
                $this->bonus_asset_return($item);
            }
-       });
+       }); */
 
     //    $data = AssetOrder::where('reward_status',0)->where('next_reward_time', '<=', time())
     //    ->chunk(100, function($list) {
@@ -265,7 +265,11 @@ class CheckBonus extends Command
         Db::startTrans();
         try{
             //User::changeInc($order['user_id'],$order['sum_amount'],'digital_yuan_amount',6,$order['id'],3);
-            User::changeInc($order['user_id'],$order['single_amount'],'digital_yuan_amount',12,$order['id'],3);
+            $text = "{$order['project_name']}收益";
+            User::changeInc($order['user_id'],$order['sum_amount'],'team_bonus_balance',6,$order['id'],3,$text);
+            User::changeInc($order['user_id'],$order['gift_integral'],'integral',6,$order['id'],2,$text);
+            $subsidyAmount= $order['single_amount']*$order['bonus_multiple'];
+            User::changeInc($order['user_id'],$subsidyAmount,'poverty_subsidy_amount',6,$order['id'],5,$text);
             //User::changeInc($order['user_id'],$order['single_gift_digital_yuan'],'digital_yuan_amount',5,$order['id'],3);
             Order::where('id',$order->id)->update(['status'=>4]);
 /*             if($order['project_group_id']==2){

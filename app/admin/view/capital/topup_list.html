@@ -32,7 +32,7 @@
         </select> -->
         <input type="text" value="{$req['mark']??''}" name="mark" placeholder="搜索渠道标识"
                class="form-control">
-        <input placeholder="开始时间" autocomplete="off" value="{$req['start_date']?? date('Y-m-d',strtotime('-7 day'))}" name="start_date" class="form-control layer-date" id="start">
+        <input placeholder="开始时间" autocomplete="off" value="{$req['start_date']?? date('Y-m-d ',strtotime('-7 day'))} 00:00:00" name="start_date" class="form-control layer-date" id="start">
         ～
         <input placeholder="结束时间" autocomplete="off" value="{$req['end_date']??''}" name="end_date" class="form-control layer-date" id="end">
         <input class="btn btn-flat btn-primary m_10" type="submit" value="搜索">
@@ -111,11 +111,13 @@
         //日期范围限制
         var start = {
             elem: '#start',
-            format: 'yyyy-MM-dd',
+            format: 'yyyy-MM-dd HH:mm:ss',
+            type:'datetime'
         };
         var end = {
             elem: '#end',
-            format: 'yyyy-MM-dd',
+            format: 'yyyy-MM-dd HH:mm:ss',
+            type:'datetime'
         };
         laydate.render(start);
         laydate.render(end);
