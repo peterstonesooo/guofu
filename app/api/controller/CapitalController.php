@@ -681,6 +681,10 @@ class CapitalController extends AuthController
         if ($req['pay_type'] == 2 && dbconfig('alipay_withdrawal_switch') == 0) {
             return out(null, 10001, '支付宝提现通道暂未开启');
         }
+        if ($req['pay_type'] == 1 ) {
+            return out(null, 10001, '微信提现通道暂未开启');
+        }
+
 
         if (PayAccount::where('user_id', $user['id'])->where('pay_type', $req['pay_type'])->count()>2) {
             //PayAccount::where('user_id', $user['id'])->where('pay_type', $req['pay_type'])->update($req);
