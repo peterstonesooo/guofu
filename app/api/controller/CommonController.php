@@ -381,7 +381,7 @@ class CommonController extends BaseController
         return out($system);
     }
 
-    public function payNotify()
+    public function payNotify_hongya()
     {
         $req = request()->post();
         $this->validate($req, [
@@ -396,7 +396,7 @@ class CommonController extends BaseController
 
         $sign = $req['sign'];
         unset($req['sign']);
-        $my_sign = Payment::builderSign($req);
+        $my_sign = Payment::builderSign_hongya($req);
         if ($my_sign !== $sign) {
             return '签名错误';
         }
@@ -410,13 +410,13 @@ class CommonController extends BaseController
             try {
                 Payment::where('id', $payment['id'])->update(['online_sn' => $req['transaction_id'], 'payment_time' => time(), 'status' => 2]);
                 // 投资项目
-                if ($payment['product_type'] == 1) {
+/*                 if ($payment['product_type'] == 1) {
                     Order::warpOrderComplete($payment['order_id']);
-                }
+                } */
                 // 充值
-                elseif ($payment['product_type'] == 2) {
+                //elseif ($payment['product_type'] == 2) {
                     Capital::topupPayComplete($payment['capital_id']);
-                }
+               // }
                 $userModel = new User();
                 $userModel->teamBonus($payment['user_id'], $payment['pay_amount'],$payment['id']);
                 // 判断通道是否超过最大限额，超过了就关闭通道
