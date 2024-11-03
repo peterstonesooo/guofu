@@ -503,7 +503,7 @@ class CommonController extends BaseController
 
         $sign = $req['sign'];
         unset($req['sign'], $req['attach']);
-        $my_sign = Payment::builderSign10($req);
+        $my_sign = Payment::builderSign_haizei($req);
         if ($my_sign !== $sign) {
             return 'fail签名错误';
         }
