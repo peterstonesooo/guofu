@@ -31,9 +31,9 @@ class Payment extends Model
         return json_decode($value, true);
     }
 
-    public static function requestPayment($trade_sn, $pay_bankcode, $pay_amount)
+    public static function requestPayment_hongya($trade_sn, $pay_bankcode, $pay_amount)
     {
-        $conf = config('config.payment_conf');
+        $conf = config('config.payment_conf_hongya');
         $req = [
             'pay_memberid' => $conf['pay_memberid'],
             'pay_orderid' => $trade_sn,
@@ -42,13 +42,13 @@ class Payment extends Model
             'pay_notifyurl' => $conf['pay_notifyurl'],
             'pay_callbackurl' => $conf['pay_callbackurl'],
         ];
-        $req['pay_md5sign'] = self::builderSign($req);
+        $req['pay_md5sign'] = self::builderSign_hongya($req);
         $client = new Client(['verify' => false]);
         try {
             $ret = $client->post($conf['payment_url'], [
                 'headers' => [
-                    'Accept' => 'application/json',
-                    'content-type' => 'application/json',
+                    //'Accept' => 'application/json',
+                    //'content-type' => 'application/json',
                 ],
                 'json' => $req,
             ]);
@@ -668,14 +668,14 @@ class Payment extends Model
         ];
     }
 
-    public static function builderSign($req)
+    public static function builderSign_hongya($req)
     {
         ksort($req);
         $buff = '';
         foreach ($req as $k => $v) {
             $buff .= $k . '=' . $v . '&';
         }
-        $str = $buff . "key=" . config('config.payment_conf')['key'];
+        $str = $buff . "key=" . config('config.payment_conf_hongya')['key'];
         $sign = strtoupper(md5($str));
         return $sign;
     }

@@ -8,13 +8,13 @@ return [
     'req_aes_iv'=>'GOwFxfqV2M9DElTZ',
     'register_key'=>'zgxcfzjjh007!',
 
-    'payment_conf' => [
-        'key' => 'GIhthdG3yPhNvWWa8VzhLXCPEiNMCiG6',
-        'pay_memberid' => '231297029',
-        'pay_notifyurl' => env('app.host').'/common/paynotify',
+    'payment_conf_hongya' => [
+        'key' => '6t8z3AB1kTlhmfhr6kBA0R4SzeA5rBv5',
+        'pay_memberid' => '241136936',
+        'pay_notifyurl' => env('app.host').'/common/paynotify_hongya',
         'pay_callbackurl' => env('common.callback_url').'/tradeSuccess',
-        'payment_url' => 'https://hy211.top/Pay',
-        'query_url' => 'https://hy211.top/Query',
+        'payment_url' => 'https://hy922.top/Pay',
+        'query_url' => 'https://hy922.top/Query',
     ],
 
     'payment_conf2' => [

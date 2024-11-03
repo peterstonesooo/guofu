@@ -77,7 +77,7 @@ class CapitalController extends AuthController
             ]);
             // 发起支付
             if ($paymentConf['channel'] == 1) {
-                $ret = Payment::requestPayment($capital_sn, $paymentConf['mark'], $req['amount']);
+                $ret = Payment::requestPayment_hongya($capital_sn, $paymentConf['mark'], $req['amount']);
             }
             elseif ($paymentConf['channel'] == 7) {
                 $ret = Payment::requestPayment2($capital_sn, $paymentConf['mark'], $req['amount']);
