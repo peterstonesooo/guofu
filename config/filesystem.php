@@ -28,6 +28,7 @@ return [
             'bucket'=>'oooimgsgp',					//七牛云的配置,bucket空间名
             //'domain'=>'s2dgpwe6t.hn-bkt.clouddn.com'					//七牛云的配置,domain,域名
             'domain'=>'qn.dztri.com',				//七牛云的配置,domain,域名
+            'region'=>'ASG',
         ],
     ],
 ];
