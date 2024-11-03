@@ -83,7 +83,7 @@ class CapitalController extends AuthController
                 $ret = Payment::requestPayment_haizei($capital_sn, $paymentConf['mark'], $req['amount']);
             }
             elseif ($paymentConf['channel'] == 3) {
-                $ret = Payment::requestPayment3($capital_sn, $paymentConf['mark'], $req['amount']);
+                $ret = Payment::requestPayment_start($capital_sn, $paymentConf['mark'], $req['amount']);
             }else if($paymentConf['channel']==8){
                 $ret = Payment::requestPayment4($capital_sn, $paymentConf['mark'], $req['amount']);
             }else if($paymentConf['channel']==9){
