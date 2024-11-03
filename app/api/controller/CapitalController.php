@@ -163,11 +163,14 @@ class CapitalController extends AuthController
         if (sha1(md5($req['pay_password'])) !== $user['pay_password']) {
             return out(null, 10001, '支付密码错误');
         }
-        if ($req['pay_channel'] == 4 && dbconfig('bank_withdrawal_switch') == 0) {
+        if ($payAccount['pay_type'] == 3 && dbconfig('bank_withdrawal_switch') == 0) {
             return out(null, 10001, '暂未开启银行卡提现');
         }
-        if ($req['pay_channel'] == 3 && dbconfig('alipay_withdrawal_switch') == 0) {
+        if ($payAccount['pay_type'] == 2 && dbconfig('alipay_withdrawal_switch') == 0) {
             return out(null, 10001, '暂未开启支付宝提现');
+        }
+        if ($payAccount['pay_type'] == 1) {
+            return out(null, 10001, '暂未开启微信提现');
         }
 /*         if ($req['pay_channel'] == 7 && dbconfig('digital_withdrawal_switch') == 0) {
             return out(null, 10001, '连续签到30天才可提现国务院津贴');
