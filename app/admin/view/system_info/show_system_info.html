@@ -57,7 +57,7 @@
                             <label class="text-lable">内容</label>
                             <input type="hidden" name="content" id="content">
                             <div class="summernote">
-                                <?php echo substr($data['content'],0,50);?>
+                                <?php echo $data['content']??'';?>
                             </div>
                         </div>
                         <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 dd_ts">*</div>

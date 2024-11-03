@@ -23,6 +23,10 @@ class SystemInfoController extends AuthController
 
         $data = $builder->paginate(['query' => $req]);
 
+        foreach($data as &$item){
+            $item['content'] = mb_substr(strip_tags($item['content']), 0, 50);
+        }
+
         $this->assign('req', $req);
         $this->assign('data', $data);
 
