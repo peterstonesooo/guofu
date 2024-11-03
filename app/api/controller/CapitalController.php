@@ -185,10 +185,10 @@ class CapitalController extends AuthController
         }
         // 每天提现时间为8：00-20：00 早上8点到晚上20点
         $timeNum = (int)date('Hi');
-        if ($timeNum < 1000 || $timeNum > 1700) {
+/*         if ($timeNum < 1000 || $timeNum > 1700) {
             return out(null, 10001, '提现时间为早上10:00到晚上17:00');
         }
-
+ */
         // $a = UserBalanceLog::where('user_id', $user['id'])->where('type', 18)->where('created_at', '>', '2024-06-06 08:00:00')->where('created_at', '<', '2024-06-06 12:00:00')->find();
         // $b = UserBalanceLog::where('user_id', $user['id'])->where('type', 19)->where('created_at', '>', '2024-06-06 08:00:00')->where('created_at', '<', '2024-06-06 12:00:00')->find();
         // if($a || $b) {
