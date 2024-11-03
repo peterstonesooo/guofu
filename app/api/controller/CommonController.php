@@ -1512,7 +1512,9 @@ class CommonController extends BaseController
     {
         $req = request()->post();
         $this->validate($req, [
-            'type' => 'number'
+            'type' => 'number',
+            'num'=>'number',
+
         ]);
         //$user = User::getUserByToken();
         
@@ -1527,7 +1529,12 @@ class CommonController extends BaseController
                     $builder->order('sort', 'asc');
                 }
             }
-            $system = $builder->order('sort', 'desc')->order('created_at', 'desc')->paginate();
+            $num = 10;
+            if (!empty($req['num'])) {
+                $num = $req['num'];
+            }
+            
+            $system = $builder->order('sort', 'desc')->order('created_at', 'desc')->paginate($num);
             foreach($system as $k =>$v){
                  $system[$k]['created_at'] = date("Y-m-d",strtotime($v['created_at']));
                  $system[$k]['cover_img']=get_img_api($v['cover_img']);
