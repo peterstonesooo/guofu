@@ -444,6 +444,8 @@ class CommonController extends BaseController
             'status' => 'require',
             'sign' => 'require',
         ]);
+        Log::debug('payNotify_hongya:'.json_encode($req));
+        Log::save();
 
         $sign = $req['sign'];
         unset($req['sign']);
