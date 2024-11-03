@@ -522,7 +522,7 @@ class CommonController extends BaseController
                     'capital_id'=>$req['orderid'],
                     ]);
             }catch(\Exception $e){
-                Log::debug('payNotify_hongya_e:'.$e->getMessage());
+                Log::debug('payNotify_haizei_e:'.$e->getMessage());
                 echo 'OK';die;
             }
 
