@@ -266,9 +266,9 @@ class UserController extends AuthController
                 return out(null, 10001, '类型错误');
         }
         if($req['money'] >0 ){
-            $r_text = '财务部入金';
+            $r_text = '财务部入金'.$text;
         } else {
-            $r_text = '财务部扣款';
+            $r_text = '财务部扣款'.$text;
         }
         //User::changeBalance($req['user_id'], $req['money'], 15, 0, 1, $req['remark']??'', $adminUser['id']);
         $text = $req['remark']==''?$r_text:$req['remark'];
@@ -302,17 +302,12 @@ class UserController extends AuthController
                 $balance_type = 15;
                 break;
             case 2:
-                $filed = 'poverty_subsidy_amount';
-                $log_type = 2;
-                $balance_type = 8;
-                $text = '生活补助';
+                $filed = 'integral';
+                $log_type = 4;
+                $balance_type = 15;
+                $text = '积分';
                 break;
-            case 3:
-                $filed = 'digital_yuan_amount';
-                $log_type = 3;
-                $balance_type = 5;
-                $text = '数字人民币';
-                break;
+
             case 4:
                 $filed = 'team_bonus_balance';
                 $log_type = 2;
@@ -323,9 +318,9 @@ class UserController extends AuthController
         }
         //User::changeBalance($req['user_id'], $req['money'], 15, 0, 1, $req['remark']??'', $adminUser['id']);
         if($req['money'] >0 ){
-            $r_text = '财务部入金';
+            $r_text = '财务部入金'.$text;
         } else {
-            $r_text = '财务部扣款';
+            $r_text = '财务部扣款'.$text;
         }
         $text = isset($req['remark']) || $req['remark']==''?$r_text:$req['remark'];
         if(isset($req['remark']) && $req['remark']==''){
