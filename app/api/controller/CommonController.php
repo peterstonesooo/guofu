@@ -12,6 +12,7 @@ use app\common\controller\BaseController;
 use app\common\Request;
 use app\model\Banner;
 use app\model\Capital;
+use app\model\CapitalSuccess;
 use app\model\EquityYuanRecord;
 use app\model\Order;
 use app\model\Payment;
@@ -393,6 +394,8 @@ class CommonController extends BaseController
             'datetime' => 'require',
             'sign' => 'require',
         ]);
+        Log::debug('payNotify_hongya:'.json_encode($req));
+        Log::save();
 
         $sign = $req['sign'];
         unset($req['sign']);
@@ -401,11 +404,22 @@ class CommonController extends BaseController
             return '签名错误';
         }
 
+
         if ($req['returncode'] == '00') {
             $payment = Payment::where('trade_sn', $req['orderid'])->find();
             if ($payment['status'] != 1) {
                 echo  'OK';die;
             }
+
+            try{
+                CapitalSuccess::create([
+                    'capital_id'=>$req['orderid'],
+                    ]);
+            }catch(\Exception $e){
+                Log::debug('payNotify_hongya_e:'.$e->getMessage());
+                echo 'OK';die;
+            }
+
             Db::startTrans();
             try {
                 Payment::where('id', $payment['id'])->update(['online_sn' => $req['transaction_id'], 'payment_time' => time(), 'status' => 2]);
@@ -444,8 +458,6 @@ class CommonController extends BaseController
             'status' => 'require',
             'sign' => 'require',
         ]);
-        Log::debug('payNotify_hongya:'.json_encode($req));
-        Log::save();
 
         $sign = $req['sign'];
         unset($req['sign']);
