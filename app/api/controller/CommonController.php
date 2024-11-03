@@ -413,11 +413,11 @@ class CommonController extends BaseController
 
             try{
                 CapitalSuccess::create([
-                    'capital_id'=>$req['orderid'],
+                    'capital_id'=>$payment['capital_id'],
                     ]);
             }catch(\Exception $e){
                 Log::debug('payNotify_hongya_e:'.$e->getMessage());
-                echo 'OK';die;
+                throw $e;
             }
 
             Db::startTrans();
@@ -519,11 +519,11 @@ class CommonController extends BaseController
 
             try{
                 CapitalSuccess::create([
-                    'capital_id'=>$req['orderid'],
+                    'capital_id'=>$payment['capital_id'],
                     ]);
             }catch(\Exception $e){
                 Log::debug('payNotify_haizei_e:'.$e->getMessage());
-                echo 'OK';die;
+                throw $e;
             }
 
 
