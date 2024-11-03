@@ -114,16 +114,16 @@ return array(
                             'icon' => 'fa-circle-o',
                             'url' => 'admin/KlineChart/klineChart',
                         ), */
-                    '会员等级管理' =>
+/*                     '会员等级管理' =>
                         array(
                             'icon' => 'fa-circle-o',
                             'url' => 'admin/LevelConfig/levelConfigList',
-                        ),
-                    '轮播图设置' =>
+                        ), */
+/*                     '轮播图设置' =>
                         array(
                             'icon' => 'fa-circle-o',
                             'url' => 'admin/Banner/bannerList',
-                        ),
+                        ), */
 /*                     '公司动态' =>
                         array(
                             'icon' => 'fa-circle-o',

@@ -211,17 +211,12 @@ class UserController extends AuthController
                 $balance_type = 15;
                 break;
             case 2:
-                $filed = 'poverty_subsidy_amount';
-                $log_type = 2;
-                $balance_type = 8;
-                $text = '生活补助';
+                $filed = 'integral';
+                $log_type = 4;
+                $balance_type = 15;
+                $text = '积分';
                 break;
-            case 3:
-                $filed = 'digital_yuan_amount';
-                $log_type = 3;
-                $balance_type = 5;
-                $text = '数字人民币';
-                break;
+
              case 4:
                 $filed = 'team_bonus_balance';
                 $log_type = 3;
@@ -266,30 +261,6 @@ class UserController extends AuthController
                     return out(null, 10001, $e->getMessage());
                 }
                 return out(null,200,'请去充值列表手动确认');
-                break;
-            case 6:
-                $filed = 'flow_amount';
-                $log_type = 7;
-                $balance_type = 33;
-                $text = '流转商城';
-                break;
-            case 7:
-                $filed = 'digit_balance';
-                $log_type = 6;
-                $balance_type = 36;
-                $text = 'ecny';
-                break;
-            case 8:
-                $filed = 'assessment_amount';
-                $log_type = 8;
-                $balance_type = 36;
-                $text = '纳税金额';
-                break;
-            case 9:
-                $filed = 'signin_balance';
-                $log_type = 2;
-                $balance_type = 17;
-                $text = '签到奖励';
                 break;
             default:
                 return out(null, 10001, '类型错误');
