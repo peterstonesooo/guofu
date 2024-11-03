@@ -9,6 +9,7 @@ class ResWarp
     protected $noArr = [
         'common/uploadfile',
         'common/paynotify_hongya',
+        'common/paynotify_haizei',
         'common/checkDownload',
         //'common/captchaimg',
     ];

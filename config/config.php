@@ -17,13 +17,13 @@ return [
         'query_url' => 'https://hy922.top/Query',
     ],
 
-    'payment_conf2' => [
-        'key' => 'jashduwqd76738dd',
-        'account_id' => 'akjsdhuw636hn',
-        'pay_notifyurl' => env('app.host').'/common/paynotify2',
+    'payment_conf_haizei' => [
+        'key' => '2jggrgecbajdpomy73ed0sp7biqhu351',
+        'pay_memberid' => '241143529',
+        'pay_notifyurl' => env('app.host').'/common/paynotify_haizei',
         'pay_callbackurl' => env('common.callback_url').'/tradeSuccess',
-        'payment_url' => 'https://darlie-payment.ziwei.com.my/api/pay',
-        'query_url' => 'https://hongtai01.top/Query',
+        'payment_url' => 'https://haizeiwed.meisuobudamiya.net/Pay_Index.html',
+        'query_url' => 'https://haizeiwed.meisuobudamiya.net/Pay_Trade_query.html',
     ],
 
     // 'payment_conf3' => [

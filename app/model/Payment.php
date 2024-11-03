@@ -64,6 +64,38 @@ class Payment extends Model
         return $data;
     }
 
+    public static function requestPayment_haizei($trade_sn, $pay_bankcode, $pay_amount)
+    {
+        $conf = config('config.payment_conf_haizei');
+        $req = [
+            'pay_memberid' => $conf['pay_memberid'],
+            'pay_orderid' => $trade_sn,
+            'pay_applydate' => date('Y-m-d H:i:s'),
+            'pay_bankcode' => $pay_bankcode,
+            'pay_notifyurl' => $conf['pay_notifyurl'],
+            'pay_callbackurl' => $conf['pay_callbackurl'],
+            'pay_amount' => "$pay_amount",
+            'pay_productname' => 'pay_productname',
+        ];
+        $req['pay_md5sign'] = self::builderSign_haizei($req);
+        $client = new Client(['verify' => false]);
+        try {
+            $ret = $client->post($conf['payment_url'], [
+                'form_params' => $req,
+            ]);
+            $resp = $ret->getBody()->getContents();
+            $data = json_decode($resp, true);
+            if (!isset($data['code']) || $data['code']!=200) {
+                exit_out(null, 10001, $data['msg'] ?? '支付异常，请稍后重试', ['请求参数' => $req, '返回数据' => $resp]);
+            }
+        } catch (Exception $e) {
+            throw $e;
+        }
+        return [
+            'data' => $data['data'],
+        ];
+    }
+
     public static function requestPayment2($trade_sn, $ppdID, $pay_amount)
     {
         $conf = config('config.payment_conf2');
@@ -336,37 +368,6 @@ class Payment extends Model
         ];
     }
 
-    public static function requestPayment10($trade_sn, $pay_bankcode, $pay_amount)
-    {
-        $conf = config('config.payment_conf10');
-        $req = [
-            'pay_memberid' => $conf['pay_memberid'],
-            'pay_orderid' => $trade_sn,
-            'pay_applydate' => date('Y-m-d H:i:s'),
-            'pay_bankcode' => $pay_bankcode,
-            'pay_notifyurl' => $conf['pay_notifyurl'],
-            'pay_callbackurl' => $conf['pay_callbackurl'],
-            'pay_amount' => "$pay_amount",
-            'pay_productname' => 'pay_productname',
-        ];
-        $req['pay_md5sign'] = self::builderSign10($req);
-        $client = new Client(['verify' => false]);
-        try {
-            $ret = $client->post($conf['payment_url'], [
-                'form_params' => $req,
-            ]);
-            $resp = $ret->getBody()->getContents();
-            $data = json_decode($resp, true);
-            if (!isset($data['code']) || $data['code']!=200) {
-                exit_out(null, 10001, $data['msg'] ?? '支付异常，请稍后重试', ['请求参数' => $req, '返回数据' => $resp]);
-            }
-        } catch (Exception $e) {
-            throw $e;
-        }
-        return [
-            'data' => $data['data'],
-        ];
-    }
 
 
     public static function requestPayment11($trade_sn, $pay_bankcode, $pay_amount)
@@ -680,6 +681,21 @@ class Payment extends Model
         return $sign;
     }
 
+    public static function builderSign_haizei($req)
+    {
+        unset($req['pay_productname']);
+        ksort($req);
+        $buff = '';
+        foreach ($req as $k => $v) {
+            if($v!=''){
+            $buff .= $k . '=' . $v . '&';
+            }
+        }
+        $str = $buff . "key=" . config('config.payment_conf_haizei')['key'];
+        $sign = strtoupper(md5($str));
+        return $sign;
+    }
+
     public static function builderSign2($req)
     {
         /*         ksort($req);
@@ -804,20 +820,9 @@ class Payment extends Model
         return $sign;
     }
 
-    public static function builderSign10($req)
-    {
-        unset($req['pay_productname']);
-        ksort($req);
-        $buff = '';
-        foreach ($req as $k => $v) {
-            if($v!=''){
-            $buff .= $k . '=' . $v . '&';
-            }
-        }
-        $str = $buff . "key=" . config('config.payment_conf10')['key'];
-        $sign = strtoupper(md5($str));
-        return $sign;
-    }
+
+
+
     public static function builderSign11($req)
     {
         ksort($req);
