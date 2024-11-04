@@ -625,7 +625,7 @@ class UserController extends AuthController
                 'ic_number' => $req['ic_number'],
                 'img1' => $req['img1'],
                 'img2' => $req['img2'],
-                'img3' => $req['img3'],
+                'img3' => isset($req['img3']) ? $req['img3'] : '',
                 'phone' => $user['phone'],
                 'user_id'=>$user['id'],
                 'status'=>0,
