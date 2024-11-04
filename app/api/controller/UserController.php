@@ -581,6 +581,7 @@ class UserController extends AuthController
             'ic_number|身份证号' => 'require|idCard',
             'img1|身份证正面' => 'require',
             'img2|身份证反面' => 'require',
+            'img3|身份证反面' => 'require',
         ]);
         $userToken = $this->user;
 /*         $redis = new \Predis\Client(config('cache.stores.redis'));
@@ -624,6 +625,7 @@ class UserController extends AuthController
                 'ic_number' => $req['ic_number'],
                 'img1' => $req['img1'],
                 'img2' => $req['img2'],
+                'img3' => $req['img3'],
                 'phone' => $user['phone'],
                 'user_id'=>$user['id'],
                 'status'=>0,
