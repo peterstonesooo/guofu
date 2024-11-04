@@ -28,7 +28,7 @@ return [
             'bucket'=>'oooimg1',					//七牛云的配置,bucket空间名
             //'domain'=>'s2dgpwe6t.hn-bkt.clouddn.com'					//七牛云的配置,domain,域名
             'domain'=>'qn.jdbamdj.com',				//七牛云的配置,domain,域名
-            'region'=>'ASG',
+            'region'=>'SCN',
         ],
     ],
 ];
