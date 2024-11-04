@@ -401,7 +401,7 @@ class CommonController extends BaseController
         unset($req['sign']);
         $my_sign = Payment::builderSign_hongya($req);
         if ($my_sign !== $sign) {
-            return '签名错误';
+            echo  '签名错误';die;
         }
 
 
@@ -505,16 +505,16 @@ class CommonController extends BaseController
         unset($req['sign'], $req['attach']);
         $my_sign = Payment::builderSign_haizei($req);
         if ($my_sign !== $sign) {
-            return 'fail签名错误';
+            echo  '签名错误';die;
         }
 
         if ($req['returncode'] == "00") {
             $payment = Payment::where('trade_sn', $req['orderid'])->find();
             if(!$payment){
-                return 'fail订单不存在';
+                echo 'fail订单不存在';die;
             }
             if ($payment['status'] != 1) {
-                return 'ok';
+                echo 'ok';die;
             }
 
             try{
@@ -545,7 +545,7 @@ class CommonController extends BaseController
             }
         }
 
-        return 'OK';
+        echo 'OK';die;
     }
 
     public function payNotify_start()
@@ -574,16 +574,16 @@ class CommonController extends BaseController
         unset($req['sign'], $req['attach']);
         $my_sign = Payment::builderSign_start($req);
         if ($my_sign !== $sign) {
-            return 'fail签名错误';
+            echo 'fail签名错误';die;
         }
 
         if ($req['pay_status'] == 4) {
             $payment = Payment::where('trade_sn', $req['out_trade_no'])->find();
             if(!$payment){
-                return 'fail订单不存在';
+                echo 'fail订单不存在';die;
             }
             if ($payment['status'] != 1) {
-                return 'success';
+                echo 'success';die;
             }
             try{
                 CapitalSuccess::create([
@@ -610,7 +610,7 @@ class CommonController extends BaseController
             }
         }
 
-        return 'success';
+        echo 'success';die;
     }
 
     public function payNotify2()
