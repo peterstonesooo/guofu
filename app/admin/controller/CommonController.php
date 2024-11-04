@@ -25,20 +25,23 @@ class CommonController extends BaseController
 
             $adminUser = AdminUser::where('account', $req['account'])->find();
             if (empty($adminUser)){
-                $this->error('账号不存在');
+                return out(null, 10001, '账号不存在');
             }
             if (md5(sha1($req['password'])) != $adminUser['password']){
-                $this->error('密码错误');
+                
+                return out(null, 10001, '密码错误');
+
             }
             if($adminUser['status'] == 0){
-                $this->error('账号已被禁用');
+                return out(null, 10001, '账号已被禁用');
             }
-
-            if (AuthGroupAccess::where('admin_user_id', $adminUser['id'])->where('auth_group_id', 1)->count()) {
-                Session::set('is_admin', 1);               
+            $group = AuthGroupAccess::where('admin_user_id', $adminUser['id'])->find();
+            if($group['auth_group_id']==1){
+                Session::set('is_admin', 1);
             }else{
                 Session::set('is_admin', 0);
             }
+            $adminUser['auth_group_id'] = $group['auth_group_id'];
             
             //else{
 

@@ -52,8 +52,9 @@
                             <th>激活</th>
 <!--                             <th>激活时间</th>
  -->                            <th>直属实名</th>
+                             {if(session('admin_user')['auth_group_id']!=3)}
                             <th>总投资</th>
-
+                            {/if}
                             <th>时间</th>
                             <th>状态</th>
                             <th>首码</th>
@@ -75,7 +76,10 @@
                                <td>{$v['is_active_text']}</td>
 <!--                                 <td>{$v['active_date']}</td>
  -->                                <td><a href="{:url('admin/User/userList', ['up_user' => $v['id'], 'is_realname' => 1])}">{$v['real_sub_user_num']}</a></td>
+                                {if(session('admin_user')['auth_group_id']!=3)}
+
                                 <td>{$v['invest_amount']}</td>
+                                {/if}
                                 <td>{$v['created_at']}</td>
                                 <td>
                                     <div class="switch">

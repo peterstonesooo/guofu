@@ -56,6 +56,13 @@ class OrderController extends AuthController
             return out(null, 10001, '项目不存在');
         }
 
+        if($req['project_id']==1 || $req['project_id']==2){
+            $order = Order::where('user_id', $user['id'])->where('project_id', $req['project_id'])->whereIn('status', [1,2])->find();
+            if($order){
+                return out(null, 10001, '已有的产品未结束不能购买');
+            }
+        }
+
         if (!in_array($req['pay_method'], $project['support_pay_methods'])) {
             return out(null, 10001, '不支持该支付方式');
         }

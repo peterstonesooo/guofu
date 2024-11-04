@@ -266,7 +266,8 @@ class CheckBonus extends Command
         try{
             //User::changeInc($order['user_id'],$order['sum_amount'],'digital_yuan_amount',6,$order['id'],3);
             $text = "{$order['project_name']}收益";
-            User::changeInc($order['user_id'],$order['sum_amount'],'team_bonus_balance',6,$order['id'],3,$text);
+            $income = $order['single_amount']+$order['sum_amount'];
+            User::changeInc($order['user_id'],$income,'team_bonus_balance',6,$order['id'],3,$text);
             User::changeInc($order['user_id'],$order['gift_integral'],'integral',6,$order['id'],2,$text);
             $subsidyAmount= $order['single_amount']*$order['bonus_multiple'];
             User::changeInc($order['user_id'],$subsidyAmount,'poverty_subsidy_amount',6,$order['id'],5,$text);
