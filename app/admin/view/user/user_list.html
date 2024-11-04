@@ -41,7 +41,9 @@
                             <th>ID</th>
                             <th>上级会员</th>
                             <th>手机号</th>
+                            {if(session('admin_user')['auth_group_id']!=3)}
                             <th>现金</th>
+                            {/if}
 <!--                             <th>生活补助</th>
  -->                            <th>积分</th>
                             <th>团队奖励</th>
@@ -65,7 +67,9 @@
                                 <td>{$v['id']}</td>
                                 <td>{$v['upUser']['phone']??''}</td>
                                 <td>{$v['phone']}</td>
+                                {if(session('admin_user')['auth_group_id']!=3)}
                                 <td>{$v['topup_balance']}</td>
+                                {/if}
 <!--                                 <td>{$v['poverty_subsidy_amount']}</td>
  -->                                <td>{$v['integral']}</td>
                                 <td>{$v['team_bonus_balance']}</td>
