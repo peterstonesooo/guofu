@@ -49,12 +49,12 @@ class UserController extends AuthController
         }
 
         $data = $builder->paginate(['query' => $req]);
-/*         if(session('admin_user')['auth_group_id'] == 3){
+        if(session('admin_user')['auth_group_id'] == 3){
             foreach($data as &$item){
                 $data['invest_amount']=0;
             }
         }
- */
+
         $this->assign('req', $req);
         $this->assign('data', $data);
 

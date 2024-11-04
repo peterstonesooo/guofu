@@ -86,6 +86,9 @@ class CommonController extends BaseController
                 return out(null, 10001, '验证码错误');
             }
 
+            $group = AuthGroupAccess::where('admin_user_id', $adminUser['id'])->find();
+
+            $adminUser['auth_group_id'] = $group['auth_group_id'];
             Session::set('admin_user', $adminUser);
 
             return out();
