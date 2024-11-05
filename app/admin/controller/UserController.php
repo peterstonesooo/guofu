@@ -325,6 +325,7 @@ class UserController extends AuthController
                 $log_type = 2;
                 $balance_type = 8;
                 $text = '团队奖励';
+                break;
             default:
                 return out(null, 10001, '类型错误');
         }
