@@ -223,7 +223,8 @@ class Order extends Model
         $order = Order::where('id', $order_id)->find();
 
         if ($project['project_group_id'] == 1) {
-            $end_time = strtotime("+{$project['period']} day", strtotime(date('Y-m-d')));
+            $period = $project['period']+1;
+            $end_time = strtotime("+{$period} day", strtotime(date('Y-m-d')));
             //$next_bonus_time = $project['review_period'] * 3600;
             $next_bonus_time = strtotime("+1 day", strtotime(date('Y-m-d')));
             Order::where('id', $order['id'])->update([

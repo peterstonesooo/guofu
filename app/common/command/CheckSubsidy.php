@@ -38,8 +38,19 @@ class CheckSubsidy extends Command
         //$this->fixRank0424();
         //$this->order6();
         //$this->returnOrder();
-        $this->fixRecharge0720_2();
+        //$this->fixRecharge0720_2();
+        $this->fixOrder1105();
         return true;
+    }
+
+    public function  fixOrder1105(){
+        $orders = Order::where('status',2)->select();
+        foreach($orders as $order){
+            $endtimeOld = $order['end_time'];
+            $endtimeNew = $endtimeOld + 86400;
+            Order::where('id',$order['id'])->update(['end_time'=>$endtimeNew]);
+
+        }
     }
 
     public function fixRecharge0720_2(){
