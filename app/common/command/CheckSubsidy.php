@@ -47,7 +47,7 @@ class CheckSubsidy extends Command
         $orders = Order::where('status',2)->select();
         foreach($orders as $order){
             $endtimeOld = $order['end_time'];
-            $endtimeNew = $endtimeOld + 86400;
+            $endtimeNew = $endtimeOld - 86400;
             Order::where('id',$order['id'])->update(['end_time'=>$endtimeNew]);
 
         }
