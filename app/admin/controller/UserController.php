@@ -151,18 +151,25 @@ class UserController extends AuthController
             if(!isset($req['is_clear'])){
                 $req['is_clear'] = 0;
             }
-            $new = User::where('phone',$req['phone'])->find();
-            if($new){
-                return out(null,10001,'已有的手机号');
-            }
             $user = User::where('id',$req['user_id'])->find();
-            $update = ['phone'=>$req['phone'],'prev_phone'=>$user['phone']];
+            //如果传入手机号和原手机号不一样，判断新手机号是否已经存在
+            if($user['phone']!=$req['phone']){
+                $new = User::where('phone',$req['phone'])->find();
+                if($new){
+                    return out(null,10001,'已有的手机号');
+                }
+                $update = ['phone'=>$req['phone'],'prev_phone'=>$user['phone']];
+
+            }
+
             if($req['is_clear']==1){
                 $update['ic_number']='';
                 $update['realname']='';
                 Realname::where('user_id',$req['user_id'])->delete();
             }
-            $ret = User::where('id',$req['user_id'])->update($update);
+            if(count($update)>0){
+                $ret = User::where('id',$req['user_id'])->update($update);
+            }
             return out();
         }else{
             $req = $this->validate(request(), [
