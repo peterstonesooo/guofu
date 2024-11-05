@@ -844,7 +844,7 @@ class UserController extends AuthController
     {
         $user = $this->user;
         $req = $this->validate(request(), [
-            'type' => 'require|number',
+            //'type' => 'require|number',
             'log_type' => 'require|number|in:0,1,2,3,4,5,6',
         ]);
         $map = config('map.user_balance_log')['type_map'];
@@ -858,11 +858,11 @@ class UserController extends AuthController
         $query = UserBalanceLog::where('user_id', $user['id'])
         ->whereIn('log_type', $log_type);
 
-
+/* 
         if($req['type']!=0){
             $query->where('type', $req['type']);
-        }
-        
+        } */
+
         $list = $query->order('id', 'desc')
         ->paginate(10)
         ->each(function ($item, $key) use ($map) {
