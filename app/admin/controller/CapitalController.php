@@ -177,7 +177,7 @@ class CapitalController extends AuthController
                         $v->payMethod .= "\n" . '分行：' . $v['bank_branch'] ?? ''; */
                         $v['payType'] = '银行卡';
                     } else {
-                        $v->payMethod = $v['account'];
+                        //$v->payMethod = $v['account'];
                         $v['payType'] = '支付宝';
                     }
                     $v->shenheUser = $v['adminUser']['nickname'] ?? '';
@@ -191,7 +191,7 @@ class CapitalController extends AuthController
                     'amountCapital' => '提现金额',
                     'withdraw_amount' => '到账金额',
                     'realname' => '收款人实名',
-                    'payMethod' => '收款账号',
+                    'account' => '收款账号',
                     'payType' => '收款方式',
                     'bank_name' => '银行名称',
                     // 'shenheUser' => '审核用户',
