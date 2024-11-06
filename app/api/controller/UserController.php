@@ -49,8 +49,14 @@ class UserController extends AuthController
         $user['realname_mark'] = '';
         if($user['is_realname']==0){
             $realnameData = Realname::where('user_id',$user['id'])->find();
-            if($realnameData && $realnameData['status']==2){
-                $user['realname_mark'] = $realnameData['mark'];
+            if($realnameData){
+                //实名审核中
+                $user['is_realname'] = 2;
+                if($realnameData['status']==2){
+                    //实名审核已拒绝
+                    $user['is_realname'] = 3;
+                    $user['realname_mark'] = $realnameData['mark'];
+                }
             }
         }
 
