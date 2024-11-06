@@ -167,15 +167,18 @@ class CapitalController extends AuthController
                     'created_at' => '创建时间'
                 ], '充值记录-' . date('YmdHis'));
             } elseif ($req['type'] == 2) {
-                foreach ($list as $v) {
+                foreach ($list as &$v) {
                     $v->account_type = $v['user']['phone'] ?? '';
                     $v->amountCapital = round(0 - $v['amount'], 2);
-                    if ($v->pay_channel == 4) {
-                        $v->payMethod = '银行：' . $v['bank_name'] ?? '';
+                    //if ($v->pay_channel == 4) {
+                    if($v->bank_name!=''){
+/*                         $v->payMethod = '银行：' . $v['bank_name'] ?? '';
                         $v->payMethod .= "\n" . '卡号：' . $v['account'] ?? '';
-                        $v->payMethod .= "\n" . '分行：' . $v['bank_branch'] ?? '';
+                        $v->payMethod .= "\n" . '分行：' . $v['bank_branch'] ?? ''; */
+                        $v['payType'] = '银行卡';
                     } else {
                         $v->payMethod = $v['account'];
+                        $v['payType'] = '支付宝';
                     }
                     $v->shenheUser = $v['adminUser']['nickname'] ?? '';
                 }
@@ -189,6 +192,8 @@ class CapitalController extends AuthController
                     'withdraw_amount' => '到账金额',
                     'realname' => '收款人实名',
                     'payMethod' => '收款账号',
+                    'payType' => '收款方式',
+                    'bank_name' => '银行名称',
                     // 'shenheUser' => '审核用户',
                     // 'audit_remark' => '拒绝理由',
                     // 'audit_date' => '审核时间',
