@@ -96,7 +96,7 @@ class SigninController extends AuthController
                 ]);
             }else{
                 $updata = [
-                    'day'=>Db::row('day+1'),
+                    'day'=>Db::raw('day+1'),
                     'end'=>$signin_date,
                 ];
                 $ret = ContinuousSignin::where('user_id',$user['id'])->where('end',$signin_date)->update($updata);
