@@ -46,7 +46,7 @@ class UserController extends AuthController
             $user['address']=$delivery['address'];
         }
 
-        $user['realname_mark'] = '';
+        $user['realname_mark'] = ''; 
         if($user['is_realname']==0){
             $realnameData = Realname::where('user_id',$user['id'])->find();
             if($realnameData){
