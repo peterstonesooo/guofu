@@ -152,6 +152,7 @@ class UserController extends AuthController
                 $req['is_clear'] = 0;
             }
             $user = User::where('id',$req['user_id'])->find();
+            $update = [];
             //如果传入手机号和原手机号不一样，判断新手机号是否已经存在
             if($user['phone']!=$req['phone']){
                 $new = User::where('phone',$req['phone'])->find();
