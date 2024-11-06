@@ -151,6 +151,7 @@ class OrderController extends AuthController
                             } 
                         }
                     }*/
+                    $txtArr = [1=>'可用余额',3=>'可提余额'];
                     if($req['pay_selected']==1){
                         $field1 = 'topup_balance';
                         $field2 = 'team_bonus_balance';
@@ -164,13 +165,13 @@ class OrderController extends AuthController
                     }
                     
                     if($user[$field1] >= $pay_amount) {
-                        
-                        User::changeInc($user['id'],-$pay_amount,$field1,3,$order['id'],$logType1,$project['project_name'],0,1,'OD');
+
+                        User::changeInc($user['id'],-$pay_amount,$field1,3,$order['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'],0,1,'OD');
                     }else{
-                        User::changeInc($user['id'],-$user[$field1],$field1,3,$order['id'],$logType1,$project['project_name'],0,1,'OD');
+                        User::changeInc($user['id'],-$user[$field1],$field1,3,$order['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'],0,1,'OD');
                         $topup_amount = bcsub($pay_amount, $user[$field1],2);
                         if($user[$field2] >= $topup_amount) {
-                            User::changeInc($user['id'],-$topup_amount,$field2,3,$order['id'],$logType2,$project['project_name'],0,1,'OD');
+                            User::changeInc($user['id'],-$topup_amount,$field2,3,$order['id'],$logType2,$txtArr[$logType2].'-'.$project['project_name'],0,1,'OD');
                         }else{
                             throw new Exception('余额不足');
                         }
