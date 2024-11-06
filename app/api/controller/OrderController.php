@@ -35,6 +35,7 @@ class OrderController extends AuthController
         $req = $this->validate(request(), [
             'project_id' => 'require|number',
             'pay_method' => 'require|number',
+            'pay_selected'=>'require|number',//首选 1余额支付 3团队奖励
             'payment_config_id' => 'requireIf:pay_method,2|requireIf:pay_method,3|requireIf:pay_method,4|requireIf:pay_method,6|number',
             'pay_password|支付密码' => 'requireIf:pay_method,1|requireIf:pay_method,5',
             'pay_voucher_img_url|支付凭证' => 'requireIf:pay_method,6|url',
@@ -82,7 +83,7 @@ class OrderController extends AuthController
             $pay_integral = 0;
 
             //if ($req['pay_method'] == 1 && $pay_amount >  ($user['topup_balance'] + $user['team_bonus_balance'] )) {
-            if ($req['pay_method'] == 1 && $pay_amount >  ($user['topup_balance'] )) {
+            if ($req['pay_method'] == 1 && $pay_amount >  ($user['topup_balance'] + $user['team_bonus_balance'])) {
                 exit_out(null, 10090, '余额不足');
             }
  
@@ -94,13 +95,13 @@ class OrderController extends AuthController
             //     }
             // }
 
-            if (in_array($req['pay_method'], [2,3,4,6])) {
+/*             if (in_array($req['pay_method'], [2,3,4,6])) {
                 $type = $req['pay_method'] - 1;
                 if ($req['pay_method'] == 6) {
                     $type = 4;
                 }
                 $paymentConf = PaymentConfig::userCanPayChannel($req['payment_config_id'], $type, $pay_amount);
-            }
+            } */
 
             if (isset(config('map.order')['pay_method_map'][$req['pay_method']]) === false) {
                 exit_out(null, 10005, '支付渠道不存在');
@@ -150,8 +151,28 @@ class OrderController extends AuthController
                             } 
                         }
                     }*/
-                    if($user['topup_balance'] >= $pay_amount) {
-                        User::changeInc($user['id'],-$pay_amount,'topup_balance',3,$order['id'],1,$project['project_name'],0,1,'OD');
+                    if($req['pay_selected']==1){
+                        $field1 = 'topup_balance';
+                        $field2 = 'team_bonus_balance';
+                        $logType1 = 1;
+                        $logType2 = 3;
+                    }else{
+                        $field1 = 'team_bonus_balance';
+                        $field2 = 'topup_balance';
+                        $logType1 = 3;
+                        $logType2 = 1;
+                    }
+                    
+                    if($user[$field1] >= $pay_amount) {
+                        User::changeInc($user['id'],-$pay_amount,$field1,3,$order['id'],$logType1,$project['project_name'],0,1,'OD');
+                    }else{
+                        User::changeInc($user['id'],-$user[$field1],$field1,3,$order['id'],$logType1,$project['project_name'],0,1,'OD');
+                        $topup_amount = bcsub($pay_amount, $user[$field1],2);
+                        if($user[$field2] >= $topup_amount) {
+                            User::changeInc($user['id'],-$topup_amount,$field2,3,$order['id'],$logType2,$project['project_name'],0,1,'OD');
+                        }else{
+                            throw new Exception('余额不足');
+                        }
                     }
                 
 
