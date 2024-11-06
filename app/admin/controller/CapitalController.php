@@ -55,7 +55,7 @@ class CapitalController extends AuthController
         }
 
         $data = $this->capitalList($req);
-        $logTypeList = [0=>'团队奖励',1=>'共富新钱包',7=>'ecny'];
+        $logTypeList = [0=>'团队奖励'];
         $this->assign('logTypeList', $logTypeList);
         $this->assign('req', $req);
         $this->assign('data', $data);
