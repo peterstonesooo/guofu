@@ -26,7 +26,7 @@ class Realname extends Model
                 User::changeInc($user['up_user_id'], 5,'integral',24,$user['id'],2,'直推实名赠送积分',0,4,'ZS');            
             } 
             if($status == 1 && $user['update_realname'] == 1){
-                User::where('id',$realname['user_id'])->update(['update_realname'=>0,'is_realname=>1']);
+                User::where('id',$realname['user_id'])->update(['update_realname'=>0,'is_realname'=>1]);
             }
             Db::commit();
         } catch (Exception $e) {
