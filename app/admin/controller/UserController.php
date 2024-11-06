@@ -171,6 +171,7 @@ class UserController extends AuthController
             if(count($update)>0){
                 $ret = User::where('id',$req['user_id'])->update($update);
             }
+            
             return out();
         }else{
             $req = $this->validate(request(), [
