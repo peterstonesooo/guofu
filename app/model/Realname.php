@@ -14,14 +14,20 @@ class Realname extends Model
         if (in_array($realname['status'], [1,2])) {
             exit_out(null, 10001, '该记录已经审核了');
         }
+
+        $user = User::where('id',$realname['user_id'])->field('id,update_realname')->find();
         Db::startTrans();
 
         try {
             Realname::where('id',$id)->update(['status'=>$status,'audit_admin_id'=>$admin_user_id,'audit_time'=>Date('Y-m-d H:i:s'),'mark'=>$audit_remark]);
-            if($status == 1){
+            if($status == 1 && $user['update_realname'] == 0){
                 $user = User::where('id',$realname['user_id'])->find();
                 User::where('id',$realname['user_id'])->update(['is_realname'=>1,'realname'=>$realname['realname'],'ic_number'=>$realname['ic_number']]);
-                User::changeInc($user['up_user_id'], 5,'integral',24,$user['id'],2,'直推实名赠送积分',0,4,'ZS');            }   
+                User::changeInc($user['up_user_id'], 5,'integral',24,$user['id'],2,'直推实名赠送积分',0,4,'ZS');            
+            } 
+            if($user['update_realname'] == 1){
+                User::where('id',$realname['user_id'])->update(['update_realname'=>0]);
+            }
             Db::commit();
         } catch (Exception $e) {
             Db::rollback();

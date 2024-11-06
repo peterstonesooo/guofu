@@ -166,12 +166,15 @@ class UserController extends AuthController
             if($req['is_clear']==1){
                 $update['ic_number']='';
                 $update['realname']='';
+                $update['is_realname']=0;
+                $update['update_realname']=1;
+
                 Realname::where('user_id',$req['user_id'])->delete();
             }
             if(count($update)>0){
                 $ret = User::where('id',$req['user_id'])->update($update);
             }
-            
+
             return out();
         }else{
             $req = $this->validate(request(), [
