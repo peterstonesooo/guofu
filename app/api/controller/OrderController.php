@@ -164,6 +164,7 @@ class OrderController extends AuthController
                     }
                     
                     if($user[$field1] >= $pay_amount) {
+                        
                         User::changeInc($user['id'],-$pay_amount,$field1,3,$order['id'],$logType1,$project['project_name'],0,1,'OD');
                     }else{
                         User::changeInc($user['id'],-$user[$field1],$field1,3,$order['id'],$logType1,$project['project_name'],0,1,'OD');
