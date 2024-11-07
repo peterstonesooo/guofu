@@ -59,26 +59,31 @@ class OrderController extends AuthController
             $builder->where('p.mark', $req['mark']);
         }
 
+        if (!empty($req['start_date'])) {
+            $builder->where('o.created_at', '>=', $req['start_date']);
+        }else{
+            $builder->where('o.created_at', '>=', date('Y-m-d'));
+        }
+        if (!empty($req['end_date'])) {
+            $builder->where('o.created_at', '<=', $req['end_date']);
+        }
+
+        if(!empty($req['project_id'])){
+            $builder->where('o.project_id', $req['project_id']);
+        }
+
         $builder1 = clone $builder;
         $total_buy_amount = round($builder1->sum('o.buy_num*o.single_amount'), 2);
         $this->assign('total_buy_amount', $total_buy_amount);
 
-        $builder2 = clone $builder;
-        $total_buy_integral = round($builder2->sum('o.buy_num*o.gift_integral'), 2);
-        $this->assign('total_buy_integral', $total_buy_integral);
 
-        $builder3 = clone $builder;
-        $total_gift_equity = round($builder3->sum('o.buy_num*o.single_gift_equity'), 2);
-        $this->assign('total_gift_equity', $total_gift_equity);
-
-        $builder4 = clone $builder;
-        $total_gift_digital_yuan = round($builder4->sum('o.buy_num*o.single_gift_digital_yuan'), 2);
-        $this->assign('total_gift_digital_yuan', $total_gift_digital_yuan);
+        $projectList = \app\model\Project::field('id,name')->select();
 
         $data = $builder->paginate(['query' => $req]);
         //var_dump($data);
         $this->assign('req', $req);
         $this->assign('data', $data);
+        $this->assign('projectList', $projectList);
 
         return $this->fetch();
     }

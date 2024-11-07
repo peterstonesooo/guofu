@@ -116,12 +116,11 @@ class CapitalController extends AuthController
         if (!empty($req['start_date'])) {
             $builder->where('c.created_at', '>=', $req['start_date'] . ' 00:00:00');
         }else{
-            $builder->where('c.created_at', '>=', date('Y-m-d 00:00:00',strtotime('-7 day')));
+            $builder->where('c.created_at', '>=', date('Y-m-d 00:00:00'));
         }
         if (!empty($req['end_date'])) {
             $builder->where('c.created_at', '<=', $req['end_date'] . ' 23:59:59');
         }
-
 /*         if(isset($req['log_type']) && $req['log_type'] !== ''){
             $builder->where('c.log_type', $req['log_type']);
         } */

@@ -14,7 +14,7 @@
         </select>
         <input type="text" value="{$req['project_name']??''}" name="project_name" placeholder="搜索项目名称"
                class="form-control">
-        <select name="pay_method" class="form-control">
+ <!--        <select name="pay_method" class="form-control">
             <option value="">搜索支付方式</option>
             <?php foreach (config('map.order')['pay_method_map'] as $k => $v) { ?>
                 <option <?php if (isset($req['pay_method']) && $req['pay_method'] == $k) {
@@ -31,7 +31,20 @@
                 } ?> value="{$k}">{$v}
                 </option>
             <?php } } ?>
+        </select> -->
+        <select name="project_id" class="form-control">
+            <option value="">项目</option>
+            <?php foreach ($projectList as $k=>$item) { if ($k > 0) { ?>
+                <option <?php if (isset($req['project_id']) && $req['project_id'] == $item['id']) {
+                    echo 'selected = "selected"';
+                } ?> value="{$item['id']}">{$item['name']}
+                </option>
+            <?php } } ?>
         </select>
+        <input placeholder="开始时间" autocomplete="off" value="{$req['start_date']?? date('Y-m-d')} " name="start_date" class="form-control layer-date" id="start">
+        ～
+        <input placeholder="结束时间" autocomplete="off" value="{$req['end_date']??''}" name="end_date" class="form-control layer-date" id="end">
+
         <input type="text" value="{$req['mark']??''}" name="mark" placeholder="搜索渠道标识"
                class="form-control">
         <input class="btn btn-flat btn-primary m_10" type="submit" value="搜索">
@@ -117,14 +130,14 @@
                             <td></td>
                             <td></td>
                             <td><strong>{$total_buy_amount}</strong></td>
-                            <td><strong>{$total_buy_integral}</strong></td>
+                            <td><strong></strong></td>
                             <td></td>
                             <td></td>
                             <td></td>
                             <td></td>
                             <td></td>
-                            <td><strong>{$total_gift_equity}</strong></td>
-                            <td><strong>{$total_gift_digital_yuan}</strong></td>
+                            <td><strong></strong></td>
+                            <td><strong></strong></td>
                             <td></td>
                             <td></td>
                             <td></td>
@@ -146,6 +159,21 @@
 </div>
 
 <script>
+    $(function () {
+        //日期范围限制
+        var start = {
+            elem: '#start',
+            format: 'yyyy-MM-dd',
+            type:'datet'
+        };
+        var end = {
+            elem: '#end',
+            format: 'yyyy-MM-dd',
+            type:'date'
+        };
+        laydate.render(start);
+        laydate.render(end);
+    });
     function auditOrder(id, status)
     {
         layer.confirm('确定操作吗？', {icon: 3, title: '提示'}, function (index) {
