@@ -121,10 +121,11 @@ class Bootstrap extends Paginator
                 );
             } else {
                 return sprintf(
-                    '<ul class="pagination">%s %s %s</ul>',
+                    '<ul class="pagination">%s %s %s %s</ul>',
                     $this->getPreviousButton(),
                     $this->getLinks(),
-                    $this->getNextButton()
+                    $this->getNextButton(),
+                    "<li><span>共".$this->total()."条 ".$this->listRows()."/页</span><li>",
                 );
             }
         }
