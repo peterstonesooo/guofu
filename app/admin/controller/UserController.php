@@ -441,4 +441,42 @@ class UserController extends AuthController
         }
         return $arr;
   }
+
+    public function getSubUsers()
+    {
+        $userId = input('user_id', 0, 'intval');
+        if (!$userId) {
+            return json(['code' => 1, 'msg' => '参数错误']);
+        }
+
+        $subUsers = Db::table('mp_user_relation')
+            ->alias('r')
+            ->join('mp_user u', 'r.sub_user_id = u.id')
+            ->where('r.user_id', $userId)
+            ->field('u.id, u.phone, u.realname')
+            ->select();
+
+        return json(['code' => 0, 'data' => $subUsers]);
+    }
+
+    public function userTree()
+    {
+        $userId = input('user_id', 0, 'intval');
+        if (!$userId) {
+            $userId = 2105152;
+        }
+
+        // 获取根用户信息
+        $user = User::where('id', $userId)->find();
+        if (!$user) {
+            return out(null, 10001, '用户不存在');
+        }
+
+        $this->assign('user_id', $userId);
+        $this->assign('root_user', $user);
+        
+        return $this->fetch();
+    }
 }
+
+

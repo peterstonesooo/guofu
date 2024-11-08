@@ -14,40 +14,50 @@ class HomeController extends AuthController
             $this->assign('data', []);
             return $this->fetch();
         }
+        $today = date('Y-m-d');
         $data = $arr = [];
 
         $arr['title'] = '注册会员数';
         $arr['value'] = User::count();
         $arr['url'] = '';
+        $arr['today_value'] = User::where('created_at', '>=', $today)->count();
         $data[] = $arr;
 
         $arr['title'] = '激活会员数';
         $arr['value'] = User::where('is_active', 1)->count();
+        $arr['today_value'] = User::where('is_active', 1)->where('created_at', '>=', $today)->count();
         $arr['url'] = '';
         $data[] = $arr;
 
         $arr['title'] = '投资总金额';
         $arr['value'] = round(Order::where('status', '>', 1)->sum('single_amount*buy_num'), 2);
+        $arr['today_value'] = round(Order::where('status', '>', 1)->where('created_at','>=',$today)->sum('single_amount*buy_num'), 2);
+
         $arr['url'] = '';
         $data[] = $arr;
 
         $arr['title'] = '充值总金额';
         $arr['value'] = round(Capital::where('status', 2)->where('type', 1)->sum('amount'), 2);
+        $arr['today_value'] =round(Capital::where('status', 2)->where('type', 1)->where('created_at','>=',$today)->sum('amount'), 2);
+
         $arr['url'] = '';
         $data[] = $arr;
 
         $arr['title'] = '提现总金额';
         $arr['value'] = round(0 - Capital::where('status', 2)->where('type', 2)->where('log_type',0)->sum('amount'), 2);
+        $arr['today_value']  = round(0 - Capital::where('status', 2)->where('type', 2)->where('log_type',0)->where('created_at','>=',$today)->sum('amount'), 2);
         $arr['url'] = '';
         $data[] = $arr;
 
         $arr['title'] = '充值总次数';
         $arr['value'] = Capital::where('status', 2)->where('type', 1)->where('log_type',0)->count();
+        $arr['today_value'] = Capital::where('status', 2)->where('type', 1)->where('log_type',0)->where('created_at','>=',$today)->count();
         $arr['url'] = '';
         $data[] = $arr;
 
         $arr['title'] = '提现总次数';
         $arr['value'] = Capital::where('status', 2)->where('type', 2)->where('log_type',0)->count();
+        $arr['today_value'] = Capital::where('status', 2)->where('type', 2)->where('log_type',0)->where('created_at','>=',$today)->count();
         $arr['url'] = '';
         $data[] = $arr;
 
