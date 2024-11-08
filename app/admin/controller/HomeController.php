@@ -25,7 +25,7 @@ class HomeController extends AuthController
 
         $arr['title'] = '激活会员数';
         $arr['value'] = User::where('is_active', 1)->count();
-        $arr['today_value'] = User::where('is_active', 1)->where('created_at', '>=', $today)->count();
+        $arr['today_value'] = User::where('is_active', 1)->where('active_time', '>=', strtotime($today))->count();
         $arr['url'] = '';
         $data[] = $arr;
 
