@@ -356,7 +356,7 @@ class OrderController extends AuthController
                 ]);
                 $userUpdate = ['invest_amount'=>Db::raw('invest_amount+'.$pay_amount),'3_1_invest_amount'=>Db::raw('3_1_invest_amount+'.$pay_amount)];
                 User::where('id', $user['id'])->update($userUpdate);
-                User::upLevel($user['id']);
+                //User::upLevel($user['id']);
                 User::changeInc($user['id'],-$user['flow_amount'],'flow_amount',33,$order['id'],7);
                 UserRelation::where('sub_user_id',$user['id'])->update(['is_flow_buy'=>1,'flow_buy_time'=>time()]);
 
@@ -537,7 +537,7 @@ class OrderController extends AuthController
                 }
             }
 
-            User::upLevel($user['id']);
+            //User::upLevel($user['id']);
             Db::commit();
         } catch (Exception $e) {
             Db::rollback();
@@ -898,7 +898,7 @@ class OrderController extends AuthController
             User::where('id',$user['id'])->inc('invest_amount',$pay_amount)->update();
             EnsureOrder::where('user_id', $user['id'])->update(['notarization_status' => 1]);
             ZhufangOrder::where('user_id', $user['id'])->update(['notarization_status' => 1]);
-            User::upLevel($user['id']);
+            //User::upLevel($user['id']);
 
             Db::commit();
         } catch (Exception $e) {

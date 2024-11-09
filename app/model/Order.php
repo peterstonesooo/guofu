@@ -245,7 +245,7 @@ class Order extends Model
         }
 
         User::where('id', $user_id)->inc('invest_amount', $order['single_amount'])->update();
-        User::upLevel($user_id);
+        //User::upLevel($user_id);
         return !0;
 
 
