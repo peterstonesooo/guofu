@@ -110,7 +110,7 @@ class CommonController extends BaseController
 
     public function register()
     {
-        return out(null, 10001, '正在维护中，请稍后再试');
+        //return out(null, 10001, '正在维护中，请稍后再试');
         $req = $this->validate(request(), [
             //'region|区号' => 'require',
             'phone|手机号' => 'require|alphaNum|length:11',
