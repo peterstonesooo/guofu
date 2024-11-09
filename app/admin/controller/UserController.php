@@ -403,8 +403,33 @@ class UserController extends AuthController
         $req = request()->get();
 
         $user = User::where('id', $req['user_id'])->find();
+        $path = Db::table('mp_user_path')->where('user_id', $req['user_id'])->find();
+        $regCount = 0;
+        $regRealCount = 0;
+        if((isset($req['start_date']) && $req['start_date']!='') || (isset($req['end_date']) && $req['end_date']!='')){
+            $query = User::alias('u')
+                ->join('mp_user_path p', 'u.id = p.user_id')
+                ->where('p.path', 'like', $path['path'] .'/'.$user['id']. '%');
+            if(isset($req['start_date']) && $req['start_date']!='') {
+                $query->where('u.created_at','>=',$req['start_date']);
+            }
+
+            if(isset($req['end_date']) && $req['end_date']!='') {
+                $query->where('u.created_at','<=',$req['end_date']);
+            }
+            $query2 = clone $query;
+            $regCount = $query->count();
+            $regRealCount = $query2->where('u.is_realname', 1)->count();
+        }else{
+            $regCount = $path['team_count'];
+            $regRealCount = $path['team_real_count'];
+        }
+
 
         $data = ['user_id' => $user['id'], 'phone' => $user['phone']];
+        $data['reg_count'] = $regCount;
+        $data['reg_real_count'] = $regRealCount;
+
         $data['total_num'] = UserRelation::where('user_id', $req['user_id'])->count();
         $data['active_num'] = UserRelation::where('user_id', $req['user_id'])->where('is_active', 1)->count();
 
@@ -419,9 +444,12 @@ class UserController extends AuthController
 
         $subUsersIds = UserRelation::where('user_id', $req['user_id'])->column('sub_user_id');
         $data['total_invest'] = User::whereIn('id', $subUsersIds)->sum('invest_amount');
+        
+
 
        
         $this->assign('data', $data);
+        $this->assign('req', $req);
 
         return $this->fetch();
     }

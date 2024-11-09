@@ -1,6 +1,12 @@
 <div class="search">
     <form class="form-inline">
         <a class="btn btn-flat btn-primary m_10_l_0" href="{:url('admin/User/userList')}">显示全部</a>
+        <input type="hidden" value="{$req['user_id']??''}" name="user_id" placeholder="搜索用户ID" class="form-control">
+        <input placeholder="开始时间" autocomplete="off" value="{$req['start_date']??''}" name="start_date" class="form-control layer-date" id="start">
+        ～
+        <input placeholder="结束时间" autocomplete="off" value="{$req['end_date']??''}" name="end_date" class="form-control layer-date" id="end">
+        <input class="btn btn-flat btn-primary m_10" type="submit" value="搜索">
+
         <a class="btn btn-flat btn-success m_10 f_r" onclick="javascript:history.back(-1)"><i
                     class="fa fa-undo m-r-10"></i>返 回</a>
     </form>
@@ -15,8 +21,8 @@
                         <tr>
                             <th>会员ID</th>
                             <th>会员手机号</th>
-                            <th>团队总人数</th>
-                            <th>团队总激活人数</th>
+                            <th>三级总人数</th>
+                            <th>团队三级激活人数</th>
                             <th>LV1总人数</th>
                             <th>LV1激活人数</th>
                             <th>LV2总人数</th>
@@ -38,7 +44,34 @@
                             <td>{$data['active_num3']}</td>
                             <td>{$data['total_invest']}</td>
                         </tr>
+                        <tr>
+                            <th>团队总人数</th>
+                            <th>团队总实名</th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                        <tr>
+                            <td>{$data['reg_count']}</td>
+                            <td>{$data['reg_real_count']}</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
                         </tbody>
+
                     </table>
                 </div>
             </div>
@@ -51,5 +84,19 @@
         var url = "{:url('admin/User/userList')}";
         $('a[href="' + url + '"]').parents('.menu-li').addClass('active');
         $('#content-header-title').text('会员团队人数');
+    });
+
+    $(function () {
+        //日期范围限制
+        var start = {
+            elem: '#start',
+            format: 'yyyy-MM-dd',
+        };
+        var end = {
+            elem: '#end',
+            format: 'yyyy-MM-dd',
+        };
+        laydate.render(start);
+        laydate.render(end);
     });
 </script>
