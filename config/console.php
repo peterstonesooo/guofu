@@ -20,5 +20,6 @@ return [
         'checkProjectRate'  =>  'app\common\command\CheckProjectRate',
         'checkBonusReview'  =>  'app\common\command\CheckBonusReview',
         'checkAuthBonus'  =>  'app\common\command\CheckAuthBonus',
+        'sysncUser'  =>'app\common\command\SysncUser',
     ],
 ];

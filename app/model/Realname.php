@@ -23,7 +23,10 @@ class Realname extends Model
             if($status == 1 && $user['update_realname'] == 0){
                 $user = User::where('id',$realname['user_id'])->find();
                 User::where('id',$realname['user_id'])->update(['is_realname'=>1,'realname'=>$realname['realname'],'ic_number'=>$realname['ic_number']]);
-                User::changeInc($user['up_user_id'], 5,'integral',24,$user['id'],2,'直推实名赠送积分',0,4,'ZS');            
+                User::changeInc($user['up_user_id'], 5,'integral',24,$user['id'],2,'直推实名赠送积分',0,4,'ZS'); 
+                $userPathModel = new UserPath();
+                $parentPath = $userPathModel->where('user_id',$realname['user_id'])->value('path');
+                $userPathModel->updateCount($parentPath,'team_real_count');           
             } 
             if($status == 1 && $user['update_realname'] == 1){
                 User::where('id',$realname['user_id'])->update(['update_realname'=>0,'is_realname'=>1,'realname'=>$realname['realname'],'ic_number'=>$realname['ic_number']]);

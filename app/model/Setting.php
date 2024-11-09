@@ -15,7 +15,7 @@ class Setting extends Model
             foreach($setting as $item){
                 $setting_conf[$item['key']] = $item['value'];
             }
-            Cache::set('setting_conf', json_decode(json_encode($setting_conf, JSON_UNESCAPED_UNICODE),true), 300);
+            Cache::set('setting_conf', json_decode(json_encode($setting_conf, JSON_UNESCAPED_UNICODE),true), 60);
             return $setting_conf;
         }
         return $setting;
