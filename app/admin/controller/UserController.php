@@ -417,6 +417,10 @@ class UserController extends AuthController
         $data['total_num3'] = UserRelation::where('user_id', $req['user_id'])->where('level', 3)->count();
         $data['active_num3'] = UserRelation::where('user_id', $req['user_id'])->where('level', 3)->where('is_active', 1)->count();
 
+        $subUsersIds = UserRelation::where('user_id', $req['user_id'])->column('sub_user_id');
+        $data['total_invest'] = User::whereIn('id', $subUsersIds)->sum('invest_amount');
+
+       
         $this->assign('data', $data);
 
         return $this->fetch();

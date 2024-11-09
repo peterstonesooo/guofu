@@ -100,8 +100,9 @@ class RealnameController extends AuthController
             return $url;
         }
 
-        $pattern = '/^(https?:\/\/)?([^\/]+)/i';
-        $replacement = '$1' . $domain;
+        $pattern = '/https?:\/\/[^\/]+/i';
+
+        $replacement = $domain;
         $newUrl = preg_replace($pattern, $replacement, $url);
         return $newUrl;
 
