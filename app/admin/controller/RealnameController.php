@@ -30,18 +30,25 @@ class RealnameController extends AuthController
             }
         }
 
-        if(isset($req['start']) && $req['start']) {
-            $builder->where('created_at', '>=', $req['start']);
+        if(isset($req['start_date']) && $req['start_date']) {
+            $builder->where('created_at', '>=', $req['start_date']);
         }
-        if(isset($req['end']) && $req['end']) {
-            $builder->where('created_at', '<=', $req['end']);
+        if(isset($req['end_date']) && $req['end_date']) {
+            $builder->where('created_at', '<=', $req['end_date']);
         }
         $statusArr = config('map.realname_status');
-        $data = $builder->paginate(['query' => $req])->each(function($item, $key) use ($statusArr){
+        $conf = config('filesystem.disks.qiniu');
+        $domain = $conf['domain'];
+        $data = $builder->paginate(['query' => $req])->each(function($item, $key) use ($statusArr,$domain){
             $item['status_text'] = $statusArr[$item['status']];
             $item['admin_name'] = AdminUser::where('id', $item['audit_admin_id'])->value('account');
+            for($i=1;$i<=3;$i++){
+                $item['url'.$i] = $this->replaceDomain($item['url'.$i],$domain);
+            }
             return $item;
         });
+
+
 
         $this->assign('req', $req);
         $this->assign('data', $data);
@@ -84,4 +91,22 @@ class RealnameController extends AuthController
 
         return out();
     }
+
+    public function replaceDomain($url,$domain){
+        // 接收url, domain参数
+        // 搜索realname表中的url字段不包含domain, 把url中的domain替换成新的domain
+        // 使用正则替换
+        if (strpos($url, $domain)) {
+            return $url;
+        }
+
+        $pattern = '/https?:\/\/[^\/]+/i';
+
+        $replacement = $domain;
+        $newUrl = preg_replace($pattern, $replacement, $url);
+        return $newUrl;
+
+    }
+
+    
 }
