@@ -15,7 +15,7 @@ class SysncUser extends Command
 
     protected function execute(Input $input, Output $output)
     {   
-        //$this->sysncUser();
+        $this->sysncUser();
         $this->updateTeamCount();
         $output->writeln('同步完成');
     }
