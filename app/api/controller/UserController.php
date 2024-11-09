@@ -860,13 +860,19 @@ class UserController extends AuthController
             $log_type = [$req['log_type']];
         }
 
+
+ 
+        if($req['type']==3){
+            $log_type = [1,3];
+        }
+
         $query = UserBalanceLog::where('user_id', $user['id'])
         ->whereIn('log_type', $log_type);
-
 
         if($req['type']!=0){
             $query->where('type', $req['type']);
         }
+
 
         $list = $query->order('id', 'desc')
         ->paginate(10)
