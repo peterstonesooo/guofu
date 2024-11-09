@@ -42,9 +42,9 @@ class RealnameController extends AuthController
         $data = $builder->paginate(['query' => $req])->each(function($item, $key) use ($statusArr,$domain){
             $item['status_text'] = $statusArr[$item['status']];
             $item['admin_name'] = AdminUser::where('id', $item['audit_admin_id'])->value('account');
-            for($i=1;$i<=3;$i++){
+/*             for($i=1;$i<=3;$i++){
                 $item['url'.$i] = $this->replaceDomain($item['url'.$i],$domain);
-            }
+            } */
             return $item;
         });
 
