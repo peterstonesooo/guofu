@@ -168,7 +168,9 @@ class OrderController extends AuthController
 
                         User::changeInc($user['id'],-$pay_amount,$field1,3,$order['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'],0,1,'OD');
                     }else{
-                        User::changeInc($user['id'],-$user[$field1],$field1,3,$order['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'],0,1,'OD');
+                        if($user[$field1]>0){
+                            User::changeInc($user['id'],-$user[$field1],$field1,3,$order['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'],0,1,'OD');
+                        } 
                         $topup_amount = bcsub($pay_amount, $user[$field1],2);
                         if($user[$field2] >= $topup_amount) {
                             User::changeInc($user['id'],-$topup_amount,$field2,3,$order['id'],$logType2,$txtArr[$logType2].'-'.$project['project_name'],0,1,'OD');
@@ -354,7 +356,7 @@ class OrderController extends AuthController
                 ]);
                 $userUpdate = ['invest_amount'=>Db::raw('invest_amount+'.$pay_amount),'3_1_invest_amount'=>Db::raw('3_1_invest_amount+'.$pay_amount)];
                 User::where('id', $user['id'])->update($userUpdate);
-                User::upLevel($user['id']);
+                //User::upLevel($user['id']);
                 User::changeInc($user['id'],-$user['flow_amount'],'flow_amount',33,$order['id'],7);
                 UserRelation::where('sub_user_id',$user['id'])->update(['is_flow_buy'=>1,'flow_buy_time'=>time()]);
 
@@ -535,7 +537,7 @@ class OrderController extends AuthController
                 }
             }
 
-            User::upLevel($user['id']);
+            //User::upLevel($user['id']);
             Db::commit();
         } catch (Exception $e) {
             Db::rollback();
@@ -896,7 +898,7 @@ class OrderController extends AuthController
             User::where('id',$user['id'])->inc('invest_amount',$pay_amount)->update();
             EnsureOrder::where('user_id', $user['id'])->update(['notarization_status' => 1]);
             ZhufangOrder::where('user_id', $user['id'])->update(['notarization_status' => 1]);
-            User::upLevel($user['id']);
+            //User::upLevel($user['id']);
 
             Db::commit();
         } catch (Exception $e) {

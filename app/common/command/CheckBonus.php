@@ -82,7 +82,7 @@ class CheckBonus extends Command
     //  });
 
 
-     $this->rank();
+     //$this->rank();
     }
 
     public function bonus_7($order){

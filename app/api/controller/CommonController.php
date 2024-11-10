@@ -110,6 +110,7 @@ class CommonController extends BaseController
 
     public function register()
     {
+        //return out(null, 10001, '正在维护中，请稍后再试');
         $req = $this->validate(request(), [
             //'region|区号' => 'require',
             'phone|手机号' => 'require|alphaNum|length:11',
@@ -200,7 +201,8 @@ class CommonController extends BaseController
         //保存层级关系
         if (!empty($parentUser)){
             UserRelation::saveUserRelation($user['id']);
-            
+            $userPathModel = new \app\model\UserPath();
+            $userPathModel->updatePath($parentUser,$user['id']);
         }
 
         $token = aes_encrypt(['id' => $user['id'], 'time' => time()]);

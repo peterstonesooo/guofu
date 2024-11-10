@@ -2,6 +2,7 @@
 
 namespace app\admin\controller;
 
+use app\common\CustomBootstrap;
 use app\model\Capital;
 use app\model\Payment;
 use app\model\PaymentConfig;
@@ -11,7 +12,6 @@ use Exception;
 use GuzzleHttp\Client;
 use think\facade\Db;
 use think\facade\Cache;
-
 class CapitalController extends AuthController
 {
     public function topupList()
@@ -55,6 +55,7 @@ class CapitalController extends AuthController
         }
 
         $data = $this->capitalList($req);
+
         $logTypeList = [0=>'团队奖励'];
         $this->assign('logTypeList', $logTypeList);
         $this->assign('req', $req);
@@ -130,6 +131,7 @@ class CapitalController extends AuthController
         $builder = $builder->order('c.id', 'desc');
         $builder1 = clone $builder;
         $builder2 = clone $builder;
+        $builder3 = clone $builder;
 
         if (isset($req['status']) && $req['status'] !== '') {
             $builder->where('c.status', $req['status']);
@@ -137,7 +139,11 @@ class CapitalController extends AuthController
 
         if($req['type']==1){
             $total_amount = round($builder1->where('status',2)->sum('amount'), 2);
+            
+            $total_amount_fail = round($builder3->whereIn('status',[1,3])->sum('amount'), 2);
             $this->assign('total_amount', $total_amount);
+
+            $this->assign('total_amount_fail', $total_amount_fail);
 
         }
         if ($req['type'] == 2) {
@@ -201,8 +207,10 @@ class CapitalController extends AuthController
             }
         }
         $listRows = $req['type'] == 1 ? 15 : 100;
+        if(request()->get('per_page')){
+            $listRows = request()->get('per_page');
+        }
         $data = $builder->paginate(['list_rows'=>$listRows,'query' => $req]);
-
         return $data;
     }
 

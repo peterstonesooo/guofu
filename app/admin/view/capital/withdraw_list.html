@@ -37,6 +37,8 @@
         <?php if (!empty($req['status']) && $req['status'] == 4) { ?>
             <input class="btn btn-flat btn-warning m_10" type="button" value="批量手动回调" onclick="batchAuditCapital(2)">
         <?php } ?>
+
+        <span id="check_text"></span>
     </form>
 </div>
 
@@ -129,6 +131,7 @@
                     </table>
                 </div>
                 <div style="text-align:center;font-size: 14px;"><?php echo $data->render(); ?></div>
+                <span id="check_text2"></span>
             </div>
         </div>
     </div>
@@ -143,6 +146,7 @@
         else {
             $(".order_ids").removeAttr("checked");
         }
+        updateCheckedNum();
     }
 
     $(function () {
@@ -233,5 +237,13 @@
                 layer.msg(res.msg, {icon: 5, time: 3000});
             }
         });
+    }
+
+    $('.order_ids').click(function(){
+        updateCheckedNum();
+    });
+    function updateCheckedNum(){
+        var len = $('.order_ids:checked').length
+        $('#check_text,#check_text2').html('已选中 '+len+' 条');
     }
 </script>
