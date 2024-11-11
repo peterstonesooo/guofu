@@ -144,7 +144,12 @@ return array(
                             'icon' => 'fa-circle-o',
                             'url' => 'admin/Notice/noticeList',
                         ), */
-                ),
+                        '排行设置' =>
+                        array(
+                            'icon' => 'fa-circle-o',
+                            'url' => 'admin/ActiveRank/index',
+                        ),
+                    ),
         ),
     '后台账号管理' =>
         array(
