@@ -40,22 +40,26 @@ class ActiveRank extends Command
         //$confs = config('map.active_rank_list');
         $users = Db::table('mp_active_rank')->select();
         $time = time();
-        foreach($users as $key=>$user){
-            $user= $user[$key];
-            $max = round(60/$user['min'],2);
-            $min = round(60/$user['max'],2);
-            $minute = $this->randFloat($min,$max);
-            //$num = rand($user['min'],$user['max']);
-            //echo "{$user['id']} {$user['phone']} $min $max $minute \n";
-            if($user['next_time']==0){
-                Db::table('mp_active_rank')->where('id',$user['id'])->update(['next_time'=>$time+$minute*60,'update_time'=>$time]);
+        try{
+            foreach($users as $key=>$user){
+                //$user= $user[$key];
+                $max = round(60/$user['min'],2);
+                $min = round(60/$user['max'],2);
+                $minute = $this->randFloat($min,$max);
+                //$num = rand($user['min'],$user['max']);
+                //echo "{$user['id']} {$user['phone']} $min $max $minute \n";
+                if($user['next_time']==0){
+                    Db::table('mp_active_rank')->where('id',$user['id'])->update(['next_time'=>$time+$minute*60,'update_time'=>$time]);
+                }
+                if($user['num']>=$user['day_max']){
+                    continue;
+                }
+                if($user['next_time']<=$time){
+                    Db::table('mp_active_rank')->where('id',$user['id'])->update(['next_time'=>Db::raw('next_time+'.$minute*60),'num'=>Db::raw('num+1'),'update_time'=>$time]);
+                }
             }
-            if($user['num']>=$user['day_max']){
-                continue;
-            }
-            if($user['next_time']<=$time){
-                Db::table('mp_active_rank')->where('id',$user['id'])->update(['next_time'=>Db::raw('next_time+'.$minute*60),'num'=>Db::raw('num+1'),'update_time'=>$time]);
-            }
+        }catch(\Exception $e){
+            return $e->getMessage().' '.$e->getLine().' '.$e->getFile();
         }
     }
 
