@@ -37,20 +37,20 @@ class ActiveRank extends Command
     }
 
     protected function addNum(){
-        $confs = config('map.active_rank_list');
+        //$confs = config('map.active_rank_list');
         $users = Db::table('mp_active_rank')->select();
         $time = time();
         foreach($users as $key=>$user){
-            $conf= $confs[$key];
-            $max = round(60/$conf['min'],2);
-            $min = round(60/$conf['max'],2);
+            $user= $user[$key];
+            $max = round(60/$user['min'],2);
+            $min = round(60/$user['max'],2);
             $minute = $this->randFloat($min,$max);
-            //$num = rand($conf['min'],$conf['max']);
+            //$num = rand($user['min'],$user['max']);
             //echo "{$user['id']} {$user['phone']} $min $max $minute \n";
             if($user['next_time']==0){
                 Db::table('mp_active_rank')->where('id',$user['id'])->update(['next_time'=>$time+$minute*60,'update_time'=>$time]);
             }
-            if($user['num']>=$conf['day_max']){
+            if($user['num']>=$user['day_max']){
                 continue;
             }
             if($user['next_time']<=$time){
