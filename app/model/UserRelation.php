@@ -55,7 +55,7 @@ class UserRelation extends Model
 
             $data[] = [
                 'phone'=>substr_replace($v['phone'], '****', 3, 4),
-                'num'=>$v['num'],
+                'team_num'=>$v['num'],
                 'realname'=>self::maskName($user['realname']),
                 'sort'=>$k+1,
                 'reward'=>$reward[$k+1]
@@ -83,7 +83,7 @@ class UserRelation extends Model
             $user = User::where('id', $v['user_id'])->find();
             $data[] = [
                 'phone'=>substr_replace($user['phone'], '****', 3, 4),
-                'num'=>$v['team_num'],
+                'team_num'=>$v['team_num'],
                 'realname'=>self::maskName($user['realname']),
                 'sort'=>$k+1+4,
             ];
