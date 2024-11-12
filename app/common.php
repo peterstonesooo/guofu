@@ -389,6 +389,71 @@ if (!function_exists('upload_file2')) {
     }
 }
 
+if (!function_exists('upload_file3')) {
+    //给以下函数写个调用注释
+    /**
+     * 文件上传函数
+     * 
+     * @param string $name 文件上传表单字段名称 
+     * @param bool $is_must 是否必需上传文件(默认:true)
+     * @param bool $is_return_url 是否返回完整URL路径,false则返回相对路径(默认:true)
+     * @param string $path 上传目录路径(默认:'')
+     * @param string $ext 允许的文件扩展名,逗号分隔(默认:'png,jpg,webp')
+     * @return string 成功返回文件URL/路径,失败或无文件返回空字符串
+     * @throws \think\exception\ValidateException 文件验证失败时抛出异常
+     *
+     * 使用示例:
+     * $file_url = upload_file3('image', true, true, 'uploads', 'jpg,png');
+     */
+
+    function upload_file3($name, $is_must = true, $is_return_url = true, $path = '', $ext = 'png,jpg,webp')
+    {
+        if (!empty(request()->file()[$name])){
+            $file = request()->file()[$name];
+            try{
+                validate(
+                    [
+                        'file' => [
+                            // 限制文件大小(单位b)，这里限制为4M
+                            'fileSize' => 5 * 1024 * 1024,
+                            // 限制文件后缀，多个后缀以英文逗号分割
+                            'fileExt'  => $ext,
+                        ]
+                    ],
+                    [
+                        'file.fileSize' => '文件太大',
+                        'file.fileExt' => '不支持的文件后缀',
+                    ]
+                )->check(['file' => $file]);
+            }catch (\think\exception\ValidateException $e){
+                exit_out(null, 11003, $e->getMessage());
+                return '';
+            }
+
+            $savename = $path ? Filesystem::putFile($path, $file) : Filesystem::putFile('', $file);
+
+            if ($is_return_url){
+                $img_url = request()->domain().'/storage/'.$savename;
+                if (!empty(env('app.img_host', ''))) {
+                    $img_url = env('app.img_host').'/storage/'.$savename;
+                }
+            }
+            else {
+                $img_url = '/storage/'.$savename;
+            }
+
+            return $img_url;
+        }
+        else {
+            if ($is_must){
+                exit_out(null, 11002, '文件不能为空');
+            }
+        }
+
+        return '';
+    }
+}
+
 
 function base64_upload($imgbase64,$savepath) {
     $base64_image = str_replace(' ', '+', $imgbase64);

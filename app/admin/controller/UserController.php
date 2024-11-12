@@ -296,6 +296,33 @@ class UserController extends AuthController
 
     public function batchBalance()
     {
+        if(request()->param('input_type')=='file') {
+
+        
+            // 使用 upload_file3 处理 Excel 文件上传
+            $file_url = upload_file3('file', true, false, 'excel', 'xlsx,xls');
+
+            if(empty($file_url)) {
+                return out(null, 201, '请上传文件');
+            }
+            //取上传文件名
+            $file = request()->file()['file'];
+            $fileName = $file->getOriginalName().'_'.date('ymdHis');
+            // 创建批次记录
+            $batchId = Db::name('batch_recharge')->insertGetId([
+                'name' => $fileName,
+                'url' => $file_url,
+                'status' => 0,
+                'rows' => 0,
+                'success_rows' => 0,
+                'fail_rows' => 0
+            ]);
+            
+            return out(['batch_id' => $batchId]);
+
+        }
+
+        // 原有的手动输入处理逻辑保持不变...
         $req = request()->post();
         $this->validate($req, [
             'users' => 'require',
@@ -362,6 +389,27 @@ class UserController extends AuthController
         Db::commit();
 
         return out();
+    }
+
+    // 批次列表
+    public function getBatchList()
+    {
+        $list = Db::name('batch_recharge')
+                ->order('id asc')
+                ->limit(20)
+                ->select()
+                ->toArray();
+        return out(['list' => $list]);
+    }
+
+    // 批次详情
+    public function getBatchDetail($id)
+    {
+        $logs = Db::name('batch_log')
+                ->where('batch_id', $id)
+                ->where('status', 2)
+                ->select();
+        return out(['logs' => $logs]);
     }
 
     public function deductBalance()
@@ -510,5 +558,3 @@ class UserController extends AuthController
         return $this->fetch();
     }
 }
-
-
