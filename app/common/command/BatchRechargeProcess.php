@@ -80,6 +80,21 @@ class BatchRechargeProcess extends Command
                                 $amount = floatval($row[2]);
                                 $remark = $row[3] ?? '';
                                 
+                                //检测$phone是否11位手机号
+                                if (!preg_match('/^\d{11}$/', $phone)) {
+                                    throw new \Exception('手机号格式错误');
+                                }
+                                //检测$type是否1,2,4
+                                if (!in_array($type, [1, 2, 4])) {
+                                    throw new \Exception('类型错误: ' . $type);
+                                }
+                                //检测$amount是否大于0
+                                if ($amount <= 0) {
+                                    throw new \Exception('金额必须大于0');
+                                }
+
+
+
                                 $user = User::where('phone', $phone)->find();
                                 if(!$user) {
                                     throw new \Exception('用户不存在');

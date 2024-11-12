@@ -176,7 +176,9 @@
                         <td>${status}</td>
                         <td>${item.created_at}</td>
                         <td>${log}</td>
-                        <td><a href="javascript:;" onclick="showDetail(${item.id})">错误日志</a></td>
+                        <td>
+                            <a href="javascript:;" onclick="showDetail(${item.id})">错误日志</a>
+                        </td>
                     </tr>`;
                 });
                 $('#batchList').html(html);
@@ -187,40 +189,53 @@
     function showDetail(batchId) {
         $.get("<?php echo url('admin/User/getBatchDetail'); ?>", {id: batchId}, function(res) {
             if(res.code == 200) {
+                var logHtml = '';
+                if(res.data.show_export){
+                   logHtml = `
+                        <div class="text-right mb-3">
+                            <a href="{:url('admin/User/exportErrorLog')}?batch_id=${res.data.batch_id}" 
+                               class="btn btn-warning btn-flat">
+                                <i class="fa fa-download mr-2"></i>导出错误日志
+                            </a>
+                        </div>
+                    `;
+                }
                 var html = `
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>手机号</th>
-                            <th>金额</th>
-                            <th>类型</th>
-                            <th>备注</th>
-                            <th>状态</th>
-                            <th>消息</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
+                <div style="margin: 10px">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>手机号</th>
+                                    <th>金额</th>
+                                    <th>类型</th>
+                                    <th>备注</th>
+                                    <th>状态</th>
+                                    <th>消息</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
                 
                 res.data.logs.forEach(function(log) {
                     var data = JSON.parse(log.data);
                     var logInfo = JSON.parse(log.log);
                     var status = logInfo.status == 'success' ? 
-                        '<span class="text-success">成功</span>' : 
-                        '<span class="text-danger">失败</span>';
+                        '<span class="label label-success">成功</span>' : 
+                        '<span class="label label-danger">失败</span>';
                     
                     html += `
                     <tr>
                         <td>${data[0]}</td>
                         <td>${data[2]}</td>
-                        <td>${data[1] || ''}</td>  
-                        <td>${data[3] || ''}</td>
+                        <td>${data[1] || '-'}</td>  
+                        <td>${data[3] || '-'}</td>
                         <td>${status}</td>
                         <td>${logInfo.message || '-'}</td>
                     </tr>`;
                 });
                 
-                html += '</tbody></table>';
-                
+                html += '</tbody></table></div></div>';
+                html = logHtml + html;
                 layer.open({
                     type: 1,
                     title: '错误日志',

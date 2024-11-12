@@ -8,6 +8,7 @@ use app\model\LevelConfig;
 use app\model\Realname;
 use app\model\User;
 use app\model\UserRelation;
+use GuzzleHttp\Psr7\Message;
 use think\facade\Db;
 class UserController extends AuthController
 {
@@ -409,7 +410,11 @@ class UserController extends AuthController
                 ->where('batch_id', $id)
                 ->where('status', 2)
                 ->select();
-        return out(['logs' => $logs]);
+        $is_logs = false;
+        if($logs && count($logs) > 0) {
+            $is_logs = true;
+        }        
+        return out(['logs' => $logs,'show_export' => $is_logs,'batch_id' => $id]);
     }
 
     public function deductBalance()
@@ -557,4 +562,43 @@ class UserController extends AuthController
         
         return $this->fetch();
     }
+
+    // 在UserController.php中添加导出方法
+    public function exportErrorLog() 
+    {
+        $batchId = input('batch_id', 0, 'intval');
+        $batch = Db::name('batch_recharge')->where('id', $batchId)->find();
+        // 获取批次的错误日志
+        $logs = Db::name('batch_log')
+                ->where('batch_id', $batchId)
+                ->where('status', 2) 
+                ->select()
+                ->toArray();
+
+        if(empty($logs)) {
+            return out(null, 10001, '没有错误日志数据');
+        }
+        $list=[];
+        foreach($logs as $log) {
+            $data = json_decode($log['data'], true);
+            $info = json_decode($log['log'], true);
+            $log1['phone'] = $data[0] ?? '';
+            $log1['type'] = $data[1] ?? '';
+            $log1['amount'] = $data[2] ?? '';
+            $log1['remark'] = $data[3] ?? '';
+            $log1['error_msg'] = $info['message'] ?? '';
+            $list[] = $log1;
+        }
+
+        create_excel($list, [
+            'phone' => '电话',
+            'type' => '类别',
+            'amount'=>'金额',  
+            'remark' => '备注',
+            'error_msg' => '错误',
+
+        ],$batch['name'].'_错误日志'.date('YmdHis'));
+    }
+
+
 }
