@@ -73,7 +73,7 @@ class UserRelation extends Model
             ->whereNotIn('r.user_id', $excludeUsers)
             ->group('r.user_id')
             ->order('team_num', 'desc')
-            ->limit(6)
+            ->limit(7)
             ->select()
             ->toArray();
     
