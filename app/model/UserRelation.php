@@ -37,7 +37,7 @@ class UserRelation extends Model
         return $this->belongsTo(User::class, 'sub_user_id')->field('id,realname,phone');
     }
 
-    public static function rankList($timeStr='yesterday') {
+    public static function rankList($timeStr='today') {
         $timeStr = date('Y-m-d', strtotime($timeStr));
         $startTime = $timeStr . ' 00:00:00';
         $endTime = $timeStr . ' 23:59:59';
