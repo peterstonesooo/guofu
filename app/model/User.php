@@ -439,7 +439,7 @@ class User extends Model
                // 如果不是积分兑换才算直推奖励和团队奖励
                //if ($order['pay_method'] != 5 && !empty($up_user_id)) {
                 // 给直属上级推荐奖
-                $levelConfig = LevelConfig::where('level', $upUser['level'])->find();
+                //$levelConfig = LevelConfig::where('level', $upUser['level'])->find();
 /*                 if (!empty($levelConfig['direct_recommend_reward_ratio'])) {
                     $reward = round($levelConfig['direct_recommend_reward_ratio']/100*$amount, 2);
                     if($reward > 0){
