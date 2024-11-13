@@ -85,10 +85,10 @@ class UserRelation extends Model
                 'phone'=>substr_replace($user['phone'], '****', 3, 4),
                 'team_num'=>$v['team_num'],
                 'realname'=>self::maskName($user['realname']),
-                'sort'=>$k+1+4,
+                'sort'=>$k+1+3,
             ];
             if ($k <= 10) {
-                $v['reward'] = $reward[$k + 1+4];
+                $v['reward'] = $reward[$k + 1+3];
             } else {
                 $v['reward'] = 20;
             }
