@@ -89,9 +89,9 @@ class BatchRechargeProcess extends Command
                                     throw new \Exception('类型错误: ' . $type);
                                 }
                                 //检测$amount是否大于0
-                                if ($amount <= 0) {
+/*                                 if ($amount <= 0) {
                                     throw new \Exception('金额必须大于0');
-                                }
+                                } */
 
 
 
