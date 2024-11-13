@@ -81,17 +81,15 @@ class UserRelation extends Model
 
             
             $user = User::where('id', $v['user_id'])->find();
+
+
             $data[] = [
                 'phone'=>substr_replace($user['phone'], '****', 3, 4),
                 'team_num'=>$v['team_num'],
                 'realname'=>self::maskName($user['realname']),
                 'sort'=>$k+1+3,
+                'reward'=>$reward[$k+1+3]
             ];
-            if ($k <= 10) {
-                $v['reward'] = $reward[$k + 1+3];
-            } else {
-                $v['reward'] = 20;
-            }
         }
     
         return $data;
