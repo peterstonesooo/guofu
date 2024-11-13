@@ -206,7 +206,7 @@ class CapitalController extends AuthController
                 ], '提现记录-' . date('YmdHis'));
             }
         }
-        $listRows = $req['type'] == 1 ? 15 : 100;
+        $listRows = $req['type'] == 1 ? 15 : 20;
         if(request()->get('per_page')){
             $listRows = request()->get('per_page');
         }

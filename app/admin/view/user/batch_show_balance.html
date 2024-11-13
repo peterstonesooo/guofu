@@ -12,43 +12,72 @@
             <div class="box box-body">
                 <div class="row dd_input_group">
                     <div class="form-group">
-                        <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">用户手机号</label>
+                        <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">选择方式</label>
                         <div class="col-xs-7 col-sm-6 col-md-4 col-lg-4">
-                            <textarea  name="users" class="form-control" placeholder="请填写用户手机号，一行一个"
-                                   value=""></textarea>
-                        </div>
-                        <div class="col-xs-1 col-sm-4 col-md-6 col-lg-6 dd_ts">*</div>
-                    </div>
-                </div>
-                <div class="row dd_input_group">
-                    <div class="form-group">
-                        <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">金额</label>
-                        <div class="col-xs-7 col-sm-6 col-md-4 col-lg-4">
-                            <input type="number" name="money" class="form-control" placeholder="请输入金额"
-                                   value="">
-                        </div>
-                        <div class="col-xs-1 col-sm-4 col-md-6 col-lg-6 dd_ts">*</div>
-                    </div>
-                </div>
-                <div class="row dd_input_group">
-                    <div class="form-group">
-                        <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">类别</label>
-                        <div class="col-xs-7 col-sm-6 col-md-4 col-lg-4">
-                            <select name="type">
-                                <option value="1">现金</option>
-                                <option value="2">积分</option>
-                                <option value="4">团队奖励</option>
+                            <select id="inputType" onchange="switchInputType()" name="input_type">
+                                <option value="manual">手动输入</option>
+                                <option value="file">文件导入</option>
                             </select>
                         </div>
-                        <div class="col-xs-1 col-sm-4 col-md-6 col-lg-6 dd_ts">*</div>
                     </div>
-                </div> 
-                <div class="row dd_input_group">
-                    <div class="form-group">
-                        <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">备注</label>
-                        <div class="col-xs-7 col-sm-6 col-md-4 col-lg-4">
-                            <input type="text" name="remark" class="form-control" placeholder="请输入备注"
-                                   value="">
+                </div>
+                <div id="fileUpload" style="display:none">
+                    <div class="row dd_input_group">
+                        <div class="form-group">
+                            <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">Excel文件</label>
+                            <div class="col-xs-7 col-sm-6 col-md-4 col-lg-4">
+                                <input type="file" name="file" class="form-control" accept=".xlsx,.xls">
+                                <div class="help-block">
+                                    <small class="text-muted">支持Excel格式(xlsx/xls)</small>
+                                    <a href="/storage/teamplate/teamplate.xlsx" target="_blank" class="text-primary ml-2">
+                                        <i class="fa fa-download"></i> 下载导入模板 
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="manualInput">
+                    <div class="row dd_input_group">
+                        <div class="form-group">
+                            <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">用户手机号</label>
+                            <div class="col-xs-7 col-sm-6 col-md-4 col-lg-4">
+                                <textarea  name="users" class="form-control" placeholder="请填写用户手机号，一行一个"
+                                    value=""></textarea>
+                            </div>
+                            <div class="col-xs-1 col-sm-4 col-md-6 col-lg-6 dd_ts">*</div>
+                        </div>
+                    </div>
+                    <div class="row dd_input_group">
+                        <div class="form-group">
+                            <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">金额</label>
+                            <div class="col-xs-7 col-sm-6 col-md-4 col-lg-4">
+                                <input type="number" name="money" class="form-control" placeholder="请输入金额"
+                                    value="">
+                            </div>
+                            <div class="col-xs-1 col-sm-4 col-md-6 col-lg-6 dd_ts">*</div>
+                        </div>
+                    </div>
+                    <div class="row dd_input_group">
+                        <div class="form-group">
+                            <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">类别</label>
+                            <div class="col-xs-7 col-sm-6 col-md-4 col-lg-4">
+                                <select name="type">
+                                    <option value="1">现金</option>
+                                    <option value="2">积分</option>
+                                    <option value="4">团队奖励</option>
+                                </select>
+                            </div>
+                            <div class="col-xs-1 col-sm-4 col-md-6 col-lg-6 dd_ts">*</div>
+                        </div>
+                    </div> 
+                    <div class="row dd_input_group">
+                        <div class="form-group">
+                            <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">备注</label>
+                            <div class="col-xs-7 col-sm-6 col-md-4 col-lg-4">
+                                <input type="text" name="remark" class="form-control" placeholder="请输入备注"
+                                    value="">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -67,6 +96,27 @@
     </div>
 </div>
 
+<div class="row">
+<div class="box box-body">
+<div class="table-responsive" style="margin-top:20px">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>批次名称</th>
+                <th>总数</th>
+                <th>成功</th>
+                <th>失败</th>
+                <th>状态</th>
+                <th>创建时间</th>
+                <th>错误</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="batchList"></tbody>
+    </table>
+</div>
+</div>
+</div>
 <script>
     $(function () {
         var url = "{:url('admin/User/userList')}";
@@ -76,15 +126,128 @@
    
     });
 
-    function sub()
-    {
-        var subUrl = "<?php echo url('admin/User/batchBalance'); ?>";
-        $.post(subUrl, $('#commentForm').serialize(), function (res) {
-            if (res.code == '200') {
-                window.location.href = document.referrer;
-            } else {
-                layer.msg(res.message, {icon: 5, time: 3000});
+    function switchInputType() {
+        var type = $('#inputType').val();
+        if(type == 'file') {
+            $('#fileUpload').show();
+            //$('textarea[name="users"]').parent().parent().hide();
+            $('#manualInput').hide();
+        } else {
+            $('#fileUpload').hide(); 
+            $('#manualInput').show();
+        }
+    }
+
+    function sub() {
+        var formData = new FormData($('#commentForm')[0]);
+        
+        $.ajax({
+            url: "<?php echo url('admin/User/batchBalance'); ?>",
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(res) {
+                if (res.code == '200') {
+                    refreshBatchList();
+                    layer.msg('提交成功!', {icon: 1});
+                } else {
+                    layer.msg(res.message, {icon: 5});
+                }
             }
         });
     }
+
+    function refreshBatchList() {
+        $.get("<?php echo url('admin/User/getBatchList'); ?>", function(res) {
+            if(res.code == 200) {
+                var html = '';
+                res.data.list.forEach(function(item) {
+                    var status = ['待处理', '处理中', '完成', '失败'][item.status];
+                    var log = '';
+                    if(item.status==3){
+                        log = item.log;
+                    }
+                    html += `<tr>
+                        <td>${item.name}</td>
+                        <td>${item.rows}</td>
+                        <td>${item.success_rows}</td>
+                        <td>${item.fail_rows}</td>
+                        <td>${status}</td>
+                        <td>${item.created_at}</td>
+                        <td>${log}</td>
+                        <td>
+                            <a href="javascript:;" onclick="showDetail(${item.id})">错误日志</a>
+                        </td>
+                    </tr>`;
+                });
+                $('#batchList').html(html);
+            }
+        });
+    }
+
+    function showDetail(batchId) {
+        $.get("<?php echo url('admin/User/getBatchDetail'); ?>", {id: batchId}, function(res) {
+            if(res.code == 200) {
+                var logHtml = '';
+                if(res.data.show_export){
+                   logHtml = `
+                        <div class="text-right mb-3">
+                            <a href="{:url('admin/User/exportErrorLog')}?batch_id=${res.data.batch_id}" 
+                               class="btn btn-warning btn-flat">
+                                <i class="fa fa-download mr-2"></i>导出错误日志
+                            </a>
+                        </div>
+                    `;
+                }
+                var html = `
+                <div style="margin: 10px">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>手机号</th>
+                                    <th>金额</th>
+                                    <th>类型</th>
+                                    <th>备注</th>
+                                    <th>状态</th>
+                                    <th>消息</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                
+                res.data.logs.forEach(function(log) {
+                    var data = JSON.parse(log.data);
+                    var logInfo = JSON.parse(log.log);
+                    var status = logInfo.status == 'success' ? 
+                        '<span class="label label-success">成功</span>' : 
+                        '<span class="label label-danger">失败</span>';
+                    
+                    html += `
+                    <tr>
+                        <td>${data[0]}</td>
+                        <td>${data[2]}</td>
+                        <td>${data[1] || '-'}</td>  
+                        <td>${data[3] || '-'}</td>
+                        <td>${status}</td>
+                        <td>${logInfo.message || '-'}</td>
+                    </tr>`;
+                });
+                
+                html += '</tbody></table></div></div>';
+                html = logHtml + html;
+                layer.open({
+                    type: 1,
+                    title: '错误日志',
+                    area: ['800px', '600px'],
+                    content: html,
+                    shadeClose: true
+                });
+            } else {
+                layer.msg(res.message || '获取详情失败', {icon: 5});
+            }
+        });
+    }
+    refreshBatchList();
+    setInterval(refreshBatchList, 5000); // 每10秒刷新一次列表
 </script>
