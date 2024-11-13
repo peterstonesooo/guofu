@@ -48,7 +48,7 @@ class UserRelation extends Model
         $data= [];
 
         foreach ($activeRank as $k => $v) {
-            $user = User::where('phone', $v['phone'])->find();
+            $user = User::where('phone', trim($v['phone']))->find();
             if (!$user) {
                 throw new \Exception('用户不存在');
             }
