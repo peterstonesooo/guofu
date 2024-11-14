@@ -433,8 +433,8 @@ class CommonController extends BaseController
                 //elseif ($payment['product_type'] == 2) {
                     Capital::topupPayComplete($payment['capital_id']);
                // }
-                $userModel = new User();
-                $userModel->teamBonus($payment['user_id'], $payment['pay_amount'],$payment['id']);
+                //$userModel = new User();
+                //$userModel->teamBonus($payment['user_id'], $payment['pay_amount'],$payment['id']);
                 // 判断通道是否超过最大限额，超过了就关闭通道
                 PaymentConfig::checkMaxPaymentLimit($payment['type'], $payment['channel'], $payment['mark']);
 
@@ -535,8 +535,8 @@ class CommonController extends BaseController
                 // 投资项目
 
                 Capital::topupPayComplete($payment['capital_id']);
-                $userModel = new User();
-                $userModel->teamBonus($payment['user_id'], $payment['pay_amount'],$payment['id']);
+                //$userModel = new User();
+                //$userModel->teamBonus($payment['user_id'], $payment['pay_amount'],$payment['id']);
                 // 判断通道是否超过最大限额，超过了就关闭通道
                 PaymentConfig::checkMaxPaymentLimit($payment['type'], $payment['channel'], $payment['mark']);
 
@@ -600,8 +600,8 @@ class CommonController extends BaseController
                 Payment::where('id', $payment['id'])->update([ 'payment_time' => time(), 'status' => 2]);
 
                 Capital::topupPayComplete($payment['capital_id']);
-                $userModel = new User();
-                $userModel->teamBonus($payment['user_id'], $payment['pay_amount'],$payment['id']);
+                //$userModel = new User();
+                //$userModel->teamBonus($payment['user_id'], $payment['pay_amount'],$payment['id']);
                 // 判断通道是否超过最大限额，超过了就关闭通道
                 PaymentConfig::checkMaxPaymentLimit($payment['type'], $payment['channel'], $payment['mark']);
 

@@ -245,6 +245,9 @@ class Order extends Model
         }
 
         User::where('id', $user_id)->inc('invest_amount', $order['single_amount'])->update();
+
+        $userModel = new User();
+        $userModel->teamBonus($user_id, $project['price'],$order_id);
         //User::upLevel($user_id);
         return !0;
 
