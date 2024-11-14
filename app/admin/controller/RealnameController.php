@@ -44,6 +44,11 @@ class RealnameController extends AuthController
             $item['admin_name'] = AdminUser::where('id', $item['audit_admin_id'])->value('account');
             for($i=1;$i<=3;$i++){
                 $item['img'.$i] = $this->replaceDomain($item['img'.$i],$domain);
+                 //如果前面没有https://,则加上
+                if(strpos($item['img'.$i],'http')===false){
+                    $item['img'.$i] = 'https://'.$item['img'.$i];
+                }
+
             }
             return $item;
         });
