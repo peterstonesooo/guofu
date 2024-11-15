@@ -76,7 +76,7 @@ class UserRelation extends Model
             ->where('u.is_realname', 1)
             ->group('r.user_id')
             ->order('team_num', 'desc')
-            ->limit(7)
+            ->limit(5)
             ->select()
             ->toArray();
     
