@@ -57,7 +57,7 @@ class OrderController extends AuthController
             return out(null, 10001, '项目不存在');
         }
 
-        if($req['project_id']==1 || $req['project_id']==2){
+        if($req['project_id']==1 || $req['project_id']==2 || $req['project_id']==5 || $req['project_id']==6 ){
             $order = Order::where('user_id', $user['id'])->where('project_id', $req['project_id'])->whereIn('status', [1,2])->find();
             if($order){
                 return out(null, 10001, '已有的产品未结束不能购买');
