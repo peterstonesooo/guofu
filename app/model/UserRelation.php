@@ -66,7 +66,7 @@ class UserRelation extends Model
             2105152,2105228,2105220,2105224,2105232,2105231,2105234,2105218,2105226,2105229,2105227,2105221,2105225,2105223,2105230,2105222
         ];
     
-        $relation = UserRelation::alias('r')
+/*         $relation = UserRelation::alias('r')
             ->field(['count(r.sub_user_id) as team_num', 'r.user_id'])
             ->join('mp_realname n', 'r.sub_user_id = n.user_id')
             ->join('mp_user u', 'u.id = r.user_id')
@@ -93,7 +93,7 @@ class UserRelation extends Model
                 'sort'=>$k+1+5,
                 'reward'=>$reward[$k+1+5]
             ];
-        }
+        } */
     
         return $data;
     }
