@@ -52,9 +52,9 @@ class RealnameController extends AuthController
             }
             $user = User::find($item['user_id']);
             $item['up_user_phone'] = '';
-            if($user['up_user_id']>0){
+/*             if($user['up_user_id']>0){
                 $item['up_user_phone'] = User::where('id,',$user['up_user_id'])->value('phone');
-            }
+            } */
             return $item;
         });
 
