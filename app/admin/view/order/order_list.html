@@ -34,7 +34,7 @@
         </select> -->
         <select name="project_id" class="form-control">
             <option value="">项目</option>
-            <?php foreach ($projectList as $k=>$item) { if ($k > 0) { ?>
+            <?php foreach ($projectList as $k=>$item) { if ($k+1 > 0) { ?>
                 <option <?php if (isset($req['project_id']) && $req['project_id'] == $item['id']) {
                     echo 'selected = "selected"';
                 } ?> value="{$item['id']}">{$item['name']}
