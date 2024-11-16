@@ -99,7 +99,7 @@ class SigninController extends AuthController
                     'day'=>Db::raw('day+1'),
                     'end'=>$signin_date,
                 ];
-                $ret = ContinuousSignin::where('user_id',$user['id'])->where('end',$signin_date)->update($updata);
+                $ret = ContinuousSignin::where('user_id',$user['id'])->where('end',$yesterday)->update($updata);
             }
             Db::commit();
         } catch (Exception $e) {
