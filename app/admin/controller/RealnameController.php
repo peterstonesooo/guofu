@@ -50,10 +50,10 @@ class RealnameController extends AuthController
                 }
 
             }
-            $user = User::find($item['user_id']);
+            $user = User::field('up_user_id')->find($item['user_id']);
             $item['up_user_phone'] = '';
             if($user['up_user_id']>0){
-                $upPhone  = User::find($user['up_user_id']);
+                $upPhone  = User::field('phone')->find($user['up_user_id']);
                 $item['up_user_phone'] = $upPhone['phone'];
             }
             return $item;
