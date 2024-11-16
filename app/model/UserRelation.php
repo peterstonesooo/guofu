@@ -91,7 +91,7 @@ class UserRelation extends Model
                 'team_num'=>$v['team_num'],
                 'realname'=>self::maskName($user['realname']),
                 'sort'=>$k+1+3,
-                'reward'=>$reward[$k+1+3]
+                'reward'=>$reward[$k+1+5]
             ];
         }
     
