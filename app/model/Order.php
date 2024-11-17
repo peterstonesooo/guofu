@@ -222,7 +222,7 @@ class Order extends Model
     {
         $order = Order::where('id', $order_id)->find();
 
-        if ($project['project_group_id'] == 1) {
+        //if ($project['project_group_id'] == 1) {
             $period = $project['period']+1;
             $end_time = strtotime("+{$period} day", strtotime(date('Y-m-d')));
             //$next_bonus_time = $project['review_period'] * 3600;
@@ -236,7 +236,7 @@ class Order extends Model
                 //'equity_status' => 2,
                 //'digital_yuan_status' => 2
             ]);
-        }
+        //}
         //购买产品和恢复资产用户激活
         if ($order['user']['is_active'] == 0) {
             User::where('id', $order['user_id'])->update(['is_active' => 1, 'active_time' => time()]);

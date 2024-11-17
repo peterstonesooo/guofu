@@ -189,6 +189,7 @@ class OrderController extends AuthController
                 // 累计总收益和赠送数字人民币  到期结算
                 // 订单支付完成
                 Order::orderPayComplete($order['id'], $project, $user['id']);
+                
             } else {
                 exit_out(null, 10005, '支付渠道不存在');
             }
