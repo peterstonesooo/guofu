@@ -48,6 +48,14 @@ class UserController extends AuthController
                 $builder->where('is_active', 1);
             }
         }
+        if (isset($req['is_realname']) && $req['is_realname'] !== '') {
+            if ($req['is_realname'] == 0) {
+                $builder->where('is_realname', 0);
+            }
+            else {
+                $builder->where('is_realname', 1);
+            }
+        }
         $builder1 = clone $builder;
         $data = $builder->paginate(['query' => $req]);
         if(session('admin_user')['auth_group_id'] == 3){
@@ -64,17 +72,10 @@ class UserController extends AuthController
                 // 'capital_sn' => '单号',
                 // 'withdraw_status_text' => '状态',
                 // 'pay_channel_text' => '支付渠道',
-                'amountCapital' => '提现金额',
-                'withdraw_amount' => '到账金额',
-                'realname' => '收款人实名',
-                'account' => '收款账号',
-                'payType' => '收款方式',
-                'bank_name' => '银行名称',
-                // 'shenheUser' => '审核用户',
-                // 'audit_remark' => '拒绝理由',
-                // 'audit_date' => '审核时间',
-                'created_at' => '创建时间'
-            ], '提现记录-' . date('YmdHis'));
+                'phone' => '电话',
+                'real_sub_user_num' => '实名下级人数',
+
+            ], '用户-' . date('YmdHis'));
         }
 
         $this->assign('req', $req);

@@ -6,7 +6,7 @@
         <input type="text" value="{$req['phone']??''}" name="phone" placeholder="搜索手机号" class="form-control">
         <input type="text" value="{$req['realname']??''}" name="realname" placeholder="搜索实名姓名" class="form-control">
         <input type="text" value="{$req['ic_number']??''}" name="ic_number" placeholder="搜索身份证" class="form-control">
-        <select name="level" class="form-control">
+<!--         <select name="level" class="form-control">
             <option value="">搜索等级</option>
             <?php foreach (config('map.user')['level_map'] as $k => $v) { ?>
                 <option <?php if (isset($req['level']) && $req['level'] !== '' && $req['level'] == $k) {
@@ -14,7 +14,19 @@
                 } ?> value="{$k}">{$v}
                 </option>
             <?php } ?>
+        </select> -->
+        <select name="is_realname" class="form-control">
+            <option value="">搜索是否实名</option>
+            <option <?php if (isset($req['is_realname']) && $req['is_realname'] !== '' && $req['is_realname'] == 0) {
+                echo 'selected = "selected"';
+            } ?> value="0">未实名
+            </option>
+            <option <?php if (isset($req['is_realname']) && $req['is_realname'] !== '' && $req['is_realname'] == 1) {
+                echo 'selected = "selected"';
+            } ?> value="1">已实名
+            </option>
         </select>
+        
         <select name="is_active" class="form-control">
             <option value="">搜索是否激活</option>
             <option <?php if (isset($req['is_active']) && $req['is_active'] !== '' && $req['is_active'] == 0) {
@@ -27,6 +39,7 @@
             </option>
         </select>
         <input class="btn btn-flat btn-primary m_10" type="submit" value="搜索">
+        <input class="btn btn-flat btn-info m_10" name="export" type="submit" value="导出">
     </form>
 </div>
 
@@ -50,8 +63,8 @@
                             <th>邀请码</th>
                             <th>实名</th>
                             <!-- <th>身份证</th>-->
-                            <th>等级</th>
-                            <th>激活</th>
+<!--                             <th>等级</th>
+ -->                            <th>激活</th>
 <!--                             <th>激活时间</th>
  -->                            <th>直属实名</th>
                              {if(session('admin_user')['auth_group_id']!=3)}
@@ -59,8 +72,8 @@
                             {/if}
                             <th>时间</th>
                             <th>状态</th>
-                            <th>首码</th>
-                            <th>操作</th>
+<!--                             <th>首码</th>
+ -->                            <th>操作</th>
                         </tr>
                         <?php foreach ($data as $k => $v) { ?>
                             <tr>
@@ -76,8 +89,8 @@
                                 <td>{$v['invite_code']}</td>
                                 <td>{$v['realname']}</td>
 <!--                                 <td>{$v['ic_number']}</td>-->  
-                                <td>{$v['level']}</td>
-                               <td>{$v['is_active_text']}</td>
+<!--                                 <td>{$v['level']}</td>
+ -->                               <td>{$v['is_active_text']}</td>
 <!--                                 <td>{$v['active_date']}</td>
  -->                                <td><a href="{:url('admin/User/userList', ['up_user' => $v['id'], 'is_realname' => 1])}">{$v['real_sub_user_num']}</a></td>
                                 {if(session('admin_user')['auth_group_id']!=3)}
@@ -98,7 +111,7 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td>
+<!--                                 <td>
                                     <div class="switch">
                                         <div class="onoffswitch">
                                             <input type="checkbox" <?php echo $v['is_agent'] == 1 ? 'checked' : ''; ?>
@@ -110,7 +123,7 @@
                                             </label>
                                         </div>
                                     </div>
-                                </td>
+                                </td> -->
                                 <td>
                                     <a {:auth_show_judge('User/editUser')} class="btn btn-flat btn-xs" href="{:url('admin/User/showUser', ['id' => $v['id']])}">编辑用户</a>
                                     <a {:auth_show_judge('User/addBalance')} class="btn btn-flat btn-xs" href="{:url('admin/User/showChangeBalance', ['user_id' => $v['id'], 'type' => 15])}">手动入金</a>
