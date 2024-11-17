@@ -44,7 +44,7 @@ class UserRelation extends Model
         $reward = config('map.rank_reward');
 
 
-        $activeRank = Db::name('active_rank')->order('num','desc')->select();
+        $activeRank = Db::name('active_rank')->order('num','desc')->where('is_disabled',0)->select();
         $data= [];
 
         foreach ($activeRank as $k => $v) {
@@ -65,8 +65,9 @@ class UserRelation extends Model
         $excludeUsers = [
             2105152,2105228,2105220,2105224,2105232,2105231,2105234,2105218,2105226,2105229,2105227,2105221,2105225,2105223,2105230,2105222
         ];
+        $limit = count($data);
     
-/*         $relation = UserRelation::alias('r')
+        $relation = UserRelation::alias('r')
             ->field(['count(r.sub_user_id) as team_num', 'r.user_id'])
             ->join('mp_realname n', 'r.sub_user_id = n.user_id')
             ->join('mp_user u', 'u.id = r.user_id')
@@ -76,7 +77,7 @@ class UserRelation extends Model
             ->where('u.is_realname', 1)
             ->group('r.user_id')
             ->order('team_num', 'desc')
-            ->limit(5)
+            ->limit($limit)
             ->select()
             ->toArray();
     
@@ -90,10 +91,10 @@ class UserRelation extends Model
                 'phone'=>substr_replace($user['phone'], '****', 3, 4),
                 'team_num'=>$v['team_num'],
                 'realname'=>self::maskName($user['realname']),
-                'sort'=>$k+1+5,
-                'reward'=>$reward[$k+1+5]
+                'sort'=>$k+1+$limit,
+                'reward'=>$reward[$k+1+$limit]
             ];
-        } */
+        }
     
         return $data;
     }
