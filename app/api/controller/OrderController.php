@@ -60,13 +60,13 @@ class OrderController extends AuthController
         if($req['project_id']==1 || $req['project_id']==2 || $req['project_id']==5 || $req['project_id']==6 ){
             $order = Order::where('user_id', $user['id'])->where('project_id', $req['project_id'])->whereIn('status', [1,2])->find();
             if($order){
-                return out(null, 10001, '已有的产品未结束不能重复购买');
+                return out(null, 10001, '周期结束前不能重复购买');
             }
         }
         if($project['project_group_id']==2){
             $order = Order::where('user_id', $user['id'])->where('project_group_id', 2)->whereIn('status', [1,2])->find();
             if($order){
-                return out(null, 10001, '已有的产品未结束不能重复购买');
+                return out(null, 10001, '周期结束前不可参与同系列其他财富方案');
             }
         }
 
@@ -189,7 +189,7 @@ class OrderController extends AuthController
                 // 累计总收益和赠送数字人民币  到期结算
                 // 订单支付完成
                 Order::orderPayComplete($order['id'], $project, $user['id']);
-                
+
             } else {
                 exit_out(null, 10005, '支付渠道不存在');
             }
