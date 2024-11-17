@@ -48,12 +48,33 @@ class UserController extends AuthController
                 $builder->where('is_active', 1);
             }
         }
-
+        $builder1 = clone $builder;
         $data = $builder->paginate(['query' => $req]);
         if(session('admin_user')['auth_group_id'] == 3){
             foreach($data as &$item){
                 $item['invest_amount']=0;
             }
+        }
+
+        if (!empty($req['export'])) {
+            $list = $builder1->select();
+            create_excel($list, [
+                'id' => '序号',
+                // 'account_type' => '用户',
+                // 'capital_sn' => '单号',
+                // 'withdraw_status_text' => '状态',
+                // 'pay_channel_text' => '支付渠道',
+                'amountCapital' => '提现金额',
+                'withdraw_amount' => '到账金额',
+                'realname' => '收款人实名',
+                'account' => '收款账号',
+                'payType' => '收款方式',
+                'bank_name' => '银行名称',
+                // 'shenheUser' => '审核用户',
+                // 'audit_remark' => '拒绝理由',
+                // 'audit_date' => '审核时间',
+                'created_at' => '创建时间'
+            ], '提现记录-' . date('YmdHis'));
         }
 
         $this->assign('req', $req);
