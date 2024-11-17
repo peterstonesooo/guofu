@@ -1,63 +1,144 @@
 <div class="search">
-    <form class="form-inline">
-    </form>
+  <form class="form-inline"></form>
 </div>
 
 <div class="row">
-    <div class="col-xs-12">
-        <div class="box">
-            <div class="box-header">
-                <div class="box-body table-responsive no-padding">
-                    <table class="table table-bordered table-hover table-striped">
-                        <tbody>
-                        <tr>
-                            <th>ID</th>
-                            <th>手机号</th>
-                            <th>每天最大</th>
-                            <th>每天最小</th>
-                            <th>每次增加最大</th>
-                            <th>每次增加最小</th>
-                        </tr>
-                        <?php foreach ($data as $k => $v) { ?>
-                            <tr>
-                                <td>{$v['id']}</td>
-                                <td><input type="text" value="{$v['phone']}" class="phone_{$v['id']}"></td>
-                                <td><input type="text" value="{$v['day_max']}" class="day_max_{$v['id']}"></td>
-                                <td><input type="text" value="{$v['day_min']}" class="day_min_{$v['id']}"></td>
-                                <td><input type="text" value="{$v['max']}" class="max_{$v['id']}"></td>
-                                <td><input type="text" value="{$v['min']}" class="min_{$v['id']}"></td>
-                                <td>{$v['num']}</td>
-                                <td><button class="btn btn-primary" onclick="save({$v['id']})">保存</button></td>
-                            </tr>
-                        <?php } ?>
-                        </tbody>
-                    </table>
-                </div>
-                <div style="text-align:center;font-size: 14px;"></div>
-            </div>
+  <div class="col-xs-12">
+    <div class="box">
+      <div class="box-header">
+        <div class="box-body table-responsive no-padding">
+          <table class="table table-bordered table-hover table-striped">
+            <tbody>
+              <tr>
+                <th>ID</th>
+                <th>手机号</th>
+                <th>每天最大</th>
+                <th>每天最小</th>
+                <th>每次增加最大</th>
+                <th>每次增加最小</th>
+                <th>开关</th>
+              </tr>
+              <?php foreach ($data as $k =>
+              $v) { ?>
+              <tr>
+                <td>{$v['id']}</td>
+                <td>
+                  <input
+                    type="text"
+                    value="{$v['phone']}"
+                    class="phone_{$v['id']}"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    value="{$v['day_max']}"
+                    class="day_max_{$v['id']}"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    value="{$v['day_min']}"
+                    class="day_min_{$v['id']}"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    value="{$v['max']}"
+                    class="max_{$v['id']}"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    value="{$v['min']}"
+                    class="min_{$v['id']}"
+                  />
+                </td>
+                <td>{$v['num']}</td>
+                <td>
+                  <div class="switch">
+                    <div class="onoffswitch">
+                      <input type="checkbox"
+                      <?php echo $v['is_disabled'] == 0 ? 'checked' : ''; ?>
+                      class="onoffswitch-checkbox" id="status{$v['id']}">
+                      <label
+                        class="onoffswitch-label"
+                        for="status{$v['id']}"
+                        onclick="changeStatus({$v['id']}, 'is_disabled')"
+                      >
+                        <span class="onoffswitch-inner"></span>
+                        <span class="onoffswitch-switch"></span>
+                      </label>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <button class="btn btn-primary" onclick="save({$v['id']})">
+                    保存
+                  </button>
+                </td>
+              </tr>
+              <?php } ?>
+            </tbody>
+          </table>
         </div>
+        <div style="text-align: center; font-size: 14px"></div>
+      </div>
     </div>
+  </div>
 </div>
 
 <script>
+  function save(id) {
+    var data = {
+      id: id,
+      phone: $(".phone_" + id).val(),
+      day_max: $(".day_max_" + id).val(),
+      day_min: $(".day_min_" + id).val(),
+      max: $(".max_" + id).val(),
+      min: $(".min_" + id).val(),
+    };
 
+    $.post('{:url("admin/ActiveRank/save")}', data, function (res) {
+      if (res.code == 1) {
+        layer.msg("保存成功", { icon: 6 });
+      } else {
+        layer.msg(res.msg, { icon: 5 });
+      }
+    });
+  }
 
-    function save(id) {
-        var data = {
-            id: id,
-            phone: $('.phone_' + id).val(),
-            day_max: $('.day_max_' + id).val(), 
-            day_min: $('.day_min_' + id).val(),
-            max: $('.max_' + id).val(),
-            min: $('.min_' + id).val()
-        };
+  function changeStatus(id, field)
+  {
+      var value = 0;
+      if ($('#' + field + id).is(':checked')) {
+          value = 1;
+      } else {
+          value = 0;
+      }
 
-        $.post('{:url("admin/ActiveRank/save")}', data, function(res) {
-            if(res.code == 1) {
-                layer.msg('保存成功', {icon: 6});
-            } else {
-                layer.msg(res.msg, {icon: 5});
-            }
-        });
-    }
+      //确认框
+      layer.confirm('确定操作吗', {icon: 3, title: '提示'}, function (index) {
+          layer.close(index);
+          $.post('{:url("admin/ActiveRank/changeStatus")}', {"id": id, "value": value, "field": field}, function (res) {
+              if (res.code != 200) {
+                  if (value == 1) {
+                      $('#' + field + id).prop('checked', false);
+                  } else {
+                      $('#' + field + id).prop('checked', true);
+                  }
+                  layer.msg(res.msg, {icon: 5, time: 2500, offset: '80px'});
+              }
+          });
+      }, function (index2) {
+          if (value == 1) {
+              $('#' + field + id).prop('checked', false);
+          } else {
+              $('#' + field + id).prop('checked', true);
+          }
+      });
+  }
 </script>

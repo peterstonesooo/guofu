@@ -2,6 +2,7 @@
 
 namespace app\admin\controller;
 
+use app\common\command\ActiveRank;
 use think\facade\Db;
 
 class ActiveRankController extends AuthController
@@ -48,5 +49,17 @@ class ActiveRankController extends AuthController
         } catch (\Exception $e) {
             return json(['code' => 0, 'msg' => '保存失败：' . $e->getMessage()]);
         }
+    }
+
+    public function changeStatus(){
+        $req = $this->validate(request(), [
+            'id' => 'require|number',
+            'field' => 'require',
+            'value' => 'require',
+        ]);
+
+        Db::name('active_rank')->where('id', $req['id'])->update([$req['field'] => $req['value']]);
+
+        return out();
     }
 }
