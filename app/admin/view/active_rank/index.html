@@ -61,19 +61,10 @@
                 <td>{$v['num']}</td>
                 <td>
                   <div class="switch">
-                    <div class="onoffswitch">
-                      <input type="checkbox"
-                      <?php echo $v['is_disabled'] == 0 ? 'checked' : ''; ?>
-                      class="onoffswitch-checkbox" id="status{$v['id']}">
-                      <label
-                        class="onoffswitch-label"
-                        for="status{$v['id']}"
-                        onclick="changeStatus({$v['id']}, 'is_disabled')"
-                      >
-                        <span class="onoffswitch-inner"></span>
-                        <span class="onoffswitch-switch"></span>
-                      </label>
-                    </div>
+                      <select name="is_disabled" id="is_disabled" class="is_disbled_{$v['id']}">
+                        <option value="0" {if($v['is_disabled']==0)} selected {/if}>开启</option>
+                        <option value="1" {if($v['is_disabled']==1)} selected {/if}>关闭</option>
+                      </select>
                   </div>
                 </td>
                 <td>
@@ -101,6 +92,8 @@
       day_min: $(".day_min_" + id).val(),
       max: $(".max_" + id).val(),
       min: $(".min_" + id).val(),
+
+      is_disabled: $(".is_disbled_" + id + " option:selected").val(),
     };
 
     $.post('{:url("admin/ActiveRank/save")}', data, function (res) {

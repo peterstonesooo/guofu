@@ -40,6 +40,7 @@ class ActiveRankController extends AuthController
             'day_min' => $data['day_min'],
             'max' => $data['max'],
             'min' => $data['min'],
+            'is_disabled' => $data['is_disabled'],
             'update_time' => time()
         ];
 

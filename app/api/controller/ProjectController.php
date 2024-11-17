@@ -95,7 +95,7 @@ class ProjectController extends AuthController
         $data = Project::where('id', $req['project_id'])->where('status', 1)->append(['total_amount', 'daily_bonus', 'passive_income', 'progress','day_amount'])->find()->toArray();
 
         // 排除不存在支付渠道的支付方式
-        foreach ($data['support_pay_methods'] as $k => $v) {
+/*         foreach ($data['support_pay_methods'] as $k => $v) {
             if (in_array($v, [2,3,4,6])) {
                 $type = $v - 1;
                 if ($v == 6) {
@@ -106,7 +106,7 @@ class ProjectController extends AuthController
                 }
             }
         }
-
+ */
         return out($data);
     }
     
