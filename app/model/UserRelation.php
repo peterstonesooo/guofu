@@ -66,34 +66,37 @@ class UserRelation extends Model
             2105152,2105228,2105220,2105224,2105232,2105231,2105234,2105218,2105226,2105229,2105227,2105221,2105225,2105223,2105230,2105222
         ];
         $limit = count($data);
+        if($limit >0){
+            $relation = UserRelation::alias('r')
+                ->field(['count(r.sub_user_id) as team_num', 'r.user_id'])
+                ->join('mp_realname n', 'r.sub_user_id = n.user_id')
+                ->join('mp_user u', 'u.id = r.user_id')
+                ->whereBetween('n.audit_time', [$startTime, $endTime])
+                ->whereNotIn('r.user_id', $excludeUsers)
+                ->where('u.status', 1)
+                ->where('u.is_realname', 1)
+                ->group('r.user_id')
+                ->order('team_num', 'desc')
+                ->limit($limit)
+                ->select()
+                ->toArray();
     
-        $relation = UserRelation::alias('r')
-            ->field(['count(r.sub_user_id) as team_num', 'r.user_id'])
-            ->join('mp_realname n', 'r.sub_user_id = n.user_id')
-            ->join('mp_user u', 'u.id = r.user_id')
-            ->whereBetween('n.audit_time', [$startTime, $endTime])
-            ->whereNotIn('r.user_id', $excludeUsers)
-            ->where('u.status', 1)
-            ->where('u.is_realname', 1)
-            ->group('r.user_id')
-            ->order('team_num', 'desc')
-            ->limit($limit)
-            ->select()
-            ->toArray();
-    
-        foreach ($relation as $k => &$v) {
+            foreach ($relation as $k => &$v) {
 
-            
-            $user = User::where('id', $v['user_id'])->find();
+                
+                $user = User::where('id', $v['user_id'])->find();
 
 
-            $data[] = [
-                'phone'=>substr_replace($user['phone'], '****', 3, 4),
-                'team_num'=>$v['team_num'],
-                'realname'=>self::maskName($user['realname']),
-                'sort'=>$k+1+$limit,
-                'reward'=>$reward[$k+1+$limit]
-            ];
+                $data[] = [
+                    'phone'=>substr_replace($user['phone'], '****', 3, 4),
+                    'team_num'=>$v['team_num'],
+                    'realname'=>self::maskName($user['realname']),
+                    'sort'=>$k+1+$limit,
+                    'reward'=>$reward[$k+1+$limit]
+                ];
+            }
+        }else{
+            $data = [];
         }
     
         return $data;
