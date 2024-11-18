@@ -104,8 +104,8 @@ class ProjectController extends AuthController
             $req['give'] = 0;
         } */
         
-        $req['cover_img'] = upload_file2('cover_img');
-        $req['details_img'] = upload_file2('details_img',false);
+        $req['cover_img'] = upload_file2('cover_img',false,false);
+        $req['details_img'] = upload_file2('details_img',false,false);
         Project::create($req);
 
         return out();
