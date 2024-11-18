@@ -418,7 +418,7 @@ class UserController extends AuthController
     public function getBatchList()
     {
         $list = Db::name('batch_recharge')
-                ->order('id asc')
+                ->order('id desc')
                 ->limit(20)
                 ->select()
                 ->toArray();
