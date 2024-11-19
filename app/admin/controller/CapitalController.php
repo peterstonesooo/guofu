@@ -70,7 +70,7 @@ class CapitalController extends AuthController
         $builder = Capital::alias('c')->field('c.*');
         $force = 'created_at_type_status';
         if ($req['type'] == 1) {
-            //$builder->join('payment p', 'p.capital_id = c.id');
+            $builder->join('payment p', 'p.capital_id = c.id');
         }
         if (isset($req['pay_channel']) && $req['pay_channel'] !== '') {
            $builder->where('c.pay_channel', $req['pay_channel']);
@@ -138,16 +138,16 @@ class CapitalController extends AuthController
         }
 
         if($req['type']==1){
-            $total_amount = round($builder1->where('status',2)->sum('amount'), 2);
+            $total_amount = round($builder1->where('c.status',2)->sum('amount'), 2);
             
-            $total_amount_fail = round($builder3->whereIn('status',[1,3])->sum('amount'), 2);
+            $total_amount_fail = round($builder3->whereIn('c.status',[1,3])->sum('amount'), 2);
             $this->assign('total_amount', $total_amount);
 
             $this->assign('total_amount_fail', $total_amount_fail);
 
         }
         if ($req['type'] == 2) {
-            $total_withdraw_amount = round($builder2->where('status',2)->sum('withdraw_amount'), 2);
+            $total_withdraw_amount = round($builder2->where('c.status',2)->sum('withdraw_amount'), 2);
             $this->assign('total_withdraw_amount', $total_withdraw_amount);
         }
 
