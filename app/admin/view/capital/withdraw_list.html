@@ -24,8 +24,8 @@
 
         <select name="pay_type" class="form-control">
             <option value="">支付方式</option>
-            <option value="4">银行卡</option>
-            <option value="3">支付宝</option>
+            <option value="4" {if($req['pay_type']==4)} selected{/if}>银行卡</option>
+            <option value="3" {if($req['pay_type']==3)} selected{/if}>支付宝</option>
         </select>
 
         <input placeholder="开始时间" autocomplete="off" value="{$req['start_date']??date('Y-m-d').' 00:00:00'} " name="start_date" class="form-control layer-date" id="start">
