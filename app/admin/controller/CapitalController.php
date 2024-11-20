@@ -106,6 +106,17 @@ class CapitalController extends AuthController
             $builder->where('c.type', $req['type']);
         }
 
+        if(isset($req['pay_type']) && $req['pay_type'] !== ''){
+            //银行卡
+            if($req['pay_type']==4){
+                $builder->where('c.bank_name','<>','');
+            }else{
+                //支付宝
+                $builder->where('c.bank_name','');
+            }
+
+        }
+
 
 /*         if (!empty($req['channel'])) {
             $builder->where('p.channel', $req['channel']);

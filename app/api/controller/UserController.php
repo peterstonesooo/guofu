@@ -779,7 +779,7 @@ class UserController extends AuthController
         $realname_num = UserRelation::alias('r')->join('mp_user u','r.sub_user_id = u.id')->where('user_id',$user['id'])->where('r.level', $req['level'])->where('u.realname','<>','')->count();
 
 
-        $list = UserRelation::where('user_id', $user['id'])->where('level', $req['level'])->field('sub_user_id')->paginate(50);
+        $list = UserRelation::where('user_id', $user['id'])->where('level', $req['level'])->field('sub_user_id')->paginate(100);
         if($list){
             foreach ($list as $k =>$v){
                 $user = User::field('id,avatar,phone,realname,invite_bonus,invest_amount,equity_amount,level,is_active,created_at')->where('id', $v['sub_user_id'])->find();

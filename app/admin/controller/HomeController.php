@@ -61,6 +61,24 @@ class HomeController extends AuthController
         $arr['url'] = '';
         $data[] = $arr;
 
+        $arr['title'] = '现金';
+        $arr['value'] = User::sum('topup_balance');
+        $arr['today_value'] = '-';
+        $arr['url'] = '';
+        $data[] = $arr;
+
+        $arr['title'] = '团队奖励';
+        $arr['value'] = User::sum('team_bonus_balance');
+        $arr['today_value'] = '-';
+        $arr['url'] = '';
+        $data[] = $arr;
+
+        $arr['title'] = '积分';
+        $arr['value'] = User::sum('integral');
+        $arr['today_value'] = '-';
+        $arr['url'] = '';
+        $data[] = $arr;
+
         $this->assign('data', $data);
 
         return $this->fetch();
