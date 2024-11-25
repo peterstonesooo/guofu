@@ -1,0 +1,209 @@
+<div class="search">
+    <form class="form-inline"></form>
+    <button type="button" class="btn btn-primary" onclick="showAdd()">
+        <i class="fa fa-plus"></i> 新增抽奖项目
+    </button>
+</div>
+
+<!-- 添加提示信息 -->
+<div class="alert alert-warning mt-3" role="alert">
+    <i class="fa fa-exclamation-triangle"></i>
+    <strong>重要提示：</strong> 所有奖项的中奖概率之和必须等于100
+</div>
+
+<div class="row">
+    <div class="col-xs-12">
+      <div class="box">
+        <div class="box-header">
+          <div class="box-body table-responsive no-padding">
+            <table class="table table-bordered table-hover table-striped">
+              <tbody>
+                <tr>
+                  <th>ID</th>
+                  <th>名称</th>
+                  <th>中奖概率(%)</th>
+                  <th>激活用户数</th>
+                  <th>减少天数</th>
+                  <th>操作</th>
+                </tr>
+                <?php foreach ($data as $k =>
+                $v) { ?>
+                <tr>
+                  <td>{$v['id']}</td>
+                  <td>
+                    <input
+                      type="text"
+                      value="{$v['name']}"
+                      class="name_{$v['id']}"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      value="{$v['lottery_ratio']}"
+                      class="lottery_ratio_{$v['id']}"
+                      data-original="{$v['lottery_ratio']}"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      value="{$v['active_num']}"
+                      class="active_num_{$v['id']}"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      value="{$v['day_num']}"
+                      class="day_num_{$v['id']}"
+                    />
+                  </td>
+                  <td>
+                    <button class="btn btn-primary" onclick="save({$v['id']})">
+                      保存
+                    </button>
+                  </td>
+                </tr>
+                <?php } ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // 添加检查概率总和的函数
+    function checkTotalRatio() {
+        var total = 0;
+        // 获取所有概率输入框的值
+        $('input[class*="lottery_ratio_"]').each(function() {
+            total += parseInt($(this).val()) || 0;
+        });
+        return total === 100;
+    }
+
+    // 修改保存函数
+    function save(id) {
+        var data = {
+            id: id,
+            name: $(".name_" + id).val(),
+            lottery_ratio: $(".lottery_ratio_" + id).val(),
+            active_num: $(".active_num_" + id).val(),
+            day_num: $(".day_num_" + id).val()
+        };
+
+        // 检查总概率
+        /*var newRatio = parseInt(data.lottery_ratio) || 0;
+        var oldRatio = parseInt($(".lottery_ratio_" + id).attr('data-original')) || 0;
+        var totalRatio = 0;
+        
+        $('input[class*="lottery_ratio_"]').each(function() {
+            if (!$(this).is($(".lottery_ratio_" + id))) {
+                totalRatio += parseInt($(this).val()) || 0;
+            }
+        });
+        totalRatio += newRatio;
+
+        if (totalRatio !== 100) {
+            layer.msg('所有奖项概率之和必须等于100%', {icon: 2});
+            return;
+        }*/
+
+        $.post('{:url("admin/LotteryConfig/save")}', data, function(res) {
+            if (res.code == 1) {
+                layer.msg("保存成功", {icon: 6});
+                // 更新原始值
+                $(".lottery_ratio_" + id).attr('data-original', newRatio);
+            } else {
+                layer.msg(res.msg, {icon: 5});
+            }
+        });
+    }
+
+    // 修改添加函数
+    function saveAdd() {
+        var data = {
+            name: $('#addForm [name="name"]').val(),
+            lottery_ratio: $('#addForm [name="lottery_ratio"]').val(),
+            active_num: $('#addForm [name="active_num"]').val(),
+            day_num: $('#addForm [name="day_num"]').val()
+        };
+
+        if (!data.name || !data.lottery_ratio) {
+            layer.msg('请填写必填项', {icon: 2});
+            return;
+        }
+
+        // 检查总概率
+        /*var newRatio = parseInt(data.lottery_ratio) || 0;
+        var totalRatio = 0;
+        
+        $('input[class*="lottery_ratio_"]').each(function() {
+            totalRatio += parseInt($(this).val()) || 0;
+        });
+        totalRatio += newRatio;
+
+        if (totalRatio !== 100) {
+            layer.msg('添加后所有奖项概率之和必须等于100%，当前总和为' + totalRatio + '%', {icon: 2});
+            return;
+        }*/
+
+        $.post('{:url("admin/LotteryConfig/add")}', data, function(res) {
+            if (res.code == 1) {
+                layer.msg('添加成功', {icon: 1});
+                layer.closeAll('page');
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                layer.msg(res.msg, {icon: 2});
+            }
+        });
+    }
+
+    function showAdd() {
+        layer.open({
+            type: 1,
+            title: '新增抽奖项目',
+            area: ['500px', '400px'],
+            content: `
+                <form id="addForm" class="form-horizontal" style="padding:20px;">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">名称：</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">中奖概率(%)：</label>
+                        <div class="col-sm-8">
+                            <input type="number" class="form-control" name="lottery_ratio" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">激活用户数：</label>
+                        <div class="col-sm-8">
+                            <input type="number" class="form-control" name="active_num" value="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">减少天数：</label>
+                        <div class="col-sm-8">
+                            <input type="number" class="form-control" name="day_num" value="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-3 col-sm-8">
+                            <button type="button" class="btn btn-primary" onclick="saveAdd()">保存</button>
+                        </div>
+                    </div>
+                </form>`,
+            success: function(layero, index) {
+                $('#addForm')[0].reset();
+            }
+        });
+    }
+  </script>

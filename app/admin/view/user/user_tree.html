@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>用户层级树形图</title>
+    <style>
+        .user-tree { padding: 20px; }
+        .tree-node { margin: 10px 0; padding-left: 20px; }
+        .tree-node .expand-btn { cursor: pointer; margin-right: 10px; }
+        .pagination { text-align: center; margin: 20px 0; }
+        .pagination a { 
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 0 2px;
+            border: 1px solid #e2e2e2;
+            background: #fff;
+            color: #333;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .pagination a:hover {
+            background: #f2f2f2;
+        }
+        .pagination .current {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 0 2px;
+            background: #009688;
+            color: #fff;
+            border: 1px solid #009688;
+        }
+        .pagination .ellipsis {
+            display: inline-block;
+            padding: 5px 10px;
+            color: #999;
+        }
+        .pagination .page-info {
+            display: inline-block;
+            padding: 5px 10px;
+            color: #666;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="user-tree">
+        <div id="userTreeContainer"></div>
+        <div id="pagination"></div>
+    </div>
+
+    <script src="__ADMIN__/plugins/user-tree.js"></script>
+    <script>
+    $(function(){
+        var userTree = new UserTree({
+            rootUserId: '{$user_id}',
+            container: '#userTreeContainer',
+            pagination: '#pagination',
+            pageSize: 10,
+            requestUrl: '{:url("admin/user/getSubUsers")}'
+        });
+    });
+    </script>
+</body>
+</html>

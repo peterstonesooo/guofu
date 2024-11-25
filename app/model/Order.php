@@ -242,6 +242,7 @@ class Order extends Model
             User::where('id', $order['user_id'])->update(['is_active' => 1, 'active_time' => time()]);
             // 下级用户激活
             UserRelation::where('sub_user_id', $order['user_id'])->update(['is_active' => 1]);
+            UserLottery::lotteryInc($order['user_id'], 3,3,0,$order['id']);
         }
 
         User::where('id', $user_id)->inc('invest_amount', $order['single_amount'])->update();
