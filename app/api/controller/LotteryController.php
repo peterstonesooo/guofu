@@ -20,9 +20,9 @@ class LotteryController extends AuthController
      *
      * @return \think\Response
      */
-    public function lotteryList()
+    public function lotteryConfigList()
     {
-        $data = LotteryConfig::select();
+        $data = LotteryConfig::field('id,name')->select();
         return json(['code' => 200, 'msg' => '', 'data' => $data]);
     }
 
