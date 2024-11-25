@@ -15,5 +15,6 @@ class UserLotteryLog extends Model
         1 => '用户抽奖',
         2 => '邀请会员实名',
         3 => '邀请会员激活',
+        4 => '使用加速',
     ];
 }

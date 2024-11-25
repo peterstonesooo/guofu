@@ -13,7 +13,7 @@ use think\facade\Log;
 class UserLottery extends Model
 {
     /**
-     * type1:用户抽奖 2:邀请会员实名  3:邀请会员激活 
+     * type1:用户抽奖 2:邀请会员实名  3:邀请会员激活 4.使用加速
      */
     public static function lotteryInc($userId,$num,$type,$userLotteryId,$realationId,$logType = 1){
         $userLottery = UserLottery::where('user_id', $userId)->find();
@@ -22,11 +22,13 @@ class UserLottery extends Model
 /*             if(!$userLottery){
                 throw new \Exception('用户抽奖次数记录不存在');
             } */
+            $lotteryNum =0;
             Db::startTrans();
             if(!$userLottery){
                 UserLottery::create(['user_id'=>$userId,'lottery_num'=>0]);
+            }else{
+                $lotteryNum = $userLottery['lottery_num'];
             }
-            $lotteryNum = $userLottery['lottery_num'];
             //抽奖次数
             UserLottery::where('user_id', $userId)->update([
                 'lottery_num' => Db::raw('lottery_num + ' . $num)
@@ -37,7 +39,7 @@ class UserLottery extends Model
                 'user_id' => $userId,
                 'user_lottery_id' => $userLotteryId,
                 'relation_id' => $realationId,
-                'amount' => 1,
+                'amount' => $num,
                 'amount_before' => $lotteryNum,
                 'amount_after' => $lotteryNum + $num,
                 'log_type' => $logType,

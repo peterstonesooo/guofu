@@ -46,12 +46,21 @@ class LotteryController extends AuthController
      */
     public function lotteryLog(){
         $user = $this->user;
-        $data = UserLotteryLog::where('user_id', $user['id'])->order('id','desc')->pagenate(15)->each(function($item, $key){
+        $data = UserLotteryLog::where('user_id', $user['id'])->where('log_type',1)->order('id','desc')->paginate(15)->each(function($item, $key){
             $item['type_text'] = UserLotteryLog::$LogType[$item['type']];
             return $item;
         });
         return json(['code' => 200, 'msg' => '', 'data' => $data]);
         
+    }
+
+    /**
+     * 用户奖品
+     */
+    public function prizeList(){
+        $user = $this->user;
+        $data = UserPrize::where('user_id', $user['id'])->order('id','desc')->paginate(15);
+        return json(['code' => 200, 'msg' => '', 'data' => $data]);
     }
 
     /**
@@ -68,19 +77,36 @@ class LotteryController extends AuthController
         if ($userLottery) {
             $lotteryNum = $userLottery['lottery_num'];
         }
+  
         if($lotteryNum <= 0){
-            return json(['code' => 10001, 'msg' => '抽奖次数不足,请邀请用户获取抽奖次数']);
+            return json(['code' => 10001, 'msg' => '抽奖次数不足,请邀请用户实名获取抽奖次数']);
         }
 
         $order = Order::where('user_id', $user['id'])->where('status',2)->where('project_group_id',2)->find();
         if(!$order){
             return json(['code' => 10001, 'msg' => '请购买就业补助一期后再抽奖']);
         }
-
+        $today = date('Y-m-d');
+        /*$realnameCount = Realname::alias('a')->join('mp_user_relation r','a.user_id = r.sub_user_id')
+                                                    ->where('r.user_id', $user['id'])
+                                                    ->where('a.status',1)
+                                                    ->where('r.level',1)
+                                                    ->where('r.auth_time','>',$today)
+                                                    ->count(); */
+        $activeCount = \app\model\User::where('up_user_id', $user['id'])
+                             ->where('is_active',1)
+                             ->where('active_time','>',strtotime($today.' 00:00:00'))
+                             ->count();
         $lotteryConfig = new LotteryConfig();
         
         try{
             $result = $lotteryConfig->lottery();
+/*             if($activeCount < $result['active_num']){
+                   $defualt = LotteryConfig::where('day_num',1)->find();
+                   if($defualt){
+                       $result = $defualt;
+                   }    
+            } */
             Db::startTrans();
             //保存抽奖记录
             $id = UserPrize::insertGetId([
@@ -95,12 +121,15 @@ class LotteryController extends AuthController
                 'lottery_num' => $lotteryNum - 1,
             ];
             if($result['day_num'] > 0){
-                //中奖
+                //中奖使用奖品
                 //$returnData['prize_name'] = $result['name'];
                 $time = $result['day_num']*60*60*24;
                 Order::where('user_id',$user['id'])->where('id',$order['id'])->update([
                     'end_time'=>Db::raw('end_time-'.$time),
                     'is_speed_up'=>1,
+                ]);
+                UserPrize::where('id',$id)->update([
+                   'status'=>1,
                 ]);
                 $data = [
                     'type'=>4,

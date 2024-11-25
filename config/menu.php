@@ -149,6 +149,11 @@ return array(
                             'icon' => 'fa-circle-o',
                             'url' => 'admin/ActiveRank/index',
                         ),
+                        '抽奖设置' =>
+                        array(
+                            'icon' => 'fa-circle-o',
+                            'url' => 'admin/LotteryConfig/index',
+                        ),
                     ),
         ),
     '后台账号管理' =>
