@@ -38,7 +38,7 @@ class LotteryConfigController extends AuthController
             'name' => $data['name'],
             'lottery_ratio' => intval($data['lottery_ratio']),
             'active_num' => intval($data['active_num']),
-            'day_num' => intval($data['day_num'])
+            'hour_num' => intval($data['hour_num'])
         ];
 
         try {
@@ -67,7 +67,7 @@ class LotteryConfigController extends AuthController
             'name' => $data['name'],
             'lottery_ratio' => intval($data['lottery_ratio']),
             'active_num' => intval($data['active_num'] ?? 0),
-            'day_num' => intval($data['day_num'] ?? 0)
+            'hour_num' => intval($data['hour_num'] ?? 0)
         ];
 
         try {

@@ -16,5 +16,6 @@ class UserLotteryLog extends Model
         2 => '邀请会员实名',
         3 => '邀请会员激活',
         4 => '使用加速',
+        5 => '加速账户改变',
     ];
 }
