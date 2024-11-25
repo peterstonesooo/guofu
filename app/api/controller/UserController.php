@@ -19,6 +19,7 @@ use app\model\Payment;
 use app\model\Realname;
 use app\model\TaxOrder;
 use app\model\UserDelivery;
+use app\model\UserLottery;
 use app\model\WalletAddress;
 use think\facade\Db;
 use Exception;
@@ -57,6 +58,15 @@ class UserController extends AuthController
                     $user['realname_mark'] = $realnameData['mark'];
                 }
             }
+        }
+        $speedUp = UserLottery::where('user_id',$user['id'])->find();
+        $user['speed_up_balance'] = 0;
+        $user['lottery_num'] = 0;
+        if(!$speedUp){
+            UserLottery::create(['user_id'=>$user['id'],'lottery_num'=>0,'speed_up_balance'=>0]);
+        }else{
+            $user['speed_up_balance'] = $speedUp['speed_up_balance'];
+            $user['lottery_num'] = $speedUp['lottery_num'];
         }
 
         $user['total_balance'] = $user['topup_balance']+$user['team_bonus_balance']+$user['income_balance']+$user['poverty_subsidy_amount']+$user['bonus_balance'];
