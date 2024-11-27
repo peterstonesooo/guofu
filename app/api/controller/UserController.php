@@ -65,8 +65,8 @@ class UserController extends AuthController
         if(!$speedUp){
             UserLottery::create(['user_id'=>$user['id'],'lottery_num'=>0,'speed_up_balance'=>0]);
         }else{
-            $user['speed_up_balance'] = $speedUp['speed_up_balance'];
-            $user['lottery_num'] = User::fomartDayInHour($speedUp['lottery_num']);
+            $user['speed_up_balance'] = User::fomartDayInHour($speedUp['speed_up_balance']);
+            $user['lottery_num'] = $speedUp['lottery_num'];
         }
 
         $user['total_balance'] = $user['topup_balance']+$user['team_bonus_balance']+$user['income_balance']+$user['poverty_subsidy_amount']+$user['bonus_balance'];
