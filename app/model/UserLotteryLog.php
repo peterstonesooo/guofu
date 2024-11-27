@@ -10,7 +10,7 @@ use think\Model;
  */
 class UserLotteryLog extends Model
 {
-    //
+    //1.抽奖次数 2.加速使用 3.加速账变
     public static $LogType = [
         1 => '用户抽奖',
         2 => '邀请会员实名',

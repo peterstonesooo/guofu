@@ -573,5 +573,25 @@ class User extends Model
         return $randomNumber;
     }
 
+    public static function fomartDayInHour($hourNum){
+        if($hourNum==0){
+            return '0小时';
+        }
+        // 将小时数转换为天数和小时数
+        $days = floor($hourNum / 24);  // 获取天数
+        $hours = $hourNum % 24;        // 获取剩余小时数
+
+        // 格式化输出
+        $timeDisplay = '';
+        if ($days > 0) {
+            $timeDisplay .= $days . '天';
+        }
+        if ($hours > 0 || $days == 0) {
+            $timeDisplay .= $hours . '小时';
+        }
+
+        return $timeDisplay;
+    }
+
     
 }

@@ -18,6 +18,7 @@ use app\model\ProjectTax;
 use app\model\ShopOrder;
 use app\model\TaxOrder;
 use app\model\User;
+use app\model\UserLotteryLog;
 use app\model\UserRelation;
 use app\model\UserSignin;
 use app\model\ZhufangOrder;
@@ -1296,10 +1297,20 @@ class OrderController extends AuthController
 
     public function orderList()
     {
-        $req = $this->validate(request(), [
+/*         $req = $this->validate(request(), [
             'status' => 'number',
             'project_group_id' => 'number',
+        ]); */
+
+        $validate =  \think\facade\Validate::rule([
+            'status' => 'number', //2收益中 4已完成
+            'is_speed_up' => 'number',
+            'project_group_id' => 'number',
         ]);
+        $req = request()->param();
+        if (!$validate->check($req)) {
+            return out(null, 10001, $validate->getError());
+        }
         $user = $this->user;
 
         $builder = Order::where('user_id', $user['id'])->where('status', '>', 1);
@@ -1307,10 +1318,43 @@ class OrderController extends AuthController
         if (!empty($req['status'])) {
             $builder->where('status', $req['status']);
         }
+        if (!empty($req['is_speed_up'])) {
+            $builder->where('is_speed_up', $req['is_speed_up']);
+        }
+
         if (!empty($req['project_group_id'])) {
             $builder->where('project_group_id', $req['project_group_id']);
         }
-        $data = $builder->order('id', 'desc')->append(['buy_amount', 'total_bonus', 'equity', 'digital_yuan', 'wait_receive_passive_income', 'total_passive_income', 'pay_date', 'sale_date', 'end_date', 'exchange_equity_date', 'exchange_yuan_date'])->paginate(30,false,['query'=>request()->param()]);
+
+
+        $orders = $builder->order('id', 'desc')->paginate(30,false,['query'=>request()->param()]);
+        $data = [];
+        foreach($orders as $order){
+            $item['id'] = $order['id'];
+            $item['project_name'] = $order['project_name'];
+            $item['single_amount'] = $order['single_amount'];
+            $item['gift_integral'] = $order['gift_integral'];
+            $item['gift_integral'] = $order['gift_integral'];
+            $item['sum_amount'] = $order['sum_amount'];
+            $item['period'] = $order['period'];
+            $item['end_time'] = date('Y-m-d H:i:s',$order['end_time']);
+            $item['status'] = $order['status'];
+            $item['bonus_multiple'] = $order['bonus_multiple'];
+            $item['is_speed_up'] = $order['is_speed_up'];
+            $item['project_group_id'] = $order['project_group_id'];
+            $item['is_can_speed_up'] = 0; //可以加速
+            if($order['project_group_id']==2 && $order['status']==2){
+                $item['is_can_speed_up'] = 1;
+            }
+            $item['prev_time'] = 0;
+            if($order['is_speed_up']==1){
+                $speedUpLog = UserLotteryLog::where('user_id',$user['id'])->where('relation_id',$order['id'])->where('type',4)->order('id','asc')->find();
+                if($speedUpLog){
+                    $item['prev_time'] = date('Y-m-d H:i:s',$speedUpLog['amount_before']);
+                }
+            }
+            $data[] = $item;
+        }
 
         return out($data);
     }

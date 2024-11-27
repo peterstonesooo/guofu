@@ -87,10 +87,10 @@ class LotteryController extends AuthController
             return json(['code' => 10001, 'msg' => '抽奖次数不足,请邀请用户实名获取抽奖次数']);
         }
 
-        $order = Order::where('user_id', $user['id'])->where('status',2)->where('project_group_id',2)->find();
+/*         $order = Order::where('user_id', $user['id'])->where('status',2)->where('project_group_id',2)->find();
         if(!$order){
             return json(['code' => 10001, 'msg' => '请购买就业补助一期后再抽奖']);
-        }
+        } */
         $today = date('Y-m-d');
         /*$realnameCount = Realname::alias('a')->join('mp_user_relation r','a.user_id = r.sub_user_id')
                                                     ->where('r.user_id', $user['id'])
@@ -164,6 +164,42 @@ class LotteryController extends AuthController
         }
         
 
+    }
+
+    /**
+     * 用户加速
+     */
+    public function speedUp(){
+        $req = $this->validate(request(), [
+            'day_num' => 'require|number',
+            'order_id' => 'require|number',
+        ]);
+        $user = $this->user;
+        $lottery = UserLottery::where('user_id', $user['id'])->find();
+        $speedUpBalance = 0;
+        if($lottery){
+            $speedUpBalance = $lottery['speed_up_balance'];
+        }
+        if($speedUpBalance <= 24){
+            return json(['code' => 10001, 'msg' => '加速时间不足一天']);
+        }
+        $order = Order::where('user_id', $user['id'])->where('status',2)->where('project_group_id',2)->where('id',$req['order_id'])->find();
+        if(!$order){
+            return json(['code' => 10001, 'msg' => '请购买就业补助一期后再加速']);
+        }
+        $today = date('Y-m-d');
+
+        $time = $req['day_num']*60*60*24;
+        $hour = $req['day_num']*24;
+        if($hour > $speedUpBalance){
+            return json(['code' => 10001, 'msg' => '加速时间不足']);
+        }
+        Order::where('user_id',$user['id'])->where('id',$order['id'])->update([
+            'end_time'=>Db::raw('end_time-'.$time),
+            'is_speed_up'=>1,
+        ]);
+        UserLottery::lotteryInc($user['id'],-$hour,4,0,$order['id'],3,'speed_up_balance');
+        return json(['code' => 200, 'msg' => '加速成功', 'data' => ['speed_up_balance'=>$speedUpBalance - $hour,'order_id'=>$order['id'],'end_time'=>date('Y-m-d H:i:s',$order['end_time'] - $time)]]);
     }
 
 
