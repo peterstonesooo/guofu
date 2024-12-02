@@ -49,7 +49,7 @@ class PayAccountController extends AuthController
             'id' => 'require|number',
             'account|账号' => 'require',
             'bank_name|银行名称' => 'max:100',
-            //'bank_branch|银行支行' => 'max:100',
+            'bank_branch|银行支行' => 'max:100',
         ]);
 
 
@@ -74,7 +74,7 @@ class PayAccountController extends AuthController
             'account|账号' => 'require',
             'phone|手机号' => 'mobile',
             'bank_name|银行名称' => 'max:100',
-            //'bank_branch|银行支行' => 'max:100',
+            'bank_branch|银行支行' => 'max:100',
         ]);
 
         $payAccount = PayAccount::where('id', $req['id'])->find();
@@ -82,9 +82,9 @@ class PayAccountController extends AuthController
             if (empty($req['bank_name'])) {
                 return out(null, 10001, '银行名称不能为空');
             }
-/*             if (empty($req['bank_branch'])) {
+            if (empty($req['bank_branch'])) {
                 return out(null, 10001, '银行支行不能为空');
-            } */
+            }
         }
         else {
             unset($req['bank_name'], $req['bank_branch']);
