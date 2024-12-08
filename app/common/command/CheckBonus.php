@@ -29,7 +29,7 @@ class CheckBonus extends Command
     {
         $cur_time = strtotime(date('Y-m-d 00:00:00'));
         $time = strtotime(date('Y-m-d 00:00:00'));
-        $data = Order::whereIn('project_group_id',[1])->where('status',2)->where('end_time', '<=', $cur_time)
+        $data = Order::whereIn('project_group_id',[1,2])->where('status',2)->where('end_time', '<=', $cur_time)
          ->chunk(100, function($list) {
             foreach ($list as $item) {
                 $this->bonus($item);
@@ -268,7 +268,9 @@ class CheckBonus extends Command
             $text = "{$order['project_name']}收益";
             $income = $order['single_amount']+$order['sum_amount'];
             User::changeInc($order['user_id'],$income,'team_bonus_balance',6,$order['id'],3,$text);
-            User::changeInc($order['user_id'],$order['gift_integral'],'integral',6,$order['id'],2,$text);
+            if($order['gift_integral']>0){
+                User::changeInc($order['user_id'],$order['gift_integral'],'integral',6,$order['id'],2,$text);
+            }
             $subsidyAmount= $order['single_amount']*$order['bonus_multiple'];
             User::changeInc($order['user_id'],$subsidyAmount,'poverty_subsidy_amount',6,$order['id'],5,$text);
             //User::changeInc($order['user_id'],$order['single_gift_digital_yuan'],'digital_yuan_amount',5,$order['id'],3);
