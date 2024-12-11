@@ -82,7 +82,7 @@ class HomeController extends AuthController
 
         $yesterday = date('Y-m-d', strtotime('-1 day'));
         $arr['title'] = '昨日签到';
-        $arr['value'] = UserSignin::whereBetweenTime('created_at',[$yesterday.' 00:00:00',$yesterday.' 23:59:59'])->count();
+        $arr['value'] = UserSignin::whereBetweenTime('created_at',$yesterday.' 00:00:00',$yesterday.' 23:59:59')->count();
         $arr['today_value'] = UserSignin::where('created_at','>=',$today)->count();
         $arr['url'] = '';
         $data[] = $arr;
