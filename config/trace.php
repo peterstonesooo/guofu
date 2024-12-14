@@ -4,7 +4,7 @@
 // +----------------------------------------------------------------------
 return [
     // 内置Html和Console两种方式 支持扩展
-    'type'    => 'Html',
+    'type'    => env('app_trace') ? 'Html' : \app\common\libs\NullTrace::class,
     // 读取的日志通道名
     'channel' => '',
 ];

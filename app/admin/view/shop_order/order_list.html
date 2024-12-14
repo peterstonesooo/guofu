@@ -1,0 +1,142 @@
+<div class="search">
+    <form class="form-inline">
+        <select name="status" class="form-control">
+            <option value="">搜索状态</option>
+            <?php foreach ($statusConfig as  $k=>$v) { ?>
+                <option <?php if (isset($req['status']) && $req['status'] == $k) {
+                    echo 'selected = "selected"';
+                } ?> value="{$k}">{$v}
+                </option>
+            <?php } ?>
+        </select>
+        <input placeholder="订单号" autocomplete="on" value="{$req['order_num']??''}" name="order_num" class="form-control">
+        <input placeholder="名称" autocomplete="on" value="{$req['title']??''}" name="title" class="form-control">
+        <input placeholder="手机号或用户ID" autocomplete="on" value="{$req['user']??''}" name="user" class="form-control">
+        <input placeholder="开始时间" autocomplete="off" value="{$req['start_date']??date('Y-m-d',strtotime('-7 day'))}" name="start_date" class="form-control layer-date" id="start">
+        ～
+        <input placeholder="结束时间" autocomplete="off" value="{$req['end_date']??''}" name="end_date" class="form-control layer-date" id="end">
+
+        <input class="btn btn-flat btn-primary m_10" type="submit" value="搜索">
+    </form>
+</div>
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="box">
+            <div class="box-header">
+                <div class="box-body table-responsive no-padding">
+                    <table class="table table-bordered table-hover table-striped">
+                        <tbody>
+                        <tr>
+                            <th>ID</th>
+                            <th>订单号</th>
+                            <th>手机号</th>
+                            <th>名称</th>
+                            <th>图片</th>
+                            <th>价格</th>
+                            <th>积分</th>
+                            <th>数量</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                        <?php foreach ($data as $k => $v) { ?>
+                            <tr>
+                                <td>{$v['id']}</td>
+                                <td>{$v['order_num']}</td>
+                                <td>{$v['phone']}</td>
+                                <td>{$v['goods_title'] ?? ''}</td>
+                                <td><img src="{$v['img_url']}" onclick="seePhoto('{$v["img_url"]}')" style="max-width: 80px;"></td>
+                                <td>{$v['price']}x{$v['num']} <br> {$v['all_price']}</td>
+                                <td>{$v['integral']}x{$v['num']} <br> {$v['all_integral']}</td>
+                                <td>{$v['num']}</td>
+                                <td>{$v['status_text']}</td>
+                                <td>{$v['add_time']}</td>
+                                <td>
+                                    <a  class="btn btn-flat btn-info btn-xs"
+                                    href="{:url('admin/ShopOrder/showDetail', ['id' => $v['id']])}"><i
+                                            class="fa fa-edit"></i> 详情</a>
+
+                                    <!-- 修改状态按钮 -->
+                                    <a class="btn btn-flat btn-info btn-xs" onclick="showChangeStatus({$v['id']}, {$v['status']})">
+                                        修改状态
+                                    </a>
+                                </td>
+                                
+                            </tr>
+                        <?php } ?>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="text-align:center;font-size: 14px;"><?php echo $data->render(); ?> <h5></h5></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加弹窗表单模板 -->
+<script type="text/html" id="statusFormTpl">
+    <form class="layui-form" id="statusForm" style="padding: 20px;">
+        <input type="hidden" name="order_id" id="order_id">
+        <div class="form-group">
+            <label>订单状态</label>
+            <select name="status" class="form-control" id="status">
+                <?php foreach ($statusConfig as $k => $v) { ?>
+                    <option value="{$k}">{$v}</option>
+                <?php } ?>
+            </select>
+        </div>
+    </form>
+</script>
+
+<script>
+    $(function () {
+        //日期范围限制
+        var start = {
+            elem: '#start',
+            format: 'yyyy-MM-dd',
+        };
+        var end = {
+            elem: '#end',
+            format: 'yyyy-MM-dd',
+        };
+        laydate.render(start);
+        laydate.render(end);
+    });
+
+    function showChangeStatus(id, currentStatus) {
+        layer.open({
+            type: 1,
+            title: '修改订单状态',
+            area: ['400px', '250px'],
+            content: $('#statusFormTpl').html(),
+            success: function(layero, index) {
+                $('#order_id').val(id);
+                $('#status').val(currentStatus);
+            },
+            btn: ['确认', '取消'],
+            yes: function(index) {
+                var formData = $('#statusForm').serialize();
+                $.ajax({
+                    url: '{:url("admin/ShopOrder/changeStatus")}',
+                    type: 'POST',
+                    data: formData,
+                    success: function(res) {
+                        if(res.code == 1) {
+                            layer.msg('修改成功');
+                            layer.close(index);
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 1500);
+                        } else {
+                            layer.msg(res.msg || '修改失败');
+                        }
+                    },
+                    error: function() {
+                        layer.msg('网络错误，请重试');
+                    }
+                });
+            }
+        });
+    }
+</script>
