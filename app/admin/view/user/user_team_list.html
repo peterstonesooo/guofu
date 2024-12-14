@@ -1,7 +1,7 @@
 <div class="search">
     <form class="form-inline">
         <a class="btn btn-flat btn-primary m_10_l_0" href="{:url('admin/User/userList')}">显示全部</a>
-        <input type="hidden" value="{$req['user_id']??''}" name="user_id" placeholder="搜索用户ID" class="form-control">
+        <input type="text" value="{$req['user_id']??''}" name="user_id" placeholder="搜索用户ID或者手机号" class="form-control">
         <input placeholder="开始时间" autocomplete="off" value="{$req['start_date']??''}" name="start_date" class="form-control layer-date" id="start">
         ～
         <input placeholder="结束时间" autocomplete="off" value="{$req['end_date']??''}" name="end_date" class="form-control layer-date" id="end">

@@ -476,8 +476,15 @@ class UserController extends AuthController
     public function userTeamList()
     {
         $req = request()->get();
-
-        $user = User::where('id', $req['user_id'])->find();
+        if(!isset($req['user_id']) || $req['user_id']==''){
+            return out(null, 10001, '参数错误');
+        }
+        if(strlen(trim($req['user_id']))==11){
+            $user = User::where('phone',$req['user_id'])->find();
+            $req['user_id'] = $user['id'];
+        }else{
+            $user = User::where('id', $req['user_id'])->find();
+        }
         $path = Db::table('mp_user_path')->where('user_id', $req['user_id'])->find();
         $regCount = 0;
         $regRealCount = 0;
@@ -485,16 +492,21 @@ class UserController extends AuthController
             $query = User::alias('u')
                 ->join('mp_user_path p', 'u.id = p.user_id')
                 ->where('p.path', 'like', $path['path'] .'/'.$user['id']. '%');
+
+            $queryReal = clone $query;
+            $queryReal->join('mp_realname r','u.id = r.user_id')->where('u.is_realname', 1);
+
             if(isset($req['start_date']) && $req['start_date']!='') {
-                $query->where('u.created_at','>=',$req['start_date']);
+                $query->where('u.created_at','>=',$req['start_date'].' 00:00:00');  
+                $queryReal->where('r.audit_time','>=',$req['start_date'].' 00:00:00');
             }
 
             if(isset($req['end_date']) && $req['end_date']!='') {
-                $query->where('u.created_at','<=',$req['end_date']);
+                $query->where('u.created_at','<=',$req['end_date'].' 23:59:59');
+                $queryReal->where('r.audit_time','<=',$req['end_date'].' 23:59:59');
             }
-            $query2 = clone $query;
             $regCount = $query->count();
-            $regRealCount = $query2->where('u.is_realname', 1)->count();
+            $regRealCount = $queryReal->count();
         }else{
             $regCount = $path['team_count'];
             $regRealCount = $path['team_real_count'];
