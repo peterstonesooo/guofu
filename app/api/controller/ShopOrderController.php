@@ -7,7 +7,40 @@ use app\model\User;
 
 class ShopOrderController extends AuthController
 {
-
+/**
+ * 商品购买
+ * 
+ * @api {post} /ShopOrder/order 商品购买
+ * 
+ * @apiDescription 用户购买商品，支持余额和积分支付
+ * 
+ * @apiParam {Number} goods_id 商品ID
+ * @apiParam {Number} num 购买数量
+ * @apiParam {String} name 收货人姓名
+ * @apiParam {String} phone 收货人手机号
+ * @apiParam {String} address 收货地址
+ * @apiParam {String} main_address 详细地址
+ * @apiParam {String} sku 商品规格
+ * 
+ * @apiSuccess {Number} order_id 订单ID
+ * 
+ * @apiSuccessExample {json} 成功返回示例:
+ * {
+ *     "code": 200,
+ *     "msg": "购买成功",
+ *     "data": {
+ *         "order_id": 1
+ *     }
+ * }
+ * 
+ * @apiError {Number} 10001 购买失败
+ * @apiErrorExample {json} 错误返回示例:
+ * {
+ *     "code": 10001,
+ *     "msg": "余额不足",
+ *     "data": null
+ * }
+ */
     public function order()
     {
         $user = $this->user;
@@ -91,6 +124,59 @@ class ShopOrderController extends AuthController
 
     }
 
+/**
+ * 获取订单列表
+ * 
+ * @api {get} /ShopOrder/orderList 获取订单列表
+ * 
+ * @apiDescription 获取当前用户的订单列表，支持按状态筛选
+ * 
+ * @apiParam {Number} status 订单状态(0:全部 1:待发货 2:待收货 3:已完成 4:已取消)
+ * 
+ * @apiSuccess {Number} id 订单ID
+ * @apiSuccess {Number} user_id 用户ID
+ * @apiSuccess {Number} goods_id 商品ID
+ * @apiSuccess {String} title 商品标题
+ * @apiSuccess {Number} price 商品单价
+ * @apiSuccess {Number} num 购买数量
+ * @apiSuccess {Number} total_price 订单总价
+ * @apiSuccess {Number} integral 消耗积分
+ * @apiSuccess {String} name 收货人姓名
+ * @apiSuccess {String} phone 收货电话
+ * @apiSuccess {String} address 收货地址
+ * @apiSuccess {String} main_address 详细地址
+ * @apiSuccess {Number} status 订单状态
+ * @apiSuccess {String} status_text 订单状态文本
+ * @apiSuccess {String} img_url 商品图片URL
+ * @apiSuccess {String} create_time 创建时间
+ * 
+ * @apiSuccessExample {json} 成功返回示例:
+ * {
+ *     "code": 1,
+ *     "msg": "success",
+ *     "data": {
+ *         "current_page": 1,
+ *         "data": [{
+ *             "id": 1,
+ *             "user_id": 100,
+ *             "goods_id": 1,
+ *             "title": "商品名称",
+ *             "price": 99.00,
+ *             "num": 1,
+ *             "total_price": 99.00,
+ *             "integral": 100,
+ *             "name": "张三",
+ *             "phone": "13800138000",
+ *             "address": "广东省广州市",
+ *             "main_address": "天河区xxx路xxx号",
+ *             "status": 1,
+ *             "status_text": "待发货",
+ *             "img_url": "http://example.com/image.jpg",
+ *             "create_time": "2024-01-01 12:00:00"
+ *         }]
+ *     }
+ * }
+ */
     public function orderList()
     {
         $req = $this->validate(request(), [
