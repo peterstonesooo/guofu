@@ -89,6 +89,7 @@
                                               <blockquote class="layui-elem-quote layui-quote-nm" style="margin-top: 10px;overflow:hidden">
                                                 预览图：
                                                 <div class="layui-upload-list" id="demo1">
+                                                    {if(isset($data['imgs_list']) && !empty($data['imgs_list']))}
                                                     {foreach($data['imgs_list'] as $img)}
                                                     <div class="p" onclick="deldom(this)">
                                                         <img src="{$img['imgurl']}" class="layui-upload-img">
@@ -100,6 +101,7 @@
                                                         </div>
                                                     </div>
                                                     {/foreach}
+                                                    {/if}
                                                 </div>
                                              </blockquote>
                                             </div>
@@ -203,7 +205,7 @@
             </div>
         </div>
     </div>
-    <div id="contents_edit" style="display:none">{$data.infos|raw}</div>
+    <div id="contents_edit" style="display:none">{if(isset($data['infos']))}{$data.infos|raw}{/if}</div>
 
     <script type="text/javascript" src="__ADMIN__/bower_components/wangeditor3/xss.js"></script>
     <script type="text/javascript" src="__ADMIN__/bower_components/wangeditor3/wangEditor.js"></script>

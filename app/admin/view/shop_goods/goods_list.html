@@ -11,6 +11,8 @@
         </select>
         <input placeholder="名称" autocomplete="on" value="{$req['title']??''}" name="title" class="form-control">
         <input class="btn btn-flat btn-primary m_10" type="submit" value="搜索">
+        <a {:auth_show_judge('Project/addProject')} class="btn btn-flat btn-success m_10 f_r"
+        href="{:url('admin/ShopGoods/showGoods')}"><i class="fa fa-plus m-r-10"></i>添 加</a>
     </form>
 </div>
 

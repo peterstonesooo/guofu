@@ -56,38 +56,38 @@ class ShopOrderController extends AuthController
             'main_address|省市县' => 'require',
 
         ]);
-        $req['sku'] = isset($req['sku']) ? $req['sku'] : '';
+        $req['sku'] =request()->param('sku');
 
 
 
-        Db::transaction(function () use ($user, $req) {
+        Db::startTrans();
             try {
                 $goods = Db::table('shop_goods')->lock(true)->where('id', $req['goods_id'])->find();
                 if (!$goods) {
-                    exit_out2(null,10001,'商品不存在');
+                    throw new \Exception('商品不存在');
                 }
                 if ($goods['num'] <= 0) {
-                    exit_out2(null,10001,'商品已售罄');
+                    throw new \Exception('商品已售罄');
                 }
                 if ($goods['status'] != 1) {
-                    exit_out2(null,10001,'商品已下架');
+                    throw new \Exception('商品已下架');
                 }
                 $allPrice = $goods['price'] * $req['num'];
                 $allIntegral = $goods['integral'] * $req['num'];
                 $user = User::where('id', $user['id'])->lock(true)->find();
                 if ($user['topup_balance'] <= $allPrice) {
-                    exit_out2(null,10001,'余额不足');
+                    throw new \Exception('余额不足');
                     
                 }
                 if ($user['integral'] < $allIntegral) {
-                    exit_out2(null,10001,'积分不足');
+                    throw new \Exception('积分不足');
 
                 }
                 if($user['pay_password'] == ''){
-                    exit_out2(null,10001,'请先设置支付密码');
+                    throw new \Exception('请先设置支付密码');
                 }
                 if ($req['pay_password']== '' || $user['pay_password'] != sha1(md5($req['pay_password']))) {
-                    exit_out2(null,10001,'支付密码错误');
+                    throw new \Exception('支付密码错误');
                 }
 
                 $orderData = [
@@ -114,12 +114,13 @@ class ShopOrderController extends AuthController
                 Db::table('shop_goods')->where('id', $goods['id'])->inc('sale_num', $orderData['num'])->dec('num', $orderData['num'])->update();
                 User::changeInc($user['id'], -$orderData['all_price'], 'topup_balance', 27, $id, 1, '余额' . '-' . $goods['title'], 0, 1, 'GO');
                 User::changeInc($user['id'], -$orderData['all_integral'], 'integral', 27, $id, 1, '积分' . '-' . $goods['title'], 0, 1, 'GO');
+                Db::commit();
                 return out(['order_id' => $id],200,'购买成功');
-                exit;
             } catch (\Exception $e) {
+                Db::rollback();
                 exit_out(null,10001,$e->getMessage());
             }
-        });
+        
         //return out(null,10001,'购买失败');
 
     }
@@ -131,51 +132,9 @@ class ShopOrderController extends AuthController
  * 
  * @apiDescription 获取当前用户的订单列表，支持按状态筛选
  * 
- * @apiParam {Number} status 订单状态(0:全部 1:待发货 2:待收货 3:已完成 4:已取消)
+ * @apiParam {Number} status 订单状态( 1未支付  2 已支付  5 待收货 6已取消  7 已完成 8退款中 9已退款)
  * 
- * @apiSuccess {Number} id 订单ID
- * @apiSuccess {Number} user_id 用户ID
- * @apiSuccess {Number} goods_id 商品ID
- * @apiSuccess {String} title 商品标题
- * @apiSuccess {Number} price 商品单价
- * @apiSuccess {Number} num 购买数量
- * @apiSuccess {Number} total_price 订单总价
- * @apiSuccess {Number} integral 消耗积分
- * @apiSuccess {String} name 收货人姓名
- * @apiSuccess {String} phone 收货电话
- * @apiSuccess {String} address 收货地址
- * @apiSuccess {String} main_address 详细地址
- * @apiSuccess {Number} status 订单状态
- * @apiSuccess {String} status_text 订单状态文本
- * @apiSuccess {String} img_url 商品图片URL
- * @apiSuccess {String} create_time 创建时间
  * 
- * @apiSuccessExample {json} 成功返回示例:
- * {
- *     "code": 1,
- *     "msg": "success",
- *     "data": {
- *         "current_page": 1,
- *         "data": [{
- *             "id": 1,
- *             "user_id": 100,
- *             "goods_id": 1,
- *             "title": "商品名称",
- *             "price": 99.00,
- *             "num": 1,
- *             "total_price": 99.00,
- *             "integral": 100,
- *             "name": "张三",
- *             "phone": "13800138000",
- *             "address": "广东省广州市",
- *             "main_address": "天河区xxx路xxx号",
- *             "status": 1,
- *             "status_text": "待发货",
- *             "img_url": "http://example.com/image.jpg",
- *             "create_time": "2024-01-01 12:00:00"
- *         }]
- *     }
- * }
  */
     public function orderList()
     {
@@ -188,11 +147,32 @@ class ShopOrderController extends AuthController
         if($req['status'] >0) {
             $query->where('status', $req['status']);
         }
-        $list = $query->order('id', 'DESC')->paginate(['query' => request()->param()]);
-        foreach ($list as &$v) {
-            $v['status_text'] = config('map.shop_order_status')[$v['status']];
-            $v['img_url'] = Db::table('shop_picture')->where('id', $v['imgurl'])->value('imgurl');
-        }
+        $list = $query->order('id', 'DESC')->paginate(['query' => request()->param()])->each(function($item){
+            $item['status_text'] = config('map.shop_order_status')[$item['status']];
+            $item['img_url'] = Db::table('shop_picture')->where('id', $item['imgurl'])->value('imgurl');
+            $item['img_url'] = get_img_api($item['img_url']);
+            return $item;
+        });
+
         return out($list);
+    }
+
+    public function orderDetail(){
+        $req = $this->validate(request(), [
+            'id' => 'require|number',
+        ]);
+        $user = $this->user;
+        $order = Db::table('shop_order')->where('id', $req['id'])->find();
+        if (!$order) {
+            return out(null, 10001, '订单不存在');
+        }
+        if ($order['user_id'] != $user['id']) {
+            return out(null, 10001, '订单不存在');
+        }
+        $order['status_text'] = config('map.shop_order_status')[$order['status']];
+        $order['img_url'] = Db::table('shop_picture')->where('id', $order['imgurl'])->value('imgurl');
+        $order['img_url'] = get_img_api($order['img_url']);
+
+        return out($order);
     }
 }

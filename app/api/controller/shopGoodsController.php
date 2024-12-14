@@ -46,10 +46,10 @@ class ShopGoodsController extends AuthController
      */
     public function goodsList(){
         $req = $this->validate(request(), [
-            'cate_id' => 'number',
-            'is_tuijian' => 'number',
+            'cate_id' => 'require|number',
+            'is_tuijian' => 'require|number',
         ]);
-        $query = Db::table('shop_goods')->where('staus',1);
+        $query = Db::table('shop_goods')->where('status',1);
         if($req['cate_id'] != 0) {
             $query->where('cate_id',$req['cate_id']);
         }
@@ -57,7 +57,7 @@ class ShopGoodsController extends AuthController
             $query->where('is_tuijian',$req['is_tuijian']);
         }
 
-        $list = $query->field('id,title,price,integral,sku,imgurl,is_tuijian')->paginate(['query' => request()->param()])->each(function($item){
+        $list = $query->field('id,title,price,integral,sku,imgurl,is_tuijian')->order('sort desc,id desc')->paginate(['query' => request()->param()])->each(function($item){
             $item['img_url'] = Db::table('shop_picture')->where('id',$item['imgurl'])->value('imgurl');
             $item['img_url'] = get_img_api($item['img_url']);
             return $item;
@@ -119,6 +119,11 @@ class ShopGoodsController extends AuthController
         $detail['img_url'] = Db::table('shop_picture')->where('id',$detail['imgurl'])->value('imgurl');
         $detail['img_url'] = get_img_api($detail['img_url']);
         return out($detail);
+    }
+
+    public function cateList(){
+        $cate = Db::table('shop_cate')->field('id,title')->order('sort desc,id desc')->select();
+        return out($cate);
     }
 
 }
