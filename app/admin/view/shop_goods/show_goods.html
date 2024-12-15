@@ -211,6 +211,7 @@
     <script type="text/javascript" src="__ADMIN__/bower_components/wangeditor3/wangEditor.js"></script>
     <script type="text/javascript">
         uploadUrl = "{:url('/common/uploadShop')}";
+        //uploadUrl = "{:url('/admin/common/uploadShop')}";
 
         var content = $("#contents_edit").html();
         var E = window.wangEditor
@@ -247,8 +248,9 @@
             var element = layui.element;
             //执行实例
             var uploadInst = upload.render({
-                accept:'imgurl'
+                accept:'images'
                 ,elem: '#imgurl' //绑定元素
+                ,exts:"jpg|png|jpeg|webp|avif"
                 ,url: uploadUrl //上传接口
                 ,progress: function(n, elem){
                     $("#progress_imgurl").show();
