@@ -369,7 +369,7 @@
                   }
             });
             
-            var url="<?php echo !empty($data) ? url("/admin/ShopGoods/editGoods") : url("/admin/ShopGoods/addGoods");?>";
+            var url="<?php echo !empty($data) ? url("admin/ShopGoods/editGoods") : url("admin/ShopGoods/addGoods");?>";
             var $ = layui.$;
             $("#infos").val(contents);
             var load=layer.load(2);
