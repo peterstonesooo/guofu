@@ -123,6 +123,12 @@ class ShopGoodsController extends AuthController
             $imgs[$k] = get_img_api($v);
         }
         $detail['imgs_list'] = $imgs;
+
+        // infos字段存储的是富文本编辑器的内容,需要找出图片url然后使用get_img_api替换成完整的url
+        $detail['infos'] = preg_replace_callback('/<img.*?src="(.*?)".*?>/i', function($matches) {
+            return str_replace($matches[1], get_img_api($matches[1]), $matches[0]);
+        }, $detail['infos']);
+
         return out($detail);
     }
 
