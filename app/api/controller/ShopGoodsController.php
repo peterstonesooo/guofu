@@ -118,6 +118,11 @@ class ShopGoodsController extends AuthController
         }
         $detail['img_url'] = Db::table('shop_picture')->where('id',$detail['imgurl'])->value('imgurl');
         $detail['img_url'] = get_img_api($detail['img_url']);
+        $imgs = Db::table('shop_picture')->where('id','in',$detail['imgs'])->field('id,imgurl')->column('imgurl');
+        foreach($imgs as $k => $v) {
+            $imgs[$k] = get_img_api($v);
+        }
+        $detail['imgs_list'] = $imgs;
         return out($detail);
     }
 
