@@ -269,8 +269,8 @@ class UserController extends AuthController
         if (!empty($req['pay_password']) && $user['pay_password'] !== sha1(md5($req['pay_password']))) {
             return out(null, 10001, '支付密码错误');
         }
-        if (!in_array($req['type'], [1,2])) {
-            return out(null, 10001, '不支持该支付方式');
+        if (!in_array($req['type'], [1])) {
+            return out(null, 10001, '不支持该方式');
         }
         if ($user['phone'] == $req['account']) {
             return out(null, 10001, '不能转帐给自己');
