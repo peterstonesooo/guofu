@@ -28,7 +28,7 @@
                                 <td>{$v['id']}</td>
                                 <td>{$v['pay_type_text']}</td>
                                 <td>{$v['realname']}</td>
-                                <td><?php if ($v['pay_type'] == 3) { ?> 银行：{$v['bank_name']}<br>支行：{$v['bank_branch']}<br>卡号：{$v['account']} <?php } else { ?>{$v['account']} <?php } ?></td>
+                                <td><?php if ($v['bank_name'] !='') { ?> 银行：{$v['bank_name']}<br>支行：{$v['bank_branch']}<br>卡号：{$v['account']} <?php } else { ?>{$v['account']} <?php } ?></td>
                                 <td>{$v['created_at']}</td>
                                 <td>
                                     <a {:auth_show_judge('PayAccount/editPayAccount')} class="btn btn-flat btn-info

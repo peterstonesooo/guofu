@@ -520,7 +520,20 @@ class UserController extends AuthController
         $subUsersIds = UserRelation::where('user_id', $req['user_id'])->column('sub_user_id');
         $data['total_invest'] = User::whereIn('id', $subUsersIds)->sum('invest_amount');
         
-
+        if (!empty($req['export'])) {
+            $list = UserRelation::alias('r')->join('mp_user u','r.sub_user_id = u.id')->field('u.id,u.phone,u.realname,r.level,r.is_active')->where('r.user_id', $req['user_id'])->select();
+            create_excel($list, [
+                'id' => '序号',
+                // 'account_type' => '用户',
+                // 'capital_sn' => '单号',
+                // 'withdraw_status_text' => '状态',
+                // 'pay_channel_text' => '支付渠道',
+                'phone' => '电话',
+                'realname' => '姓名',
+                'level' => '第几级',
+                'is_active' => '激活',
+            ], '用户-' . date('YmdHis'));
+        }
 
        
         $this->assign('data', $data);

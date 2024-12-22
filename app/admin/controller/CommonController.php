@@ -112,6 +112,26 @@ class CommonController extends BaseController
         return redirect(url('admin/Common/login'));
     }
 
+    public function uploadFile2(){
+        $url = upload_file2('file');
+        return out(['url'=>$url]);   
+    }
+
+    public function uploadShop(){
+        $url = upload_shop('file',true,false,'shop','png,jpg,webp,avif,jpeg');
+        $ids =[];
+        if(is_array($url)){
+            foreach($url as $v){
+                $insertId= Db::table('shop_picture')->insertGetId(['imgurl'=>$v,'status'=>1]);
+                $ids[] = $insertId;
+            }
+            $id = implode(',',$ids);
+        }else{
+         $id = Db::table('shop_picture')->insertGetId(['imgurl'=>$url,'status'=>1]);
+        }
+        return out(['url'=>$url,'id' => $id]);   
+    }
+
     public function doc()
     {
         $database = env('database.database');

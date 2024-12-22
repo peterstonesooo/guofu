@@ -267,10 +267,7 @@ class CommonController extends BaseController
         return out(['url' => $url]);
     }
 
-/*     public function uploadFile2(){
-        $url = upload_file2('file');
-        return out(['url'=>$url]);   
-    } */
+
 
     public function systemInfo()
     {

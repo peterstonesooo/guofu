@@ -1,0 +1,170 @@
+<div class="container-fluid">
+    <!-- 订单基本信息 -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title">订单基本信息</h3>
+                </div>
+                <div class="box-body">
+                    <table class="table table-bordered">
+                        <tr>
+                            <td width="15%"><strong>订单编号：</strong></td>
+                            <td width="35%">{$order.order_num}</td>
+                            <td width="15%"><strong>下单时间：</strong></td>
+                            <td width="35%">{$order.add_time}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>订单状态：</strong></td>
+                            <td>{$order.status_text}</td>
+                            <td><strong></strong></td>
+                            <td></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 商品信息 -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title">商品信息</h3>
+                </div>
+                <div class="box-body">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>商品图片</th>
+                                <th>商品名称</th>
+                                <th>单价</th>
+                                <th>积分</th>
+                                <th>数量</th>
+                                 <th>小计</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><img src="{$order.img_url}" style="max-width: 80px;"></td>
+                                <td>{$order.goods_title} <br> {$order.sku}</td>
+                                <td>{$order.price}</td>
+                                <td>{$order.integral}</td>
+
+                                <td>{$order.num}</td>
+                                <td>价格 ￥{$order.all_price} <br/>积分 {$order.all_integral}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 收货信息 -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title">收货信息</h3>
+                </div>
+                <div class="box-body">
+                    <table class="table table-bordered">
+                        <tr>
+                            <td width="15%"><strong>收货人：</strong></td>
+                            <td width="35%">{$order.name}</td>
+                            <td width="15%"><strong>联系电话：</strong></td>
+                            <td width="35%">{$order.phone}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>收货地址：</strong></td>
+                            <td colspan="3">{$order.main_address} {$order.address}</td>
+                        </tr>
+                        {if($order.status == 2)}
+                        <tr>
+                            <td colspan="4">
+                                <button class="btn btn-primary" onclick="showShipDialog()">发货</button>
+                            </td>
+                        </tr>
+                        {/if}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- 发货信息 -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">发货信息</h3>
+                    </div>
+                    <div class="box-body">
+                        <table class="table table-bordered">
+                            <tr>
+                                <td width="15%"><strong>物流名称：</strong></td>
+                                <td width="35%">{$order.send_type}</td>
+                                <td width="15%"><strong>快递单号</strong></td>
+                                <td width="35%">{$order.send_num}</td>
+                            </tr>
+
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <!-- 订单状态记录 -->
+
+</div>
+
+<!-- 添加弹框表单模板 -->
+<script type="text/html" id="shipFormTpl">
+    <form class="layui-form" id="shipForm" style="padding: 20px;">
+        <input type="hidden" name="order_id" value="{$order.id}">
+        <div class="form-group">
+            <label>物流公司名称</label>
+            <input type="text" class="form-control" name="express_name" required>
+        </div>
+        <div class="form-group" style="margin-top:15px;">
+            <label>快递单号</label>
+            <input type="text" class="form-control" name="express_num" required>
+        </div>
+    </form>
+</script>
+
+<script>
+function showShipDialog() {
+    layer.open({
+        type: 1,
+        title: '填写物流信息',
+        area: ['500px', '300px'],
+        content: $('#shipFormTpl').html(),
+        btn: ['确认发货', '取消'],
+        yes: function(index) {
+            var formData = $('#shipForm').serialize();
+            $.ajax({
+                url: '{:url("admin/ShopOrder/ship")}',
+                type: 'POST',
+                data: formData,
+                success: function(res) {
+                    if(res.code == 1) {
+                        layer.msg('发货成功');
+                        layer.close(index);
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        layer.msg(res.msg || '发货失败');
+                    }
+                },
+                error: function() {
+                    layer.msg('网络错误，请重试');
+                }
+            });
+        }
+    });
+}
+</script>

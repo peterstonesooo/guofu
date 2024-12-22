@@ -90,6 +90,27 @@ if (!function_exists('exit_out')) {
     }
 }
 
+if (!function_exists('exit_out2')) {
+    function exit_out2($data = null, $code = 200, $msg = 'success', $e = false)
+    {
+        $out = ['code' => $code, 'msg' => $msg, 'data' => $data];
+
+        if ($e !== false) {
+            if ($e instanceof Exception) {
+                $errMsg = $e->getFile().'文件第'.$e->getLine().'行错误：'.$e->getMessage();
+                trace([$msg => $errMsg], 'error');
+            }
+            else {
+                trace([$msg => $e], 'error');
+            }
+        }
+
+        //$msg = json_encode($out, JSON_UNESCAPED_UNICODE);
+
+        throw new ExitOutException($msg);
+    }
+}
+
 if (!function_exists('auth_show_judge')) {
     function auth_show_judge($path, $is_return_bool = false)
     {
@@ -452,6 +473,69 @@ if (!function_exists('upload_file3')) {
 
         return '';
     }
+}
+
+if (!function_exists('upload_shop')) {
+    function upload_shop($name, $is_must = true, $is_return_url = true, $path = '', $ext = 'png,jpg,webp')
+    {
+        $files = request()->file()[$name] ?? null;
+        
+        if (empty($files)) {
+            $files = request()->file();
+            if (empty($files) && $is_must) {
+                exit_out(null, 11002, '文件不能为空');
+                return '';
+            }
+           
+        }
+    
+        // 处理单文件上传
+        if (!is_array($files)) {
+            return handle_single_file($files, $path, $ext, $is_return_url);
+        }
+    
+        // 处理多文件上传
+        $urls = [];
+        foreach ($files as $file) {
+            $url = handle_single_file($file, $path, $ext, $is_return_url);
+            if (!empty($url)) {
+                $urls[] = $url;
+            }
+        }
+    
+        return $urls;
+    }
+}
+
+function handle_single_file($file, $path, $ext, $is_return_url) 
+{
+    try {
+        validate([
+            'file' => [
+                'fileSize' => 5 * 1024 * 1024,
+                'fileExt'  => $ext,
+            ]
+        ], [
+            'file.fileSize' => '文件太大',
+            'file.fileExt' => '不支持的文件后缀',
+        ])->check(['file' => $file]);
+    } catch (\think\exception\ValidateException $e) {
+        exit_out(null, 11003, $e->getMessage());
+        return '';
+    }
+
+    $savename = $path ? Filesystem::putFile($path, $file) : Filesystem::putFile('', $file);
+
+    if ($is_return_url) {
+        $img_url = request()->domain().'/storage/'.$savename;
+        if (!empty(env('app.img_host', ''))) {
+            $img_url = env('app.img_host').'/storage/'.$savename;
+        }
+    } else {
+        $img_url = '/storage/'.$savename;
+    }
+
+    return $img_url;
 }
 
 

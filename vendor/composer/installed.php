@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'topthink/think',
-        'pretty_version' => 'dev-master',
-        'version' => 'dev-master',
-        'reference' => '72658ce5c69d7687760385757f53b78b56925e9d',
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => '59658d21389ad7aa639893c35ab68c78cfc9d3bf',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -695,9 +695,9 @@
             'dev_requirement' => false,
         ),
         'topthink/think' => array(
-            'pretty_version' => 'dev-master',
-            'version' => 'dev-master',
-            'reference' => '72658ce5c69d7687760385757f53b78b56925e9d',
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => '59658d21389ad7aa639893c35ab68c78cfc9d3bf',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -756,15 +756,6 @@
             'install_path' => __DIR__ . '/../topthink/think-template',
             'aliases' => array(),
             'dev_requirement' => false,
-        ),
-        'topthink/think-trace' => array(
-            'pretty_version' => 'v1.4',
-            'version' => '1.4.0.0',
-            'reference' => '9a9fa8f767b6c66c5a133ad21ca1bc96ad329444',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../topthink/think-trace',
-            'aliases' => array(),
-            'dev_requirement' => true,
         ),
         'topthink/think-view' => array(
             'pretty_version' => 'v1.0.14',

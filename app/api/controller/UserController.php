@@ -248,17 +248,17 @@ class UserController extends AuthController
     public function transferAccounts(){
         //return out(null, 10001, '网络问题，请稍后再试');
         $req = $this->validate(request(), [
-            'type' => 'require|in:1,2,3,4',//1数字人民币,2 现金充值余额 3 可提现余额 4新共富钱包余额
+            'type' => 'require|in:1,2,3,4',//1余额 2提现金额
             'realname|对方姓名' => 'max:20',
             'account|对方账号' => 'require',//虚拟币钱包地址
-            'money|转账金额' => 'require|number|between:10,100000',
+            'money|转账金额' => 'require|number|between:100,100000',
             'pay_password|支付密码' => 'require',
         ]);//type 1 数字人民币，realname 对方姓名，account 对方账号，money 转账金额，pay_password 支付密码
         $user = $this->user;
 
-         if($req['type'] == 4) {
+/*          if($req['type'] == 4) {
             return out(null, 10001, '请先办理共富工程项目收益申报');
-        }
+        } */
 
         if (empty($user['ic_number'])) {
             return out(null, 10001, '请先完成实名认证');
@@ -269,34 +269,27 @@ class UserController extends AuthController
         if (!empty($req['pay_password']) && $user['pay_password'] !== sha1(md5($req['pay_password']))) {
             return out(null, 10001, '支付密码错误');
         }
-        if (!in_array($req['type'], [1,2,3,4])) {
+        if (!in_array($req['type'], [1,2])) {
             return out(null, 10001, '不支持该支付方式');
         }
-        if ($user['phone'] == $req['account'] && $req['type']==2) {
+        if ($user['phone'] == $req['account']) {
             return out(null, 10001, '不能转帐给自己');
         }
-        if($req['type'] == 4) {
+/*         if($req['type'] == 4) {
             return out(null, 10001, '为了保障您的资金安全，请尽快完成办理项目收益申报，办理完成后请耐心等待开放转账通知！');
-        }
+        } */
 
         Db::startTrans();
         try {
-            //1可用余额（可提现金额） 2 转账余额（充值金额加他人转账的金额）
-            //topup_balance充值余额 can_withdraw_balance可提现余额  balance总余额
+            //topup_balance充值余额 team_bonus_balance
             $user = User::where('id', $user['id'])->lock(true)->find();//转账人
-            if($req['type']==1){
-                $wallet =WalletAddress::where('address',$req['account'])->where('user_id','>',0)->find();
-                if(!$wallet){
-                    exit_out(null, 10002, '目标地址不存在');
-                }
-                $take = User::where('id', $wallet['user_id'])->lock(true)->find();//收款人
-            }else{
-                if(!isset($req['realname'])){
-                    return out(null, 10001, '请输入对方姓名');
-                }
-                $take = User::where('phone',$req['account'])->where('realname',$req['realname'])->lock(true)->find();//收款人
 
+            if(!isset($req['realname'])){
+                return out(null, 10001, '请输入对方姓名');
             }
+            $take = User::where('phone',$req['account'])->where('realname',$req['realname'])->lock(true)->find();//收款人
+
+            
 
             if (!$take) {
                 exit_out(null, 10001, '用户不存在');
@@ -306,14 +299,14 @@ class UserController extends AuthController
             }
             
             if($req['type'] ==1){
-                $field = 'digital_yuan_amount';
-                $fieldText = '数字人民币';
-                $logType=2;
-            } elseif($req['type'] ==2){
                 $field = 'topup_balance';
-                $fieldText = '现金余额';
-                $logType = 1;
-             } elseif($req['type'] ==4){
+                $fieldText = '可用余额';
+                $logType=1;
+            } elseif($req['type'] ==2){
+                $field = 'team_bonus_balance';
+                $fieldText = '可提余额';
+                $logType = 3;
+             } /* elseif($req['type'] ==4){
                 $field = 'gf_purse';
                 $fieldText = '共富工程钱包余额';
                 $logType = 1;
@@ -321,7 +314,7 @@ class UserController extends AuthController
                  $field = 'team_bonus_balance';
                  $fieldText = '可提现余额';
                  $logType = 1;
-             }
+             } */
 
 
             if ($req['money'] > $user[$field]) {
@@ -347,30 +340,28 @@ class UserController extends AuthController
                 'remark' => '转账'.$fieldText.'转账给'.$take['realname'],
                 'admin_user_id' => 0,
                 'status' => 2,
-                'project_name' => ''
             ]);
 
             //收到金额  加金额 转账金额
             //User::where('id', $take['id'])->inc('balance', $req['money'])->inc('topup_balance', $req['money'])->update();
-            if(in_array($req['type'],[2,3,4])){
+/*             if(in_array($req['type'],[2,3,4])){
                 $field2 = 'topup_balance';
             }else if($req['type'] ==1){
                 $field2 = 'digital_yuan_amount';
-            }
-            User::where('id', $take['id'])->inc($field2, $req['money'])->update();
+            } */
+            User::where('id', $take['id'])->inc($field, $req['money'])->update();
             //User::changeBalance($take['id'], $req['money'], 18, 0, 1,'接收转账来自'.$user['realname']);
             UserBalanceLog::create([
                 'user_id' => $take['id'],
                 'type' => 19,
                 'log_type' => $logType,
                 'relation_id' => $user['id'],
-                'before_balance' => $take[$field2],
+                'before_balance' => $take[$field],
                 'change_balance' => $req['money'],
-                'after_balance' =>  $take[$field2]+$req['money'],
+                'after_balance' =>  $take[$field]+$req['money'],
                 'remark' => '接收'.$fieldText.'来自'.$user['realname'],
                 'admin_user_id' => 0,
                 'status' => 2,
-                'project_name' => ''
             ]);
             Db::commit();
         } catch (Exception $e) {
@@ -387,7 +378,7 @@ class UserController extends AuthController
         $req = $this->validate(request(), [
             'type' => 'require|in:1,2,3',//1推荐给奖励,2 转账余额（充值金额）3 可提现余额
             //'realname|对方姓名' => 'require|max:20',
-            'account|对方账号' => 'require',//虚拟币钱包地址
+            'account|对方账号' => 'require',//phone
             'money|转账金额' => 'require|number|between:100,100000',
             'pay_password|支付密码' => 'require',
         ]);//type 1 数字人民币，，realname 对方姓名，account 对方账号，money 转账金额，pay_password 支付密码
@@ -414,11 +405,8 @@ class UserController extends AuthController
             //1可用余额（可提现金额） 2 转账余额（充值金额加他人转账的金额）
             //topup_balance充值余额 can_withdraw_balance可提现余额  balance总余额
             $user = User::where('id', $user['id'])->lock(true)->find();//转账人
-            $wallet =WalletAddress::where('address',$req['account'])->where('user_id','>',0)->find();
-            if(!$wallet){
-                exit_out(null, 10002, '目标地址不存在');
-            }
-            $take = User::where('id', $wallet['user_id'])->lock(true)->find();//收款人
+
+            $take = User::where('id', $user['phone'])->lock(true)->find();//收款人
             if (!$take) {
                 exit_out(null, 10002, '用户不存在');
             }
@@ -789,7 +777,7 @@ class UserController extends AuthController
         $realname_num = UserRelation::alias('r')->join('mp_user u','r.sub_user_id = u.id')->where('user_id',$user['id'])->where('r.level', $req['level'])->where('u.realname','<>','')->count();
 
 
-        $list = UserRelation::where('user_id', $user['id'])->where('level', $req['level'])->field('sub_user_id')->paginate(50);
+        $list = UserRelation::where('user_id', $user['id'])->where('level', $req['level'])->field('sub_user_id')->paginate(100);
         if($list){
             foreach ($list as $k =>$v){
                 $user = User::field('id,avatar,phone,realname,invite_bonus,invest_amount,equity_amount,level,is_active,created_at')->where('id', $v['sub_user_id'])->find();
@@ -894,10 +882,10 @@ class UserController extends AuthController
                 $item['type_text'] = $typeText;
             }
             
-            if ($item['type'] == 6) {
+/*             if ($item['type'] == 6) {
                 $projectName = Order::where('id', $item['relation_id'])->value('project_name');
                 $item['type_text'] = $projectName.'分配额度';
-            }
+            } */
 
             return $item;
         });

@@ -5,6 +5,7 @@ namespace app\admin\controller;
 use app\model\Capital;
 use app\model\Order;
 use app\model\User;
+use app\model\UserSignin;
 
 class HomeController extends AuthController
 {
@@ -58,6 +59,31 @@ class HomeController extends AuthController
         $arr['title'] = '提现总次数';
         $arr['value'] = Capital::where('status', 2)->where('type', 2)->where('log_type',0)->count();
         $arr['today_value'] = Capital::where('status', 2)->where('type', 2)->where('log_type',0)->where('created_at','>=',$today)->count();
+        $arr['url'] = '';
+        $data[] = $arr;
+
+        $arr['title'] = '现金';
+        $arr['value'] = User::sum('topup_balance');
+        $arr['today_value'] = '-';
+        $arr['url'] = '';
+        $data[] = $arr;
+
+        $arr['title'] = '团队奖励';
+        $arr['value'] = User::sum('team_bonus_balance');
+        $arr['today_value'] = '-';
+        $arr['url'] = '';
+        $data[] = $arr;
+
+        $arr['title'] = '积分';
+        $arr['value'] = User::sum('integral');
+        $arr['today_value'] = '-';
+        $arr['url'] = '';
+        $data[] = $arr;
+
+        $yesterday = date('Y-m-d', strtotime('-1 day'));
+        $arr['title'] = '昨日签到';
+        $arr['value'] = UserSignin::where('created_at','>=',$yesterday)->count();
+        $arr['today_value'] = UserSignin::where('created_at','>=',$today)->count();
         $arr['url'] = '';
         $data[] = $arr;
 

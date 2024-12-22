@@ -1,0 +1,41 @@
+<div class="search">
+    <form class="form-inline">
+    </form>
+    <a  class="btn btn-flat btn-success m_10 f_r"
+    href="{:url('admin/cate/showCate')}"><i class="fa fa-plus m-r-10"></i>添 加</a>
+
+</div>
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="box">
+            <div class="box-header">
+                <div class="box-body table-responsive no-padding">
+                    <table class="table table-bordered table-hover table-striped">
+                        <tbody>
+                        <tr>
+                            <th>ID</th>
+                            <th>名称</th>
+                            <th>排序</th>
+                            <th>操作</th>
+                        </tr>
+                        <?php foreach ($data as $k => $v) { ?>
+                            <tr>
+                                <td>{$v['id']}</td>
+                                <td>{$v['title']}</td>
+                                <td>{$v['sort']}</td>
+                                <td>
+                                    <a  class="btn btn-flat btn-info
+                                    btn-xs" href="{:url('admin/cate/showCate', ['id' => $v['id']])}"><i
+                                            class="fa fa-edit"></i> 编辑</a>
+                                </td>
+                            </tr>
+                        <?php } ?>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="text-align:center;font-size: 14px;"><?php echo $data->render(); ?></div>
+            </div>
+        </div>
+    </div>
+</div>

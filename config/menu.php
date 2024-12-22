@@ -156,6 +156,29 @@ return array(
                         ),
                     ),
         ),
+        '商城管理' =>
+        array(
+            'icon' => 'fa-gears',
+            'url' =>
+                array(
+                    '商品分类' =>
+                        array(
+                            'icon' => 'fa-circle-o',
+                            'url' => 'admin/Cate/cateList',
+                        ),
+                    '商品管理' =>
+                        array(
+                            'icon' => 'fa-circle-o',
+                            'url' => 'admin/ShopGoods/goodsList',
+                        ),
+                    '订单管理' =>
+                        array(
+                            'icon' => 'fa-circle-o',
+                            'url' => 'admin/ShopOrder/orderList',
+                        ),
+                    ),
+
+        ),
     '后台账号管理' =>
         array(
             'icon' => 'fa-users',

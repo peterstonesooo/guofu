@@ -34,6 +34,9 @@ class CapitalController extends AuthController
         if ($req['pay_channel'] == 0 && (!isset($req['uname']) || $req['uname']=='')){
             return out(null, 10001, '请填写付款人');
         }
+        if($user['realname']=='' || $user['ic_number']==''){
+            return out(null, 10001, '请先实名认证');
+        }
         // if (in_array($req['pay_channel'], [2,3,4,5,6,8,9,10])) {
         //     $type = $req['pay_channel'] - 1;
         //     if ($req['pay_channel'] == 6) {
