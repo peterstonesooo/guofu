@@ -2752,7 +2752,7 @@ Image.prototype = {
         // tabs 的配置
         var tabsConfig = [{
             title: '上传图片',
-            tpl: '<div class="w-e-up-img-container">\n                    <div id="' + upTriggerId + '" class="w-e-up-btn">\n                        <i class="w-e-icon-upload2"></i>\n                    </div>\n                    <div style="display:none;">\n                        <input id="' + upFileId + '" type="file" multiple="multiple" accept="image/jpg,image/jpeg,image/png,image/gif,image/bmp"/>\n                    </div>\n                </div>',
+            tpl: '<div class="w-e-up-img-container">\n                    <div id="' + upTriggerId + '" class="w-e-up-btn">\n                        <i class="w-e-icon-upload2"></i>\n                    </div>\n                    <div style="display:none;">\n                        <input id="' + upFileId + '" type="file" multiple="multiple" accept="image/jpg,image/jpeg,image/png,image/gif,image/bmp,image/avif"/>\n                    </div>\n                </div>',
             events: [{
                 // 触发选择图片
                 selector: '#' + upTriggerId,
@@ -4130,7 +4130,7 @@ UploadImg.prototype = {
                 return;
             }
 
-            if (/\.(jpg|jpeg|png|bmp|gif|webp)$/i.test(name) === false) {
+            if (/\.(jpg|jpeg|png|bmp|gif|webp|avif)$/i.test(name) === false) {
                 // 后缀名不合法，不是图片
                 errInfo.push('\u3010' + name + '\u3011\u4E0D\u662F\u56FE\u7247');
                 return;
