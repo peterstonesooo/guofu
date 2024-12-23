@@ -4133,7 +4133,7 @@ UploadImg.prototype = {
             if (/\.(jpg|jpeg|png|bmp|gif|webp|avif)$/i.test(name) === false) {
                 // 后缀名不合法，不是图片
                 errInfo.push('\u3010' + name + '\u3011\u4E0D\u662F\u56FE\u7247');
-                return;
+                return; 
             }
             if (maxSize < size) {
                 // 上传图片过大

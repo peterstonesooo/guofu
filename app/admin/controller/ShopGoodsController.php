@@ -18,7 +18,7 @@ class ShopGoodsController extends AuthController
             $builder->where('title','like','%'.trim($req['title']).'%');
         }
 
-        $data = $builder->paginate(['query' => $req])->each(function($item){
+        $data = $builder->order('id desc')->paginate(['query' => $req])->each(function($item){
             $item['cate_name'] = Db::table('shop_cate')->where('id',$item['cate_id'])->value('title');
             $item['img_url'] = Db::table('shop_picture')->where('id',$item['imgurl'])->value('imgurl');
             return $item;
