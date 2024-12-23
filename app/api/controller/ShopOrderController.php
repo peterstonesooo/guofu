@@ -113,7 +113,7 @@ class ShopOrderController extends AuthController
                 // 增加销量 sale_num 和减少库存
                 Db::table('shop_goods')->where('id', $goods['id'])->inc('sale_num', $orderData['num'])->dec('num', $orderData['num'])->update();
                 User::changeInc($user['id'], -$orderData['all_price'], 'topup_balance', 27, $id, 1, '余额' . '-' . $goods['title'], 0, 1, 'GO');
-                User::changeInc($user['id'], -$orderData['all_integral'], 'integral', 27, $id, 1, '积分' . '-' . $goods['title'], 0, 1, 'GO');
+                User::changeInc($user['id'], -$orderData['all_integral'], 'integral', 27, $id, 2, '积分' . '-' . $goods['title'], 0, 1, 'GO');
                 Db::commit();
                 return out(['order_id' => $id],200,'购买成功');
             } catch (\Exception $e) {
