@@ -75,7 +75,8 @@ return array(
         ],
         'groupName' => [
             //['id'=>2,'name'=>'就业补助一期','type'=>0,],
-            ['id'=>3,'name'=>'就业补助二期','type'=>0,],
+            //['id'=>3,'name'=>'就业补助二期','type'=>0,],
+            ['id'=>4,'name'=>'养老补助一期','type'=>0,],
             //['id'=>1,'name'=>'民生帮扶计划','type'=>0,],
         ],
         'project_house'=>[
