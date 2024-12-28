@@ -524,9 +524,16 @@ function handle_single_file($file, $path, $ext, $is_return_url)
         return '';
     }
 
-    $savename = $path ? Filesystem::putFile($path, $file) : Filesystem::putFile('', $file);
+    //$savename = $path ? Filesystem::putFile($path, $file) : Filesystem::putFile('', $file);
 
-    if ($is_return_url) {
+    //Log::debug('开始上传七牛:'.time());
+    $savename = Filesystem::disk('qiniu')->putFile('', $file);
+    //Log::debug('七牛上传完成:'.time());
+    //Log::save();
+    $baseUrl = 'http://'.config('filesystem.disks.qiniu.domain').'/';    
+    return $baseUrl.str_replace("\\", "/", $savename);
+
+/*     if ($is_return_url) {
         $img_url = request()->domain().'/storage/'.$savename;
         if (!empty(env('app.img_host', ''))) {
             $img_url = env('app.img_host').'/storage/'.$savename;
@@ -535,7 +542,7 @@ function handle_single_file($file, $path, $ext, $is_return_url)
         $img_url = '/storage/'.$savename;
     }
 
-    return $img_url;
+    return $img_url; */
 }
 
 
