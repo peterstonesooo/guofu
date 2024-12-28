@@ -57,7 +57,10 @@ class ShopOrderController extends AuthController
 
         ]);
         $req['sku'] =request()->param('sku');
-
+        $userOrder = Db::table('shop_order')->where('user_id', $user['id'])->where('status','>=',2)->find();
+        if($userOrder){
+            return out(null, 10001, '每个用户只能购买一个商品');
+        }
 
 
         Db::startTrans();
