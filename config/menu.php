@@ -156,7 +156,7 @@ return array(
                         ),
                     ),
         ),
-/*         '商城管理' =>
+        '商城管理' =>
         array(
             'icon' => 'fa-gears',
             'url' =>
@@ -178,7 +178,7 @@ return array(
                         ),
                     ),
 
-        ), */
+        ),
     '后台账号管理' =>
         array(
             'icon' => 'fa-users',
