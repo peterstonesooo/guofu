@@ -274,7 +274,7 @@ class User extends Model
                 }
                 
             }elseif($log_type == 6){
-                $field = 'integral';
+                $field = 'signin_integral';
             }elseif($log_type == 3){
                 $field = 'digital_yuan_amount';
             }elseif($log_type == 4){
