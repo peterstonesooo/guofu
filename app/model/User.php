@@ -273,7 +273,7 @@ class User extends Model
                     $field = 'balance';
                 }
                 
-            }elseif($log_type == 2){
+            }elseif($log_type == 6){
                 $field = 'integral';
             }elseif($log_type == 3){
                 $field = 'digital_yuan_amount';
