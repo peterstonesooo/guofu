@@ -21,7 +21,7 @@ class SigninController extends AuthController
     public function userSignin()
     {
         
-        return out(null, 10001, '正在维护中');
+       // return out(null, 10001, '正在维护中');
         
         
         // 每天签到时间为8：00-20：00 早上8点到晚上21点
