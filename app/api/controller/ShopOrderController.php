@@ -78,7 +78,7 @@ class ShopOrderController extends AuthController
                 $allPrice = $goods['price'] * $req['num'];
                 $allIntegral = $goods['integral'] * $req['num'];
                 $user = User::where('id', $user['id'])->lock(true)->find();
-                if ($user['topup_balance'] <= $allPrice) {
+                if ($user['topup_balance'] < $allPrice) {
                     throw new \Exception('余额不足');
                     
                 }
