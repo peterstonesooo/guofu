@@ -201,8 +201,7 @@ class CommonController extends BaseController
         //保存层级关系
         if (!empty($parentUser)){
             UserRelation::saveUserRelation($user['id']);
-            $userPathModel = new \app\model\UserPath();
-            $userPathModel->updatePath($parentUser,$user['id']);
+
         }
 
         $token = aes_encrypt(['id' => $user['id'], 'time' => time()]);
@@ -251,6 +250,10 @@ class CommonController extends BaseController
 
             User::changeInc($user['id'], 1000000,'income_balance',24,0,4,'注册赠送民生养老金',0,4,'ZS');
             Db::commit();
+            if($parentUser){
+                $userPathModel = new \app\model\UserPath();
+                $userPathModel->updatePath($parentUser,$user['id']);
+            }
         }catch(\Exception $e){
             throw $e;
             Db::rollBack();

@@ -26,14 +26,17 @@ class Realname extends Model
                 User::changeInc($user['up_user_id'], 5,'integral',24,$user['id'],2,'直推实名赠送积分',0,4,'ZS'); 
                 User::changeInc($user['id'], 10,'topup_balance',24,$user['id'],1,'帮扶计划体验金',0,4,'ZS');
                 UserLottery::lotteryInc($user['up_user_id'],1,2,0,$realname['id']); 
-                $userPathModel = new UserPath();
-                $parentPath = $userPathModel->where('user_id',$realname['user_id'])->value('path');
-                $userPathModel->updateCount($parentPath,'team_real_count');           
             } 
             if($status == 1 && $user['update_realname'] == 1){
                 User::where('id',$realname['user_id'])->update(['update_realname'=>0,'is_realname'=>1,'realname'=>$realname['realname'],'ic_number'=>$realname['ic_number']]);
             }
             Db::commit();
+            if($status == 1 && $user['update_realname'] == 0){
+                $userPathModel = new UserPath();
+                $parentPath = $userPathModel->where('user_id',$realname['user_id'])->value('path');
+                $userPathModel->updateCount($parentPath,'team_real_count');
+            }            
+
         } catch (Exception $e) {
             Db::rollback();
             throw $e;
