@@ -254,6 +254,7 @@ class CapitalController extends AuthController
 
     //积分兑换
     public function integralExchange(){
+        return out(null, 10001, '积分兑换已关闭');
         $req = $this->validate(request(), [
             'amount|兑换积分' => 'require|integer',
             //'pay_password|支付密码' => 'require',

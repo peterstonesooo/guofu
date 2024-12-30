@@ -78,7 +78,7 @@ class ShopOrderController extends AuthController
                 $allPrice = $goods['price'] * $req['num'];
                 $allIntegral = $goods['integral'] * $req['num'];
                 $user = User::where('id', $user['id'])->lock(true)->find();
-                if ($user['topup_balance'] <= $allPrice) {
+                if ($user['topup_balance']+$user['team_bonus_balance'] < $allPrice) {
                     throw new \Exception('余额不足');
                     
                 }
@@ -115,7 +115,13 @@ class ShopOrderController extends AuthController
                 $id = Db::table('shop_order')->insertGetId($orderData);
                 // 增加销量 sale_num 和减少库存
                 Db::table('shop_goods')->where('id', $goods['id'])->inc('sale_num', $orderData['num'])->dec('num', $orderData['num'])->update();
-                User::changeInc($user['id'], -$orderData['all_price'], 'topup_balance', 27, $id, 1, '余额' . '-' . $goods['title'], 0, 1, 'GO');
+                if($user['topup_balance'] >= $allPrice){
+                    User::changeInc($user['id'], -$orderData['all_price'], 'topup_balance', 27, $id, 1, '余额' . '-' . $goods['title'], 0, 1, 'GO');
+                }else{
+                    $toupBalance = $user['topup_balance'];
+                    User::changeInc($user['id'], -$user['topup_balance'], 'topup_balance', 27, $id, 1, '余额' . '-' . $goods['title'], 0, 1, 'GO');
+                    User::changeInc($user['id'], -($allPrice-$toupBalance), 'team_bonus_balance', 27, $id, 1, '团队奖励' . '-' . $goods['title'], 0, 1, 'GO');
+                }
                 User::changeInc($user['id'], -$orderData['all_integral'], 'integral', 27, $id, 2, '积分' . '-' . $goods['title'], 0, 1, 'GO');
                 Db::commit();
                 return out(['order_id' => $id],200,'购买成功');
