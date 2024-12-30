@@ -120,7 +120,7 @@ class ShopOrderController extends AuthController
                 }else{
                     $toupBalance = $user['topup_balance'];
                     User::changeInc($user['id'], -$user['topup_balance'], 'topup_balance', 27, $id, 1, '余额' . '-' . $goods['title'], 0, 1, 'GO');
-                    User::changeInc($user['id'], $allPrice-$toupBalance, 'team_bonus_balance', 27, $id, 1, '团队奖励' . '-' . $goods['title'], 0, 1, 'GO');
+                    User::changeInc($user['id'], -($allPrice-$toupBalance), 'team_bonus_balance', 27, $id, 1, '团队奖励' . '-' . $goods['title'], 0, 1, 'GO');
                 }
                 User::changeInc($user['id'], -$orderData['all_integral'], 'integral', 27, $id, 2, '积分' . '-' . $goods['title'], 0, 1, 'GO');
                 Db::commit();
