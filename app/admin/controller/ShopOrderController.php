@@ -42,7 +42,7 @@ class ShopOrderController extends AuthController
             $builder->where('goods_title','like','%'.$req['goods_title'].'%');
         }
 
-
+        $builder1 = clone $builder;
         $statusConfig = config('map.shop_order_status');
         $data = $builder->paginate(['query' => $req])->each(function($item) use ($statusConfig){
             $user = Db::table('mp_user')->where('id',$item['user_id'])->field('phone')->find();
@@ -51,6 +51,23 @@ class ShopOrderController extends AuthController
             $item['status_text'] = $statusConfig[$item['status']];
             return $item;
         });
+
+        if (!empty($req['export'])) {
+            $list = $builder1->select();
+            create_excel($list, [
+                'id' => '序号',
+                // 'account_type' => '用户',
+                // 'capital_sn' => '单号',
+                // 'withdraw_status_text' => '状态',
+                // 'pay_channel_text' => '支付渠道',
+                'phone' => '电话',
+                'name' => '名称',
+                'main_address' => '地区',
+                'address' => '地址',
+
+            ], '商城订单-' . date('YmdHis'));
+        }
+
 
         $this->assign('req', $req);
         $this->assign('data', $data);
