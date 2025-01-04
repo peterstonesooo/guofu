@@ -78,6 +78,7 @@ class ProjectController extends AuthController
             //'support_pay_methods|支付方式' => 'require|max:100',
             'sort|排序号' => 'integer',
             'sum_amount|总补贴金额' => 'requireIf:project_group_id,1|float',
+            'lottery_num|抽奖次数' => 'integer',
 /*             'virtually_progress|虚拟进度' => 'float',
             'withdrawal_limit|赠送日提现额度' => 'integer',
             'digital_red_package|赠送数字红包' => 'integer',
@@ -147,6 +148,8 @@ class ProjectController extends AuthController
             'flow_type|流转方式' => 'max:100',
             'allowed|流转名额' => 'integer', */
             //'underline_price|划线价' => 'float',
+            'lottery_num|抽奖次数' => 'integer',
+
         ]);
         $req['intro'] = request()->param('intro', '');
         $methods =[1];
