@@ -44,8 +44,6 @@ class MultiApp
         if (!$this->parseMultiApp()) {
             return $next($request);
         }
-
-        print_r($this->app);die;
         return $this->app->middleware->pipeline('app')
             ->send($request)
             ->then(function ($request) use ($next) {
