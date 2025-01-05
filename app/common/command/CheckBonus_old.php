@@ -53,4 +53,7 @@ class CheckBonus extends Command
 
         return true;
     }
+
+
+    
 }
