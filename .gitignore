@@ -15,3 +15,6 @@
 /test/TestCheckBonus.php
 /vendor/bin/.phpunit.result.cache
 /config/cache.php
+/config
+/.htaccess
+/public/.htaccess

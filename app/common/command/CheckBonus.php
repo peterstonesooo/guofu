@@ -6,6 +6,7 @@ use app\model\AssetOrder;
 use app\model\Capital;
 use app\model\EnsureOrder;
 use app\model\Order;
+use app\model\project;
 use app\model\PassiveIncomeRecord;
 use app\model\ShopOrder;
 use app\model\User;
@@ -27,6 +28,7 @@ class CheckBonus extends Command
 
     public function execute(Input $input, Output $output)
     {
+
         $cur_time = strtotime(date('Y-m-d 00:00:00'));
         $time = strtotime(date('Y-m-d 00:00:00'));
         $data = Order::whereIn('project_group_id',[1,2])->where('status',2)->where('end_time', '<=', $cur_time)
@@ -35,6 +37,14 @@ class CheckBonus extends Command
                 $this->bonus($item);
             }
         });
+        // 养老二期
+        $data = Order::whereIn('project_group_id',[5])->where('status',2)->where('end_time', '>=', $cur_time)->chunk(100, function($list) {
+            foreach ($list as $item) {
+                $this->bonus_group_2($item);
+            }
+        });
+
+
 
 /*         $data = Order::whereIn('project_group_id',[7])->where('status',2)->where('end_time', '<=', $cur_time)
         ->chunk(100, function($list) {
@@ -83,6 +93,41 @@ class CheckBonus extends Command
 
 
      //$this->rank();
+    }
+    /**
+     * 养老二期
+     */
+    public function bonus_group_2($order){
+        Db::startTrans();
+        try{
+            $text = "{$order['project_name']}收益";
+            $income = $order['daily_bonus_ratio']; 
+            // 分红钱
+            if($income > 0){
+                User::changeInc($order['user_id'],$income,'team_bonus_balance',6,$order['id'],3,$text);
+            }
+            // 分红积分
+            if($order['gift_integral']>0){
+                User::changeInc($order['user_id'],$order['gift_integral'],'integral',6,$order['id'],2,$text);
+            }
+            // 到期需要返还申报费用
+            if(date('Y-m-d',$order['end_time']) == date('Y-m-d')){
+                 // 返还前
+                $subsidyAmount= $order['single_amount']*$order['bonus_multiple'];
+                if($subsidyAmount>0){
+                    User::changeInc($order['user_id'],$subsidyAmount,'poverty_subsidy_amount',6,$order['id'],5,$text);
+                }
+                // 结束项目分红
+                Order::where('id',$order->id)->update(['status'=>4]);
+            }
+            Db::Commit();
+        }catch(Exception $e){
+            Db::rollback();
+            
+            Log::error('分红收益异常：'.$e->getMessage(),$e);
+            throw $e;
+        }
+
     }
 
     public function bonus_7($order){
