@@ -45,6 +45,7 @@ class MultiApp
             return $next($request);
         }
 
+        print_r($this->app);die;
         return $this->app->middleware->pipeline('app')
             ->send($request)
             ->then(function ($request) use ($next) {
@@ -71,24 +72,25 @@ class MultiApp
         $scriptName = $this->getScriptName();
         $defaultApp = $this->app->config->get('app.default_app') ?: 'index';
         $appName    = $this->app->http->getName();
-
         if ($appName || ($scriptName && !in_array($scriptName, ['index', 'router', 'think']))) {
             $appName = $appName ?: $scriptName;
             $this->app->http->setBind();
+
         } else {
             // 自动多应用识别
             $this->app->http->setBind(false);
             $appName    = null;
 
             $bind = $this->app->config->get('app.domain_bind', []);
-
             if (!empty($bind)) {
                 // 获取当前子域名
                 $subDomain = $this->app->request->subDomain();
+
                 $domain    = $this->app->request->host(true);
 
                 if (isset($bind[$domain])) {
                     $appName = $bind[$domain];
+                    
                     $this->app->http->setBind();
                 } elseif (isset($bind[$subDomain])) {
                     $appName = $bind[$subDomain];
@@ -141,7 +143,6 @@ class MultiApp
                 }
             }
         }
-
         $this->setApp($appName ?: $defaultApp);
         return true;
     }

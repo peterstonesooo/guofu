@@ -102,13 +102,17 @@ class CheckBonus extends Command
         try{
             $text = "{$order['project_name']}收益";
             $income = $order['daily_bonus_ratio']; 
-            User::changeInc($order['user_id'],$income,'team_bonus_balance',6,$order['id'],3,$text);
+            // 分红钱
+            if($income > 0){
+                User::changeInc($order['user_id'],$income,'team_bonus_balance',6,$order['id'],3,$text);
+            }
+            // 分红积分
             if($order['gift_integral']>0){
                 User::changeInc($order['user_id'],$order['gift_integral'],'integral',6,$order['id'],2,$text);
             }
             // 到期需要返还申报费用
             if(date('Y-m-d',$order['end_time']) == date('Y-m-d')){
-                 // 返还
+                 // 返还前
                 $subsidyAmount= $order['single_amount']*$order['bonus_multiple'];
                 if($subsidyAmount>0){
                     User::changeInc($order['user_id'],$subsidyAmount,'poverty_subsidy_amount',6,$order['id'],5,$text);
@@ -124,8 +128,6 @@ class CheckBonus extends Command
             throw $e;
         }
 
-
-        print_r($order);die;
     }
 
     public function bonus_7($order){
