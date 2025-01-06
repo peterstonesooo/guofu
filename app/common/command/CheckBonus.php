@@ -103,10 +103,16 @@ class CheckBonus extends Command
             $next_bonus_time = strtotime(date('Y-m-d 00:00:00', strtotime('+ 1day')));
             
             $cur_time = strtotime(date('Y-m-d 00:00:00'));
+            // 到期需要返还申报费用
             if($order['end_time'] <= $cur_time) {
-               // User::changeInc($order['user_id'],$order['sum_amount'],'gf_purse',39,$order['id'],9,$order['project_name'].'持有到期收益');
-                // Order::where('id',$order->id)->update(['status'=>4]);
-            }
+                // 返还前
+               $amount= $order['single_amount'];
+               if($amount>0){
+                   //User::changeInc($order['user_id'],$amount,'poverty_subsidy_amount',6,$order['id'],5,$text);
+               }
+               // 结束项目分红
+               Order::where('id',$order->id)->update(['status'=>4]);
+           }
             $text = "{$order['project_name']}收益";
             $income = $order['daily_bonus_ratio']; 
             // 分红钱
@@ -119,16 +125,7 @@ class CheckBonus extends Command
             }
             $gain_bonus = bcadd($order['gain_bonus'],$income,2);
             Order::where('id',$order->id)->update(['next_bonus_time'=>$next_bonus_time,'gain_bonus'=>$gain_bonus]);
-            // 到期需要返还申报费用
-            if($order['end_time'] <= $cur_time) {
-                 // 返还前
-                $amount= $order['single_amount'];
-                if($amount>0){
-                    User::changeInc($order['user_id'],$amount,'poverty_subsidy_amount',6,$order['id'],5,$text);
-                }
-                // 结束项目分红
-                Order::where('id',$order->id)->update(['status'=>4]);
-            }
+
             Db::Commit();
         }catch(Exception $e){
             Db::rollback();
