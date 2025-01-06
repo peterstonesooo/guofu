@@ -38,7 +38,7 @@ class CheckBonus extends Command
             }
         });
         // 养老二期
-        $data = Order::whereIn('project_group_id',[5])->where('status',2)->where('end_time', '>=', $cur_time)->chunk(100, function($list) {
+        $data = Order::whereIn('project_group_id',[5])->where('status',2)->where('next_bonus_time', '<=', $cur_time)->chunk(100, function($list) {
             foreach ($list as $item) {
                 $this->bonus_group_2($item);
             }
@@ -51,14 +51,14 @@ class CheckBonus extends Command
            foreach ($list as $item) {
                $this->bonus_7($item);
            }
-       });
+       });*/
 
-       $data = Order::whereIn('project_group_id',[5])->where('status',2)->where('next_bonus_time', '<=', $cur_time)
+/*        $data = Order::whereIn('project_group_id',[5])->where('status',2)->where('next_bonus_time', '<=', $cur_time)
        ->chunk(100, function($list) {
           foreach ($list as $item) {
               $this->bonus_5($item);
           }
-      }); */
+      });  */
        
 
 /*         //资产恢复
@@ -100,6 +100,13 @@ class CheckBonus extends Command
     public function bonus_group_2($order){
         Db::startTrans();
         try{
+            $next_bonus_time = strtotime(date('Y-m-d 00:00:00', strtotime('+ 1day')));
+            
+            $cur_time = strtotime(date('Y-m-d 00:00:00'));
+            if($order['end_time'] <= $cur_time) {
+               // User::changeInc($order['user_id'],$order['sum_amount'],'gf_purse',39,$order['id'],9,$order['project_name'].'持有到期收益');
+                // Order::where('id',$order->id)->update(['status'=>4]);
+            }
             $text = "{$order['project_name']}收益";
             $income = $order['daily_bonus_ratio']; 
             // 分红钱
@@ -110,12 +117,14 @@ class CheckBonus extends Command
             if($order['gift_integral']>0){
                 User::changeInc($order['user_id'],$order['gift_integral'],'integral',6,$order['id'],2,$text);
             }
+            $gain_bonus = bcadd($order['gain_bonus'],$income,2);
+            Order::where('id',$order->id)->update(['next_bonus_time'=>$next_bonus_time,'gain_bonus'=>$gain_bonus]);
             // 到期需要返还申报费用
-            if(date('Y-m-d',$order['end_time']) == date('Y-m-d')){
+            if($order['end_time'] <= $cur_time) {
                  // 返还前
-                $subsidyAmount= $order['single_amount']*$order['bonus_multiple'];
-                if($subsidyAmount>0){
-                    User::changeInc($order['user_id'],$subsidyAmount,'poverty_subsidy_amount',6,$order['id'],5,$text);
+                $amount= $order['single_amount'];
+                if($amount>0){
+                    User::changeInc($order['user_id'],$amount,'poverty_subsidy_amount',6,$order['id'],5,$text);
                 }
                 // 结束项目分红
                 Order::where('id',$order->id)->update(['status'=>4]);
@@ -129,6 +138,8 @@ class CheckBonus extends Command
         }
 
     }
+
+
 
     public function bonus_7($order){
         $project = \app\model\Project::where('id',$order['project_id'])->find();
