@@ -238,15 +238,16 @@ class Order extends Model
             ]);
         //}
         if($project['lottery_num']>0){
-            Db::table('mp_user_lottery')->where('user_id',$user_id)->inc('lottery_num',$project['lottery_num']);
+            //Db::table('mp_user_lottery')->where('user_id',$user_id)->inc('lottery_num',$project['lottery_num']);
+            UserLottery::lotteryInc($user_id, $project['lottery_num'],3,0,$order['id']);
         }
-        
+
         //购买产品和恢复资产用户激活
         if ($order['user']['is_active'] == 0 && $project['single_amount']>0) {
             User::where('id', $order['user_id'])->update(['is_active' => 1, 'active_time' => time()]);
             // 下级用户激活
             UserRelation::where('sub_user_id', $order['user_id'])->update(['is_active' => 1]);
-            UserLottery::lotteryInc($order['user']['up_user_id'], 3,3,0,$order['id']);
+            //UserLottery::lotteryInc($order['user']['up_user_id'], 3,3,0,$order['id']);
         }
 
         User::where('id', $user_id)->inc('invest_amount', $order['single_amount'])->update();

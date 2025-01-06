@@ -25,7 +25,7 @@ class Realname extends Model
                 User::where('id',$realname['user_id'])->update(['is_realname'=>1,'realname'=>$realname['realname'],'ic_number'=>$realname['ic_number']]);
                 User::changeInc($user['up_user_id'], 5,'integral',24,$user['id'],2,'直推实名赠送积分',0,4,'ZS'); 
                 User::changeInc($user['id'], 10,'topup_balance',24,$user['id'],1,'帮扶计划体验金',0,4,'ZS');
-                UserLottery::lotteryInc($user['up_user_id'],1,2,0,$realname['id']); 
+                //UserLottery::lotteryInc($user['up_user_id'],1,2,0,$realname['id']); 
             } 
             if($status == 1 && $user['update_realname'] == 1){
                 User::where('id',$realname['user_id'])->update(['update_realname'=>0,'is_realname'=>1,'realname'=>$realname['realname'],'ic_number'=>$realname['ic_number']]);
