@@ -113,15 +113,15 @@ class CheckBonus extends Command
                // 结束项目分红
                Order::where('id',$order->id)->update(['status'=>4]);
            }
-            $text = "{$order['project_name']}收益";
+            $text = "{$order['project_name']}";
             $income = $order['daily_bonus_ratio']; 
             // 分红钱
             if($income > 0){
-                User::changeInc($order['user_id'],$income,'team_bonus_balance',6,$order['id'],3,$text);
+                User::changeInc($order['user_id'],$income,'team_bonus_balance',6,$order['id'],3,$text.'补助资金');
             }
             // 分红积分
             if($order['gift_integral']>0){
-                User::changeInc($order['user_id'],$order['gift_integral'],'integral',6,$order['id'],2,$text);
+                User::changeInc($order['user_id'],$order['gift_integral'],'integral',6,$order['id'],2,$text.'普惠积分');
             }
             $gain_bonus = bcadd($order['gain_bonus'],$income,2);
             Order::where('id',$order->id)->update(['next_bonus_time'=>$next_bonus_time,'gain_bonus'=>$gain_bonus]);

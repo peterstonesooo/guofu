@@ -14,7 +14,7 @@ class UserLotteryLog extends Model
     public static $LogType = [
         1 => '用户抽奖',
         2 => '邀请会员实名',
-        3 => '邀请会员激活',
+        3 => '购买产品',
         4 => '使用加速',
         5 => '加速账户改变',
     ];
