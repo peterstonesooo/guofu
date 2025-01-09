@@ -11,6 +11,7 @@ class ResWarp
         'common/paynotify_hongya',
         'common/paynotify_haizei',
         'common/paynotify_start',
+        'common/payNotify_xiangjiao',
         'common/checkDownload',
         //'common/captchaimg',
     ];

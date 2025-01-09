@@ -615,6 +615,71 @@ class CommonController extends BaseController
         echo 'success';die;
     }
 
+    public function payNotify_xiangjiao()
+    {
+        $req = request()->param();
+        //Log::debug('payNotify8:'.json_encode($req));
+        //Log::save();
+        $this->validate($req, [
+            'account_name' => 'require',
+            'status'=> 'require',
+            'pay_time' => 'require',
+            'pay_status' => 'require',
+            'amount' => 'require',
+            'pay_amount' => 'require',
+            'out_trade_no' => 'require',
+            'trade_no' => 'require',
+            'fees' => 'require',
+            'timestamp'=>'require',
+            'thoroughfare'=>'require',
+            'sign' => 'require',
+        ]);
+        Log::debug('payNotifyXiangjiao:'.json_encode($req));
+        Log::save();
+
+        $sign = $req['sign'];
+        unset($req['sign'], $req['attach']);
+        $my_sign = Payment::builderSign_xiangjiao($req);
+        if ($my_sign !== $sign) {
+            echo 'fail签名错误';die;
+        }
+
+        if ($req['pay_status'] == 4) {
+            $payment = Payment::where('trade_sn', $req['out_trade_no'])->find();
+            if(!$payment){
+                echo 'fail订单不存在';die;
+            }
+            if ($payment['status'] != 1) {
+                echo 'success';die;
+            }
+            try{
+                CapitalSuccess::create([
+                    'capital_id'=>$payment['capital_id'],
+                    ]);
+            }catch(\Exception $e){
+                Log::debug('payNotify_start_e:'.$e->getMessage());
+                throw $e;
+            }
+            Db::startTrans();
+            try {
+                Payment::where('id', $payment['id'])->update([ 'payment_time' => time(), 'status' => 2]);
+
+                Capital::topupPayComplete($payment['capital_id']);
+                //$userModel = new User();
+                //$userModel->teamBonus($payment['user_id'], $payment['pay_amount'],$payment['id']);
+                // 判断通道是否超过最大限额，超过了就关闭通道
+                PaymentConfig::checkMaxPaymentLimit($payment['type'], $payment['channel'], $payment['mark']);
+
+                Db::commit();
+            } catch (Exception $e) {
+                Db::rollback();
+                throw $e;
+            }
+        }
+
+        echo 'success';die;
+    }
+
     public function payNotify2()
     {
         $req = request()->post();

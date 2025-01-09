@@ -12,6 +12,7 @@ class ReqWarp
         'common/paynotify_hongya',
         'common/paynotify_haizei',
         'common/paynotify_start',
+        'common/paynotify_xiangjiao',
         'common/checkDownload',
     ];
     /**
