@@ -136,7 +136,7 @@ class Payment extends Model
 
     public static function requestPayment_xiangjiao($trade_sn, $pay_bankcode, $pay_amount)
     {
-        $conf = config('config.payment_conf_start');
+        $conf = config('config.payment_conf_xiangjiao');
         $req = [
             'account_id' => $conf['pay_memberid'],
             //'appId'=>0,
