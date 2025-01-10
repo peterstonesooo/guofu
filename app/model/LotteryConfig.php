@@ -3,7 +3,9 @@ declare (strict_types = 1);
 
 namespace app\model;
 
+use BitWasp\Bitcoin\Locktime;
 use think\Model;
+use think\facade\Db;
 
 /**
  * @mixin \think\Model
@@ -28,7 +30,16 @@ class LotteryConfig extends Model
                 break;
             }
         }
-        return $result;
+            $conf = $this->where('id', $result['id'])->lock(true)->find();
+            if($conf['num'] > 0){
+                $this->where('id', $result['id'])->dec('num')->inc('active_num')->update();
+                $result = $conf;
+            }else{
+                $result = $config[0];
+                $this->where('id', $result['id'])->inc('active_num')->update();
+            }
 
+
+        return $result;
     }
 }

@@ -29,7 +29,7 @@ class LotteryConfigController extends AuthController
         $data = $this->request->post();
         
         // 验证必填参数
-        if (empty($data['id']) || empty($data['name']) || !isset($data['lottery_ratio'])) {
+        if (empty($data['id']) || empty($data['name']) || !isset($data['lottery_ratio']) || !isset($data['num'])) {
             return json(['code' => 0, 'msg' => '参数错误']);
         }
 
@@ -37,8 +37,7 @@ class LotteryConfigController extends AuthController
         $saveData = [
             'name' => $data['name'],
             'lottery_ratio' => intval($data['lottery_ratio']),
-            'active_num' => intval($data['active_num']),
-            'hour_num' => intval($data['hour_num'])
+            'num' => intval($data['num']),
         ];
 
         try {
@@ -66,8 +65,7 @@ class LotteryConfigController extends AuthController
         $saveData = [
             'name' => $data['name'],
             'lottery_ratio' => intval($data['lottery_ratio']),
-            'active_num' => intval($data['active_num'] ?? 0),
-            'hour_num' => intval($data['hour_num'] ?? 0)
+            'num' => intval($data['num'] ?? 0),
         ];
 
         try {
