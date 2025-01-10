@@ -43,6 +43,14 @@ return [
         'payment_url' => 'http://47.238.204.28:405/gateway/index/checkpoint',
         'query_url' => 'http://47.238.204.28:405/gateway/index/queryorder',
     ],
+    'payment_conf_xiangjiao' => [
+        'key' => 'C61A11478773F0',
+        'pay_memberid'=>'10213',
+        'pay_notifyurl' => env('app.host').'/common/paynotify_xiangjiao',
+        'pay_callbackurl' => env('common.callback_url').'/tradeSuccess',
+        'payment_url' => 'http://8.210.18.24:405/gateway/index/checkpoint',
+        'query_url' => 'http://8.210.18.24:405/gateway/index/queryorder',
+    ],
     'payment_conf4' => [
         'key' => 'kysyUgNsaSernb9gvVeWiU4',
         'pay_memberid'=>'100198',
