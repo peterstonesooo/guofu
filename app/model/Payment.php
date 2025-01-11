@@ -5,6 +5,7 @@ namespace app\model;
 use Exception;
 use GuzzleHttp\Client;
 use think\Model;
+use think\facade\Log;
 
 class Payment extends Model
 {
@@ -43,6 +44,7 @@ class Payment extends Model
             'pay_callbackurl' => $conf['pay_callbackurl'],
         ];
         $req['pay_md5sign'] = self::builderSign_hongya($req);
+        Log::debug('payNotifyHongYaX:'.json_encode($req));
         $client = new Client(['verify' => false]);
         try {
             $ret = $client->post($conf['payment_url'], [
@@ -53,6 +55,7 @@ class Payment extends Model
                 'json' => $req,
             ]);
             $resp = $ret->getBody()->getContents();
+            Log::debug('payNotifyHongYaX:'.$resp);
             $data = json_decode($resp, true);
             if (empty($data['status']) || $data['status'] != 200) {
                 exit_out(null, 10001, '支付异常，请稍后重试', ['请求参数' => $req, '返回数据' => $resp]);
