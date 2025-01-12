@@ -37,7 +37,7 @@ class LotteryController extends AuthController
         if ($userLottery) {
             $lotteryNum = $userLottery['lottery_num'];
             $speedUpBalance = $userLottery['speed_up_balance'];
-            $count = UserPrize::where('user_id', $user['id'])->field('lottery_id,name,count(lottery_id) ct')->group('lottery_id')->select();
+            $count = UserPrize::where('user_id', $user['id'])->field('lottery_id,name,count(lottery_id) ct')->group('lottery_id,name')->select();
 
         }else{
             $lotteryNum = 0;
