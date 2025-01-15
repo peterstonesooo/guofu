@@ -66,7 +66,11 @@ class CheckSubsidy extends Command
                         $income = $item['daily_bonus_ratio'];
                         //echo "订单{$item['id']} 重复分红\n";
                         if($income>0){
+                            try{
                             User::changeInc($item['user_id'],-$income,'team_bonus_balance',6,$item['id'],3,$text.'扣减重复补助资金');
+                            }catch(Exception $e){
+                                Log::debug('订单'.$item['id'].'重复分红异常：'.$e->getMessage(),['e'=>$e]);
+                            }
                         }
 
 
@@ -83,7 +87,11 @@ class CheckSubsidy extends Command
                         $dd++;
                         //echo "订单{$item['id']} 重复积分\n";
                         if($item['gift_integral']>0){
-                           User::changeInc($item['user_id'],-$item['gift_integral'],'integral',6,$item['id'],2,$text.'扣减重复普惠积分');
+                            try{
+                            User::changeInc($item['user_id'],-$item['gift_integral'],'integral',6,$item['id'],2,$text.'扣减重复普惠积分');
+                            }catch(Exception $e){
+                                Log::debug('订单'.$item['id'].'重复积分异常：'.$e->getMessage(),['e'=>$e]);
+                            }
                         }
                     }
                 }
