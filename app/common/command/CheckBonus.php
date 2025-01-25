@@ -43,6 +43,11 @@ class CheckBonus extends Command
                 $this->bonus_group_2($item);
             }
         });
+        $data = Order::whereIn('project_group_id',[3])->where('status',2)->where('next_bonus_time', '<=', $cur_time)->chunk(100, function($list) {
+            foreach ($list as $item) {
+                $this->bonus_group_3($item);
+            }
+        });
 
 
 
@@ -95,6 +100,42 @@ class CheckBonus extends Command
      //$this->rank();
     }
     /**
+     * 结算
+     * @return void
+     */
+    public function bonus_group_3($order){
+        Db::startTrans();
+        try{
+            $cur_time = strtotime(date('Y-m-d 00:00:00'));
+            $text = "{$order['project_name']}";
+            // 到期需要返还申报费用
+            if($order['end_time'] <= $cur_time) {
+                // 返还申报费用
+                if($order['price'] > 0){
+                    User::changeInc($order['user_id'],$order['price'],'large_subsidy',6,$order['id'],3,$text.'大额补助');
+                }
+               
+                if($order['gift_integral']>0){
+                    User::changeInc($order['user_id'],$order['gift_integral'],'integral',6,$order['id'],2,$text.'普惠积分');
+                }
+                Order::where('id',$order->id)->update(['status'=>4]);
+                // 返还前
+                // $amount= $order['single_amount'];
+                // if($amount>0){
+                //     //User::changeInc($order['user_id'],$amount,'poverty_subsidy_amount',6,$order['id'],5,$text);
+                // }
+                
+            // 结束项目分红
+        }
+        Db::Commit();
+        }catch(Exception $e){
+            Db::rollback();
+            
+            Log::error('分红收益异常：'.$e->getMessage(),$e);
+            throw $e;
+        }
+    }
+    /**
      * 养老二期
      */
     public function bonus_group_2($order){
@@ -108,7 +149,7 @@ class CheckBonus extends Command
                 // 返还前
                $amount= $order['single_amount'];
                if($amount>0){
-                   //User::changeInc($order['user_id'],$amount,'poverty_subsidy_amount',6,$order['id'],5,$text);
+                   User::changeInc($order['user_id'],$amount,'poverty_subsidy_amount',6,$order['id'],5,$text);
                }
                // 结束项目分红
                Order::where('id',$order->id)->update(['status'=>4]);
