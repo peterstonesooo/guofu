@@ -38,15 +38,15 @@ class CheckEvents extends Command
             '5'=> 288, //财
 
         ];
-
         // 福：88元   禄：108元  寿：188元   喜：288元   财：588元
 
         Db::startTrans();
         try{
-       $lists = UserPrize::where([['status'=>0]])->select('id')->toArray();
+        $lists = UserPrize::where('status',0)->select()->toArray();
+       
+
                 if(empty($lists)){
                     throw new Exception('无结算记录！');
-                    return false;
                 }
                 $userTO = [];
                 // 处理完更新
@@ -56,16 +56,18 @@ class CheckEvents extends Command
                         // UserPrize::where('id',$val['id'])->update(['status'=>1]);
                     }
                     if(isset($userTO[$val['user_id']][$val['lottery_id']])){
-                        $userTO[$val['user_id']][$val['lottery_id']] ++;
+                        $userTO[$val['user_id']][$val['lottery_id']] +=1;
                     }else{
-                        $userTO[$val['user_id']][$val['lottery_id']] ++;
+                        $userTO[$val['user_id']][$val['lottery_id']] =1;
                     }
 
                 }
+               
+
                 // 结算集合的
                 foreach ($userTO as $k => $v) {
                     $max = 0;
-                    if(isset($v['1']) && $v['2']  && $v['3'] && $v['4'] && $v['5']){
+                    if(isset($v['1']) && isset($v['2'])  && isset($v['3']) && isset($v['4']) && isset($v['5'])){
                         foreach ($v as $num) {
                             if($max !=0 && $max > $num){
                                 $max = $num;
@@ -77,17 +79,20 @@ class CheckEvents extends Command
                         // 跳出当次循环
                         continue;
                     }
+
                     User::changeInc($k,5888*$max,'team_bonus_balance',8,$val['id'],3,'抽奖');
                 }
                 // 修改状态
-                UserPrize::where([['status'=>0]])->update(['status'=>1]);
+                UserPrize::where('status',0)->update(['status'=>1]);
                 
             Db::Commit();
+            print_r('结算成功！');die;
         }catch(Exception $e){
             Db::rollback();
             
-            Log::error('结算异常'.$e->getMessage(),$e);
-            throw $e;
+            Log::error('结1算异常'.$e->getMessage(),$e);
+            print_r($e->getMessage());die;
+            // throw $e;
         }
 
     }
