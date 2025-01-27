@@ -848,7 +848,7 @@ class UserController extends AuthController
         $user = $this->user;
         $req = $this->validate(request(), [
             'type' => 'require|number',
-            'log_type' => 'require|number|in:0,1,2,3,4,5,6',
+            'log_type' => 'require|number|in:0,1,2,3,4,5,6,7',
         ]);
         $map = config('map.user_balance_log')['type_map'];
         $log_type = [1,2,3,4,5,6];
