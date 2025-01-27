@@ -22,12 +22,13 @@ class CheckEvents extends Command
 
     public function execute(Input $input, Output $output)
     {
-        $this->SettleAccount();
+        $this->SettleAccount2();
     }
 
 
     /**
-     * 结算奖励
+     * 结算奖励a
+     * 
      */
     public function SettleAccount(){
         $Rewards = [
@@ -46,41 +47,38 @@ class CheckEvents extends Command
        
 
                 if(empty($lists)){
-                    throw new Exception('无结算记录！');
+                    //throw new Exception('无结算记录！');
                 }
                 $userTO = [];
                 // 处理完更新
                 foreach ($lists as $k => $val) {
-                    if(isset($Rewards[$val['lottery_id']]) && $Rewards[$val['lottery_id']]>0){
+ /*                    if(isset($Rewards[$val['lottery_id']]) && $Rewards[$val['lottery_id']]>0){
                         User::changeInc($val['user_id'],$Rewards[$val['lottery_id']],'team_bonus_balance',8,$val['id'],3,'抽奖奖励');
                         // UserPrize::where('id',$val['id'])->update(['status'=>1]);
-                    }
+                    } */
                     if(isset($userTO[$val['user_id']][$val['lottery_id']])){
                         $userTO[$val['user_id']][$val['lottery_id']] +=1;
                     }else{
                         $userTO[$val['user_id']][$val['lottery_id']] =1;
                     }
+                    $userTo[$val['user_id']]['record'][] = $val['id'];
+
 
                 }
                
 
                 // 结算集合的
                 foreach ($userTO as $k => $v) {
-                    $max = 0;
-                    if(isset($v['1']) && isset($v['2'])  && isset($v['3']) && isset($v['4']) && isset($v['5'])){
-                        foreach ($v as $num) {
-                            if($max !=0 && $max > $num){
-                                $max = $num;
-                            }
+                    $min_count = 0;
+                    if(isset($v['1']) && isset($v['2']) && isset($v['3']) && isset($v['4']) && isset($v['5'])) {
+                        // 使用 PHP 内置函数找出最小值
+                        $min_count = min($v['1'], $v['2'], $v['3'], $v['4'], $v['5']);
+                        
+                        // 如果有效的最小值存在，发放奖励
+                        if($min_count > 0) {
+                            //User::changeInc($k, 5888 * $min_count, 'team_bonus_balance', 8, $val['id'], 3, '集齐五福奖励');
                         }
                     }
-                    // 发送奖励
-                    if($max==0){
-                        // 跳出当次循环
-                        continue;
-                    }
-
-                    User::changeInc($k,5888*$max,'team_bonus_balance',8,$val['id'],3,'抽奖');
                 }
                 // 修改状态
                 UserPrize::where('status',0)->update(['status'=>1]);
@@ -95,5 +93,88 @@ class CheckEvents extends Command
             // throw $e;
         }
 
+    }
+
+    public function SettleAccount2(){
+        $Rewards = [
+            '1'=> 88, //福
+            '2'=> 108, //禄
+            '3'=> 188, //寿
+            '4'=> 288, //喜
+            '5'=> 288, //财
+
+        ];
+
+        $RewardsName = [
+            '1'=> '福', //福
+            '2'=> '禄', //禄
+            '3'=> '寿', //寿
+            '4'=> '喜', //喜
+            '5'=> '财', //财
+
+        ];
+
+
+
+        Db::execute('TRUNCATE mp_user_prize_count;');
+
+        $sql = "INSERT INTO mp_user_prize_count 
+                    (user_id, lottery_1, lottery_2, lottery_3, lottery_4, lottery_5, status)
+                    SELECT 
+                        user_id,
+                        IFNULL(MAX(CASE WHEN lottery_id = 1 THEN ct END), 0) as lottery_1,
+                        IFNULL(MAX(CASE WHEN lottery_id = 2 THEN ct END), 0) as lottery_2,
+                        IFNULL(MAX(CASE WHEN lottery_id = 3 THEN ct END), 0) as lottery_3,
+                        IFNULL(MAX(CASE WHEN lottery_id = 4 THEN ct END), 0) as lottery_4,
+                        IFNULL(MAX(CASE WHEN lottery_id = 5 THEN ct END), 0) as lottery_5,
+                        0 as status
+                    FROM (
+                        SELECT 
+                            user_id,
+                            lottery_id,
+                            COUNT(*) as ct
+                        FROM mp_user_prize 
+                        WHERE status = 0
+                        GROUP BY user_id, lottery_id
+                    ) t
+                    GROUP BY user_id		";
+        Db::execute($sql);
+        Db::startTrans();
+        try{
+            $lists = Db::name('user_prize_count')->where('status', 0)->where('lottery_1', '>', 0)->where('lottery_2', '>', 0)->where('lottery_3', '>', 0)->where('lottery_4', '>', 0)->where('lottery_5', '>', 0)->select();
+            if(empty($lists)){
+                //throw new Exception('无结算记录！');
+            }
+            foreach($lists as $item){
+                $minCount = 0;
+                $minCount = min($item['lottery_1'], $item['lottery_2'], $item['lottery_3'], $item['lottery_4'], $item['lottery_5']);
+                if($minCount > 0){
+                    User::changeInc($item['user_id'], 5888 * $minCount, 'team_bonus_balance', 28, 0, 3, '集齐五福奖励');
+                }
+                Db::name('user_prize_count')->where('user_id', $item['user_id'])->dec('lottery_1', $minCount)->dec('lottery_2', $minCount)->dec('lottery_3', $minCount)->dec('lottery_4', $minCount)->dec('lottery_5', $minCount)->update();
+            }
+
+            $lists = Db::name('user_prize_count')->where('status', 0)->select();
+            foreach($lists as $item){
+                foreach($item as $k=>$v){
+                    if($k == 'id' || $k == 'user_id' || $k == 'status'){
+                        continue;
+                    }
+                    if($v > 0){
+                        $key = str_replace('lottery_', '', $k);
+                        $name = $RewardsName[$key];
+                        User::changeInc($item['user_id'], $Rewards[$key] * $v, 'team_bonus_balance', 28, $item['id'], 3, '抽奖奖励'.$name.'*'.$v);
+                    }
+                }
+                Db::name('user_prize_count')->where('id', $item['id'])->update(['status'=>1]);
+            }
+            Db::name('user_prize')->where('status', 0)->update(['status'=>1]);
+            Db::commit();
+        }catch(Exception $e){
+            Db::rollback();
+            Log::error('结算异常'.$e->getMessage(),['e'=>$e]);
+            print_r($e->getMessage());die;
+        // throw $e;
+        }
     }
 }
