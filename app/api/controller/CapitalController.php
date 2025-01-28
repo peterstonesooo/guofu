@@ -138,10 +138,10 @@ class CapitalController extends AuthController
 
     public function applyWithdraw()
     {
-        //return out(null, 10001, '网络问题，请稍后再试');
-        if(!domainCheck()){
+        return out(null, 10001, '春节假期期间,提现功能暂停服务,2月5日（正月初八）恢复正常');
+/*         if(!domainCheck()){
             return out(null, 10001, '请联系客服下载最新app');
-        }
+        } */
         $req = $this->validate(request(), [
             'amount|提现金额' => 'require|float',
             'pay_channel|收款渠道' => 'require|number',

@@ -530,10 +530,10 @@ function handle_single_file($file, $path, $ext, $is_return_url)
     $savename = Filesystem::disk('qiniu')->putFile('', $file);
     //Log::debug('七牛上传完成:'.time());
     //Log::save();
-    $baseUrl = 'http://'.config('filesystem.disks.qiniu.domain').'/';    
+    $baseUrl = 'https://'.config('filesystem.disks.qiniu.domain').'/';    
     return $baseUrl.str_replace("\\", "/", $savename);
 
-/*     if ($is_return_url) {
+/*     if ($is_return_url) {s
         $img_url = request()->domain().'/storage/'.$savename;
         if (!empty(env('app.img_host', ''))) {
             $img_url = env('app.img_host').'/storage/'.$savename;

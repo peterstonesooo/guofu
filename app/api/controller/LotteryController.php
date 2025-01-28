@@ -37,7 +37,7 @@ class LotteryController extends AuthController
         if ($userLottery) {
             $lotteryNum = $userLottery['lottery_num'];
             $speedUpBalance = $userLottery['speed_up_balance'];
-            $count = UserPrize::where('user_id', $user['id'])->field('lottery_id,name,count(lottery_id) ct')->group('lottery_id')->select();
+            $count = UserPrize::where('user_id', $user['id'])->field('lottery_id,name,count(lottery_id) ct')->group('lottery_id,name')->select();
 
         }else{
             $lotteryNum = 0;
@@ -67,7 +67,7 @@ class LotteryController extends AuthController
     public function prizeList(){
         $user = $this->user;
         //$data = UserPrize::where('user_id', $user['id'])->order('id','desc')->paginate(15);
-        $userPrize = UserPrize::where('user_id', $user['id'])->field('lottery_id,name,count(lottery_id) ct')->group('lottery_id')->select();
+        $userPrize = UserPrize::where('user_id', $user['id'])->field('lottery_id,name,count(lottery_id) ct')->group('lottery_id,name')->select();
 
         return json(['code' => 200, 'msg' => '', 'data' => $userPrize]);
     }
@@ -116,7 +116,7 @@ class LotteryController extends AuthController
             ];
 
             Db::commit();
-            $userPrize = UserPrize::where('user_id', $user['id'])->field('lottery_id,name,count(lottery_id) ct')->group('lottery_id')->select();
+            $userPrize = UserPrize::where('user_id', $user['id'])->field('lottery_id,name,count(lottery_id) ct')->group('lottery_id,name')->select();
             $returnData['count'] = $userPrize;
 
             return json(['code' => 200, 'msg' => '抽奖成功', 'data' => $returnData]);

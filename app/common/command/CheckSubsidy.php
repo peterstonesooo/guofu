@@ -39,8 +39,64 @@ class CheckSubsidy extends Command
         //$this->order6();
         //$this->returnOrder();
         //$this->fixRecharge0720_2();
-        $this->fixOrder1105();
+        $this->fixBonus0116();
         return true;
+    }
+
+    public function fixBonus0116(){
+               // 养老二期
+               $cur_time = strtotime(date('Y-m-d 00:05:00').' +1 day');
+               $cc=0;
+               $dd=0;
+               $data = Order::whereIn('project_group_id',[5])->where('status',2)->where('next_bonus_time', '<=', $cur_time)->chunk(100, function($list) use (&$cc,&$dd) {
+
+                foreach ($list as $item) {
+                    $count = UserBalanceLog::where('user_id',$item['user_id'])
+                        ->where('type',6)
+                        ->where('log_type',3)
+                        ->where('id','>=',1967703)
+                        ->where('id','<=',2017077)
+                        ->where('relation_id',$item['id'])
+                        ->count();
+
+                        $text = "{$item['project_name']}";
+                    if($count>1){
+                        $cc++;
+                        
+                        $income = $item['daily_bonus_ratio'];
+                        //echo "订单{$item['id']} 重复分红\n";
+                        if($income>0){
+                            try{
+                            User::changeInc($item['user_id'],-$income,'team_bonus_balance',6,$item['id'],3,$text.'扣减重复补助资金');
+                            }catch(Exception $e){
+                                Log::debug('订单'.$item['id'].'重复分红异常：'.$e->getMessage(),['e'=>$e]);
+                            }
+                        }
+
+
+                    }
+
+                    $count2 = UserBalanceLog::where('user_id',$item['user_id'])
+                    ->where('type',6)
+                    ->where('log_type',2)
+                    ->where('id','>=',1967703)
+                    ->where('id','<=',2017077)
+                    ->where('relation_id',$item['id'])
+                    ->count();
+                    if($count2>1){
+                        $dd++;
+                        //echo "订单{$item['id']} 重复积分\n";
+                        if($item['gift_integral']>0){
+                            try{
+                            User::changeInc($item['user_id'],-$item['gift_integral'],'integral',6,$item['id'],2,$text.'扣减重复普惠积分');
+                            }catch(Exception $e){
+                                Log::debug('订单'.$item['id'].'重复积分异常：'.$e->getMessage(),['e'=>$e]);
+                            }
+                        }
+                    }
+                }
+                echo "已处理{$cc}条记录 {$dd}\n";
+            });
     }
 
     public function  fixOrder1105(){

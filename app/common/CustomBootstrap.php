@@ -14,7 +14,7 @@ class CustomBootstrap extends Bootstrap
     {
         $currentUrl = $this->url($this->currentPage());
         $perPageSelect = '';
-        if($this->options['path']=="/admin/Capital/withdrawList.html"){
+        if (strpos($this->options['path'], 'Capital/withdrawList') !== false) {
             $perPageOptions = [10, 20, 30, 50, 100];
             $perPageSelect = '<li><select class="form-control" style="display:inline;width:100px" onchange="location.href=this.value;">';
             foreach ($perPageOptions as $option) {
