@@ -43,12 +43,12 @@ class CheckBonus extends Command
                 $this->bonus_group_2($item);
             }
         });
-/*         $data = Order::whereIn('project_group_id',[3])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function($list) {
+        $data = Order::whereIn('project_group_id',[3])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function($list) {
             foreach ($list as $item) {
                 $this->bonus_group_3($item);
             }
         });
- */
+
 
 
 /*         $data = Order::whereIn('project_group_id',[7])->where('status',2)->where('end_time', '<=', $cur_time)
@@ -111,8 +111,8 @@ class CheckBonus extends Command
             // 到期需要返还申报费用
             if($order['end_time'] <= $cur_time) {
                 // 返还申报费用
-                if($order['price'] > 0){
-                    User::changeInc($order['user_id'],$order['price'],'large_subsidy',6,$order['id'],3,$text.'大额补助');
+                if($order['sum_amount'] > 0){
+                    User::changeInc($order['user_id'],$order['sum_amount'],'large_subsidy',6,$order['id'],7,$text.'大额补助');
                 }
                
                 if($order['gift_integral']>0){
