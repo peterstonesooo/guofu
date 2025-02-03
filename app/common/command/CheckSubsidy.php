@@ -39,8 +39,21 @@ class CheckSubsidy extends Command
         //$this->order6();
         //$this->returnOrder();
         //$this->fixRecharge0720_2();
-        $this->fixBonus0116();
+        //$this->fixBonus0116();
+        $this->fixBonus0203();
+
         return true;
+    }
+
+    public function fixBonus0203(){
+            $orders = Order::where('project_group_id',3)->where('status',4)->chunk(100, function($list) {
+                foreach ($list as $order) {
+                    $text = "{$order['project_name']}";
+                    if($order['single_amount'] > 0){
+                        User::changeInc($order['user_id'],$order['single_amount'],'large_subsidy',6,$order['id'],7,$text.'申报费用返还');
+                    }
+                }
+            });
     }
 
     public function fixBonus0116(){
