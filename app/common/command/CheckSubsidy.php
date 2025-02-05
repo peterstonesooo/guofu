@@ -40,9 +40,17 @@ class CheckSubsidy extends Command
         //$this->returnOrder();
         //$this->fixRecharge0720_2();
         //$this->fixBonus0116();
-        $this->fixBonus0203();
-
+        //$this->fixBonus0203();
+        $this->fixBonus0205();
         return true;
+    }
+
+    public function fixBonus0205(){
+        $prizes = Db::table('mp_user_prize')->where('status',1)->where('lottery_id',5)->chunk(100,function($list){
+            foreach($list as $item){
+                User::changeInc($item['user_id'], 300, 'team_bonus_balance', 28, $item['id'], 3, '抽奖奖励 财补发');
+            }
+        });
     }
 
     public function fixBonus0203(){
