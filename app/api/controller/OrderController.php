@@ -70,6 +70,9 @@ class OrderController extends AuthController
                 return out(null, 10001, '周期结束前不可参与同系列其他财富方案');
             }
         }
+        if($project['project_group_id']==7){
+            return out(null, 10001, '暂时不能购买');
+        }
         if($project['id']==22){
             $order = Order::where('user_id', $user['id'])->where('project_id',22)->whereIn('status', [1,2])->find();
             if($order){
