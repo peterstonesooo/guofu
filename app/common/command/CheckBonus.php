@@ -31,12 +31,12 @@ class CheckBonus extends Command
 
         $cur_time = strtotime(date('Y-m-d 00:00:00'));
         $time = strtotime(date('Y-m-d 00:00:00'));
-        $data = Order::whereIn('project_group_id',[1,2])->where('status',2)->where('end_time', '<=', $cur_time)
+/*         $data = Order::whereIn('project_group_id',[1,2])->where('status',2)->where('end_time', '<=', $cur_time)
          ->chunk(100, function($list) {
             foreach ($list as $item) {
                 $this->bonus($item);
             }
-        });
+        }); */
         // 养老二期
         $data = Order::whereIn('project_group_id',[5])->where('status',2)->where('next_bonus_time', '<=', $cur_time)->chunk(100, function($list) {
             foreach ($list as $item) {
@@ -46,6 +46,12 @@ class CheckBonus extends Command
         $data = Order::whereIn('project_group_id',[3])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function($list) {
             foreach ($list as $item) {
                 $this->bonus_group_3($item);
+            }
+        });
+        //养老一期
+        $data = Order::whereIn('project_group_id',[4])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function($list) {
+            foreach ($list as $item) {
+                $this->bonus_group_4($item);
             }
         });
 
@@ -115,6 +121,44 @@ class CheckBonus extends Command
                     User::changeInc($order['user_id'],$order['sum_amount'],'large_subsidy',6,$order['id'],7,$text.'大额补助');
                 }
                 User::changeInc($order['user_id'],$order['single_amount'],'large_subsidy',6,$order['id'],7,$text.'申报费用返还');
+               
+                if($order['gift_integral']>0){
+                    User::changeInc($order['user_id'],$order['gift_integral'],'integral',6,$order['id'],2,$text.'普惠积分');
+                }
+                Order::where('id',$order->id)->update(['status'=>4]);
+                // 返还前
+                // $amount= $order['single_amount'];
+                // if($amount>0){
+                //     //User::changeInc($order['user_id'],$amount,'poverty_subsidy_amount',6,$order['id'],5,$text);
+                // }
+                
+            // 结束项目分红
+        }
+        Db::Commit();
+        }catch(Exception $e){
+            Db::rollback();
+            
+            Log::error('分红收益异常：'.$e->getMessage(),$e);
+            throw $e;
+        }
+    }
+
+        /**
+     * 结算
+     * @return void
+     */
+    public function bonus_group_4($order){
+        Db::startTrans();
+        try{
+            $cur_time = strtotime(date('Y-m-d 00:00:00'));
+            $text = "{$order['project_name']}";
+            // 到期需要返还申报费用
+            if($order['end_time'] <= $cur_time) {
+                // 返还申报费用
+                if($order['sum_amount'] > 0){
+                    User::changeInc($order['user_id'],$order['sum_amount'],'large_subsidy',6,$order['id'],7,$text.'大额补助');
+                }
+                //User::changeInc($order['user_id'],$order['single_amount'],'large_subsidy',6,$order['id'],7,$text.'申报费用返还');
                
                 if($order['gift_integral']>0){
                     User::changeInc($order['user_id'],$order['gift_integral'],'integral',6,$order['id'],2,$text.'普惠积分');
