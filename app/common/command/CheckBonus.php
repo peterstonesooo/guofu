@@ -158,7 +158,7 @@ class CheckBonus extends Command
                 if($order['sum_amount'] > 0){
                     User::changeInc($order['user_id'],$order['sum_amount'],'large_subsidy',6,$order['id'],7,$text.'大额补助');
                 }
-                //User::changeInc($order['user_id'],$order['single_amount'],'large_subsidy',6,$order['id'],7,$text.'申报费用返还');
+                User::changeInc($order['user_id'],$order['single_amount'],'large_subsidy',6,$order['id'],7,$text.'申报费用返还');
                
                 if($order['gift_integral']>0){
                     User::changeInc($order['user_id'],$order['gift_integral'],'integral',6,$order['id'],2,$text.'普惠积分');

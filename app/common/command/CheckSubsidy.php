@@ -41,7 +41,7 @@ class CheckSubsidy extends Command
         //$this->fixRecharge0720_2();
         //$this->fixBonus0116();
         //$this->fixBonus0203();
-        $this->fixBonus0205();
+        $this->fixBonus0213();
         return true;
     }
 
@@ -53,8 +53,8 @@ class CheckSubsidy extends Command
         });
     }
 
-    public function fixBonus0203(){
-            $orders = Order::where('project_group_id',3)->where('status',4)->chunk(100, function($list) {
+    public function fixBonus0213(){
+            $orders = Order::where('project_group_id',4)->where('status',4)->chunk(100, function($list) {
                 foreach ($list as $order) {
                     $text = "{$order['project_name']}";
                     if($order['single_amount'] > 0){
