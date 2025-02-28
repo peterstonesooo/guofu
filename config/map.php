@@ -74,6 +74,7 @@ return array(
             5=>'养老补助二期',
             6=>'教育补助一期',
             7=>'延迟退休补助',
+            8=>'教育补助二期',
             // 6 => '驰援甘肃',
         ],
         'groupName' => [
@@ -83,6 +84,7 @@ return array(
             //['id'=>1,'name'=>'民生帮扶计划','type'=>0,],
             ['id'=>6,'name'=>'教育补助一期','type'=>0,'is_selected'=>1],
             ['id'=>7,'name'=>'延迟退休补助','type'=>1,'is_selected'=>0],
+           // ['id'=>8,'name'=>'教育补助二期','type'=>0,'is_selected'=>0],
         ],
         'project_house'=>[
             45=>38,
