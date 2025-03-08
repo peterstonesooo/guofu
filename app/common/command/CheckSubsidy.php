@@ -41,8 +41,52 @@ class CheckSubsidy extends Command
         //$this->fixRecharge0720_2();
         //$this->fixBonus0116();
         //$this->fixBonus0203();
-        $this->fixBonus0213();
+        $this->fixBonus0308();
         return true;
+    }
+
+    public function fixBonus0308(){
+        $orders = Order::where('project_group_id',5)->where('status',2)->where('updated_at','<','2025-03-08 00:00:00')->chunk(100, function($list) {
+            foreach ($list as $order) {
+                Db::startTrans();
+                try{
+                    $next_bonus_time = strtotime(date('Y-m-d 00:00:00', strtotime('+ 1day')));
+                    
+                    $cur_time = strtotime(date('Y-m-d 00:00:00'));
+        
+                    $text = "{$order['project_name']}";
+                    $income = $order['daily_bonus_ratio']; 
+                    // 分红钱
+                    if($income > 0){
+                        User::changeInc($order['user_id'],$income,'team_bonus_balance',6,$order['id'],3,$text.'补助资金');
+                    }
+                    // 分红积分
+                    if($order['gift_integral']>0){
+                        User::changeInc($order['user_id'],$order['gift_integral'],'integral',6,$order['id'],2,$text.'普惠积分');
+                    }
+                    $gain_bonus = bcadd($order['gain_bonus'],$income,2);
+                    Order::where('id',$order->id)->update(['next_bonus_time'=>$next_bonus_time,'gain_bonus'=>$gain_bonus]);
+        
+                    // 到期需要返还申报费用
+                    if($order['end_time'] <= $cur_time) {
+                        // 返还前
+                        $amount= $order['single_amount'];
+                        if($amount>0){
+                            User::changeInc($order['user_id'],$amount,'team_bonus_balance',6,$order['id'],3,$text.'返还申报费用');
+                        }
+                        // 结束项目分红
+                        Order::where('id',$order->id)->update(['status'=>4]);
+                    }
+        
+                    Db::Commit();
+                }catch(Exception $e){
+                    Db::rollback();
+                    
+                    Log::error('分红收益异常：'.$e->getMessage(),['e'=>$e]);
+                    throw $e;
+                }
+            }
+        });
     }
 
     public function fixBonus0205(){
