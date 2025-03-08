@@ -27,7 +27,7 @@ return [
             'secretKey'=>'LUafaV40f27dIlYk18wTgT8pw0J4ckiA5k4AjjUl',//七牛云的配置,secretKey
             'bucket'=>'oooimg1',					//七牛云的配置,bucket空间名
             //'domain'=>'s2dgpwe6t.hn-bkt.clouddn.com'					//七牛云的配置,domain,域名
-            'domain'=>'cod.gtzfy.com',				//七牛云的配置,domain,域名
+            'domain'=>'cod.hzckf.com',				//七牛云的配置,domain,域名
             'region'=>'SCN',
         ],
     ],
