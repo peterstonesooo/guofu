@@ -37,12 +37,12 @@ class CheckBonus extends Command
                 $this->bonus($item);
             }
         }); */
-        // 养老二期
-        // $data = Order::whereIn('project_group_id',[5])->where('status',2)->where('next_bonus_time', '<=', $cur_time)->chunk(100, function($list) {
-        //     foreach ($list as $item) {
-        //         $this->bonus_group_2($item);
-        //     }
-        // });
+        //养老二期
+        $data = Order::whereIn('project_group_id',[5])->where('status',2)->where('next_bonus_time', '<=', $cur_time)->chunk(100, function($list) {
+            foreach ($list as $item) {
+                $this->bonus_group_2($item);
+            }
+        });
 /*         $data = Order::whereIn('project_group_id',[3])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function($list) {
             foreach ($list as $item) {
                 $this->bonus_group_3($item);
@@ -54,11 +54,11 @@ class CheckBonus extends Command
                 $this->bonus_group_4($item);
             }
         }); */
-        $data = Order::whereIn('project_group_id',[6])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function($list) {
+/*         $data = Order::whereIn('project_group_id',[6])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function($list) {
             foreach ($list as $item) {
                 $this->bonus_group_6($item);
             }
-        });
+        }); */
 
 
 
