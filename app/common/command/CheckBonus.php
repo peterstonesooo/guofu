@@ -54,11 +54,11 @@ class CheckBonus extends Command
                 $this->bonus_group_4($item);
             }
         }); */
-/*         $data = Order::whereIn('project_group_id',[6])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function($list) {
+        $data = Order::whereIn('project_group_id',[6])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function($list) {
             foreach ($list as $item) {
                 $this->bonus_group_6($item);
             }
-        }); */
+        });
 
 
 
