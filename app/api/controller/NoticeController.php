@@ -24,9 +24,10 @@ class NoticeController extends AuthController
         $data = Db::query($sql);
         foreach($data as &$v) {
             //把换行符替换成<br>
+            $v['content'] = htmlspecialchars ($v['content']);
+
             $v['content'] = nl2br($v['content']);  // 将换行符转换为<br>标签
             $v['content'] = str_replace(' ', '&nbsp;', $v['content']);  // 将空格转换为&nbsp;
-            $v['content'] = htmlspecialchars ($v['content']);
         }
         return out($data);
     }
