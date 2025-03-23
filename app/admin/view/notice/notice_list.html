@@ -29,20 +29,20 @@
                         <tbody>
                         <tr>
                             <th>ID</th>
-                            <th>用户</th>
+                            <th>类别</th>
                             <th>标题</th>
                             <th>内容</th>
-                            <th>已读状态</th>
+                            <th>用户</th>
                             <th>创建时间</th>
                             <th>操作</th>
                         </tr>
                         <?php foreach ($data as $k => $v) { ?>
                             <tr>
                                 <td>{$v['id']}</td>
-                                <td>{$v['user']['phone']??''}</td>
+                                <td>{if($v['type']==1)}公告{else/}指定{/if}</td>
                                 <td>{$v['title']}</td>
                                 <td>{:strip_tags($v['content'])}</td>
-                                <td>{$v['is_read_text']}</td>
+                                <td>{$v['user']['phone']??''}</td>
                                 <td>{$v['created_at']}</td>
                                 <td>
                                     <a {:auth_show_judge('Notice/editNotice')} class="btn btn-flat btn-info
