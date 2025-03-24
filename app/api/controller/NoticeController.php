@@ -32,6 +32,21 @@ class NoticeController extends AuthController
         return out($data);
     }
 
+    public function noticeDetail(){
+        $req = $this->validate(request(), [
+            'id' => 'require'
+        ]);
+        $data = Notice::find($req['id']);
+        if(!$data) {
+            return out('通知不存在', 20001);
+        }
+        $data['content'] = htmlspecialchars ($data['content']);
+        $v['content'] = nl2br($data['content']);  // 将换行符转换为<br>标签
+        $v['content'] = str_replace(' ', '&nbsp;', $data['content']);  // 将空格转换为&nbsp;
+
+        return out($data);
+    }
+
     public function readCount(){
         $user = $this->user;
         $sql1 = "select count(*) ct from mp_notice n  where n.type = 1 and not EXISTS (select id from mp_notice_read r where r.notice_id = n.id and r.user_id = {$user['id']})";
