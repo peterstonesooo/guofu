@@ -32,7 +32,7 @@ class OrderController extends AuthController
 
     public function placeOrder()
     {
-        //return out(null, 10001, '维护中，请稍后再试'); 
+        return out(null, 10001, '维护中，请稍后再试'); 
         $req = $this->validate(request(), [
             'project_id' => 'require|number',
             'pay_method' => 'require|number',
