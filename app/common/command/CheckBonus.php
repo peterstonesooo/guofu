@@ -37,23 +37,13 @@ class CheckBonus extends Command
                 $this->bonus($item);
             }
         }); */
-        // 养老二期
-        // $data = Order::whereIn('project_group_id',[5])->where('status',2)->where('next_bonus_time', '<=', $cur_time)->chunk(100, function($list) {
-        //     foreach ($list as $item) {
-        //         $this->bonus_group_2($item);
-        //     }
-        // });
-/*         $data = Order::whereIn('project_group_id',[3])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function($list) {
+        //养老二期
+        $data = Order::whereIn('project_group_id',[5])->where('status',2)->where('next_bonus_time', '<=', $cur_time)->chunk(100, function($list) {
             foreach ($list as $item) {
-                $this->bonus_group_3($item);
+                $this->bonus_group_2($item);
             }
         });
-        //养老一期
-        $data = Order::whereIn('project_group_id',[4])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function($list) {
-            foreach ($list as $item) {
-                $this->bonus_group_4($item);
-            }
-        }); */
+
         $data = Order::whereIn('project_group_id',[6])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function($list) {
             foreach ($list as $item) {
                 $this->bonus_group_6($item);
@@ -344,27 +334,64 @@ class CheckBonus extends Command
 
 
 
-    public function bonus_7($order){
-        $project = \app\model\Project::where('id',$order['project_id'])->find();
+    public function bonus_group_7($order){
         Db::startTrans();
         try{
-            echo "{$order['id']}开始分红\n";
-            //User::changeInc($order['user_id'],$order['sum_amount'],'digital_yuan_amount',6,$order['id'],3);
-            Order::where('id',$order->id)->update(['status'=>4]);
-            User::changeInc($order['user_id'],$project['single_gift_gf_purse'],'gf_purse',6,$order['id'],9,$order['project_name'].'持有到期收益');
-            User::changeInc($order['user_id'],$project['single_gift_digital_yuan'],'digital_yuan_amount',6,$order['id'],3,$order['project_name'].'持有到期收益');
-            /* $next_bonus_time = strtotime(date('Y-m-d 00:00:00', strtotime('+ 1day')));
-            Order::where('id',$order->id)->update(['next_bonus_time'=>$next_bonus_time]);
-            $cur_time = strtotime(date('Y-m-d 00:00:00')); */
-            //if($order['end_time'] <= $cur_time) {
-               // User::changeInc($order['user_id'],$order['sum_amount'],'gf_purse',39,$order['id'],9,$order['project_name'].'持有到期收益');
-                // Order::where('id',$order->id)->update(['status'=>4]);
-            //}
-            Db::Commit();
+            $cur_time = strtotime(date('Y-m-d 00:00:00'));
+            $text = "{$order['project_name']}";
+            // 到期需要返还申报费用
+            if($order['end_time'] <= $cur_time) {
+                //echo "{$order['id']}开始分红\n";
+                // 返还申报费用
+                if($order['daily_bonus_ratio'] > 0){
+                    User::changeInc($order['user_id'],$order['daily_bonus_ratio'],'team_bonus_balance',6,$order['id'],3,$text.'补助资金');
+                }
+                User::changeInc($order['user_id'],$order['single_amount'],'team_bonus_balance',6,$order['id'],3,$text.'申报费用返还');
+               
+                if($order['gift_integral']>0){
+                    User::changeInc($order['user_id'],$order['gift_integral'],'integral',6,$order['id'],2,$text.'普惠积分');
+                }
+                Order::where('id',$order->id)->update(['status'=>4]);
+
+                
+            // 结束项目分红
+        }
+        Db::Commit();
         }catch(Exception $e){
             Db::rollback();
             
-            Log::error('分红收益异常：'.$e->getMessage());
+            Log::error('分红收益异常：'.$e->getMessage(),$e);
+            throw $e;
+        }
+    }
+
+    public function bonus_group_8($order){
+        Db::startTrans();
+        try{
+            $cur_time = strtotime(date('Y-m-d 00:00:00'));
+            $text = "{$order['project_name']}";
+            // 到期需要返还申报费用
+            if($order['end_time'] <= $cur_time) {
+                //echo "{$order['id']}开始分红\n";
+                // 返还申报费用
+                if($order['sum_amount'] > 0){
+                    User::changeInc($order['user_id'],$order['sum_amount'],'team_bonus_balance',6,$order['id'],3,$text.'补助资金');
+                }
+                User::changeInc($order['user_id'],$order['single_amount'],'team_bonus_balance',6,$order['id'],3,$text.'申报费用返还');
+               
+                if($order['gift_integral']>0){
+                    User::changeInc($order['user_id'],$order['gift_integral'],'integral',6,$order['id'],2,$text.'普惠积分');
+                }
+                Order::where('id',$order->id)->update(['status'=>4]);
+
+                
+            // 结束项目分红
+        }
+        Db::Commit();
+        }catch(Exception $e){
+            Db::rollback();
+            
+            Log::error('分红收益异常：'.$e->getMessage(),$e);
             throw $e;
         }
     }
