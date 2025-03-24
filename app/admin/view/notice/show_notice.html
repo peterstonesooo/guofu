@@ -13,6 +13,20 @@
                 <input type="hidden" class="form-control" value="{$data['id']}" name="id">
             <?php } ?>
             <div class="box box-body">
+                {if(empty($data))}
+
+                <div class="row dd_input_group">
+                    <div class="form-group">
+                        <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">类别</label>
+                        <div class="col-xs-7 col-sm-6 col-md-4 col-lg-4">
+                            <select name="type">
+                                <option value="1" {if(isset($data['type']) && $data['type']==1)} selected {/if}>公告</option>
+                                <option value="2" {if(isset($data['type']) && $data['type']==2)} selected {/if}>指定</option>
+                            </select>
+                        </div>
+                        <div class="col-xs-1 col-sm-4 col-md-6 col-lg-6 dd_ts">*</div>
+                    </div>
+                </div>
                 <div class="row dd_input_group">
                     <div class="form-group">
                         <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">用户手机号</label>
@@ -20,9 +34,10 @@
                             <input type="text" name="phone" class="form-control" placeholder="请输入用户手机号"
                                    value="{$data['phone']??''}">
                         </div>
-                        <div class="col-xs-1 col-sm-4 col-md-6 col-lg-6 dd_ts">* 多个手机号用,逗号分割 编辑时不支持多个</div>
+                        <div class="col-xs-1 col-sm-4 col-md-6 col-lg-6 dd_ts">* 多个手机号用,逗号分割 公告不用填写</div>
                     </div>
                 </div>
+                {/if}
                 <div class="row dd_input_group">
                     <div class="form-group">
                         <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">标题</label>
@@ -35,12 +50,10 @@
                 </div>
                 <div class="row dd_input_group">
                     <div class="form-group">
-                        <div class="col-xs-11 col-sm-11 col-md-11 col-lg-11 summernote_div">
+                        <div class="col-xs-11 col-sm-11 col-md-11 col-lg-11 ">
                             <label class="text-lable">内容</label>
-                            <input type="hidden" name="content" id="content">
-                            <div class="summernote">
-                                <?php echo $data['content']??'';?>
-                            </div>
+                            <textarea  name="content" id="content" style="width: 100%;height: 100px;">{$data['content']??''}</textarea>
+
                         </div>
                         <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 dd_ts">*</div>
                     </div>
@@ -75,26 +88,7 @@
 
 <script>
     $(function () {
-        $('.summernote').summernote({
-            toolbar: [
-                ['style', ['style']],
-                ['font', ['bold', 'underline', 'clear']],
-                ['fontname', ['fontname']],
-                ['fontsize', ['fontsize']],
-                ['color', ['color']],
-                ['para', ['ul', 'ol', 'paragraph']],
-                ['table', ['table']],
-                ['insert', ['link', 'picture', 'video']],
-                ['view', ['fullscreen', 'codeview', 'help']],
-            ],
-            lang: 'zh-CN',
-            minHeight: '300px',
-            callbacks: {
-                onImageUpload: function (files) {
-                    sendFile(files, 'summernote');
-                }
-            }
-        });
+
 
         var url = "{:url('admin/Notice/noticeList')}";
         $('a[href="' + url + '"]').parents('.menu-li').addClass('active');
@@ -107,8 +101,6 @@
 
     function sub()
     {
-        var content = $('.summernote').summernote('code');
-        $('#content').val(content);
         var formData = new FormData($('#commentForm')[0]);
         $.ajax({
             url: '<?php echo !empty($data) ? url("admin/Notice/editNotice") : url("admin/Notice/addNotice");?>',

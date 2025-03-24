@@ -19,10 +19,10 @@ class NoticeController extends AuthController
             $user_ids[] = $req['user'];
             $builder->whereIn('user_id', $user_ids);
         }
-        if (isset($req['start_date']) && $req['start_date'] !== ''){
+        if (isset($req['start_date']) && $req['start_date'] !== '') {
             $builder->where('created_at', '>', $req['start_date']);
         }
-        if (isset($req['end_date']) && $req['end_date'] !== ''){
+        if (isset($req['end_date']) && $req['end_date'] !== '') {
             $builder->where('created_at', '<', $req['end_date']);
         }
 
@@ -46,7 +46,7 @@ class NoticeController extends AuthController
         if (!empty($req['id'])) {
             $data = Notice::where('id', $req['id'])->find();
             $user = User::where('id', $data['user_id'])->find();
-            $data['phone'] = $user['phone'];
+            //$data['phone'] = $user['phone'];
         }
         $this->assign('data', $data);
 
@@ -56,26 +56,43 @@ class NoticeController extends AuthController
     public function addNotice()
     {
         $req = $this->validate(request(), [
-            'phone|手机号' => 'require',
+            'phone|手机号' => 'requireIf:type,2',
             'title|标题' => 'require|max:100',
             'content|内容' => 'require',
+            'type|类型' => 'require',
         ]);
         Db::startTrans();
         try {
-            $phone = explode(',', $req['phone']);
-            foreach ($phone as $key => $value) {
-                $user = User::where('phone', $value)->find();
-                if(!$user) {
-                    throw new Exception($value.'手机号不存在');
+
+            $insert = [
+                'type' => $req['type'],
+                'title' => $req['title'],
+                'content' => $req['content'],
+            ];
+
+           $notice =  Notice::create($insert);
+
+            if ($req['type'] == 2) {
+                if($req['phone'] == ''){
+                    throw new Exception('手机号不能为空');
                 }
-                $insert = [
-                    'user_id' => $user['id'],
-                    'title' => $req['title'],
-                    'content' => $req['content'],
-                ];
-                Notice::create($insert);
+
+                $phone = explode(',', $req['phone']);
+                foreach ($phone as $key => $value) {
+                    $user = User::where('phone', $value)->find();
+                    if (!$user) {
+                        throw new Exception($value . '手机号不存在');
+                    }
+                    $insertUserNotice = [
+                        'user_id' => $user['id'],
+                        'notice_id' => $notice['id'],
+                    ];
+                    Db::name('user_notice')->insert($insertUserNotice);
+                }
             }
-            
+
+
+
             Db::Commit();
         } catch (\Exception $e) {
             Db::rollback();
@@ -89,14 +106,10 @@ class NoticeController extends AuthController
     {
         $req = $this->validate(request(), [
             'id' => 'require|number',
-            'phone|手机号' => 'require',
             'title|标题' => 'require|max:100',
             'content|内容' => 'require',
         ]);
-        $user = User::where('phone', $req['phone'])->find();
-        if(!$user) {
-            return out(null, 0, '手机号不存在或者输入多个手机号');
-        }
+
         Notice::where('id', $req['id'])->update($req);
 
         return out();
@@ -109,7 +122,7 @@ class NoticeController extends AuthController
             'id' => 'require|number'
         ]);
 
-        Notice::destroy($req['id']);
+        Db::table('mp_notice')->delete(($req['id']));
 
         return out();
     }

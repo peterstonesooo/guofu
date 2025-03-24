@@ -139,11 +139,11 @@ return array(
                             'icon' => 'fa-circle-o',
                             'url' => 'admin/Setting/settingList',
                         ),
-/*                     '站内信' =>
+                    '站内信' =>
                         array(
                             'icon' => 'fa-circle-o',
                             'url' => 'admin/Notice/noticeList',
-                        ), */
+                        ),
                         '排行设置' =>
                         array(
                             'icon' => 'fa-circle-o',
