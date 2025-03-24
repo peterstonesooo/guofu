@@ -28,6 +28,8 @@ class NoticeController extends AuthController
 
             $v['content'] = nl2br($v['content']);  // 将换行符转换为<br>标签
             $v['content'] = str_replace(' ', '&nbsp;', $v['content']);  // 将空格转换为&nbsp;
+            $is_read = Db::table('mp_notice_read')->where('notice_id', $v['id'])->where('user_id', $user['id'])->find();
+            $v['is_read'] = $is_read ? 1 : 0;
         }
         return out($data);
     }
