@@ -196,6 +196,9 @@ class OrderController extends AuthController
                             throw new Exception('余额不足');
                         }
                     }
+
+                    User::changeInc($user['id'],0,$field1,3,$order2['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'].'-赠送',0,1,'OD');
+
                 
 
                 // 累计总收益和赠送数字人民币  到期结算
