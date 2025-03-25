@@ -218,7 +218,7 @@ class Order extends Model
         return round(PassiveIncomeRecord::where('order_id', $data['id'])->value('amount') * $data['buy_num'], 2);
     }
 
-    public static function orderPayComplete($order_id, $project, $user_id)
+    public static function orderPayComplete($order_id, $project, $user_id,$is_gift =0)
     {
         $order = Order::where('id', $order_id)->find();
 
@@ -242,19 +242,22 @@ class Order extends Model
             UserLottery::lotteryInc($user_id, $project['lottery_num'],3,0,$order['id']);
         }
 
-        //购买产品和恢复资产用户激活
-        if ($order['user']['is_active'] == 0 && $project['single_amount']>0) {
-            User::where('id', $order['user_id'])->update(['is_active' => 1, 'active_time' => time()]);
-            // 下级用户激活
-            UserRelation::where('sub_user_id', $order['user_id'])->update(['is_active' => 1]);
-            //UserLottery::lotteryInc($order['user']['up_user_id'], 3,3,0,$order['id']);
+
+
+        if($is_gift == 0){
+            //购买产品和恢复资产用户激活
+            if ($order['user']['is_active'] == 0 && $project['single_amount']>0) {
+                User::where('id', $order['user_id'])->update(['is_active' => 1, 'active_time' => time()]);
+                // 下级用户激活
+                UserRelation::where('sub_user_id', $order['user_id'])->update(['is_active' => 1]);
+                //UserLottery::lotteryInc($order['user']['up_user_id'], 3,3,0,$order['id']);
+            }
+
+            User::where('id', $user_id)->inc('invest_amount', $order['single_amount'])->update();
+
+            $userModel = new User();
+            $userModel->teamBonus($user_id, $project['price'],$order_id);
         }
-
-        User::where('id', $user_id)->inc('invest_amount', $order['single_amount'])->update();
-
-
-        $userModel = new User();
-        $userModel->teamBonus($user_id, $project['price'],$order_id);
         //User::upLevel($user_id);
         return !0;
 
