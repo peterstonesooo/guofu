@@ -334,7 +334,7 @@ class CheckBonus extends Command
 
 
 
-    public function bonus_group_7($order){
+/*     public function bonus_group_7($order){
         Db::startTrans();
         try{
             $cur_time = strtotime(date('Y-m-d 00:00:00'));
@@ -394,7 +394,7 @@ class CheckBonus extends Command
             Log::error('分红收益异常：'.$e->getMessage(),$e);
             throw $e;
         }
-    }
+    } */
 
     public function bonus_5($order){
         Db::startTrans();
