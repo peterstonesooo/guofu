@@ -484,11 +484,17 @@ class Order extends Model
             return ['code' => 10003,'order_id'=>$order_id, 'msg' => '找不到购买订单日志记录'];
 
         }
-        $fields = ['topup_balance', 'signin_balance', 'team_bonus_balance'];
-        $cnFields = ['topup_balance' => '充值余额', 'signin_balance' => '签到金额', 'team_bonus_balance' => '团队奖励'];
-        $amouts = ['topup_balance' => 0, 'signin_balance' => 0, 'team_bonus_balance' => 0];
+        $fields = ['topup_balance', 'team_bonus_balance'];
+        $cnFields = ['topup_balance' => '可用余额',  'team_bonus_balance' => '可提余额'];
+        $amouts = ['topup_balance' => 0, 'team_bonus_balance' => 0];
         foreach ($logs as $key => $log) {
-            $field = $fields[$key];
+            //$field = $fields[$key];
+            if (strpos($log['remark'], '可用余额-') !== false) {
+                $field = 'topup_balance';
+            } elseif (strpos($log['remark'], '可提余额-') !== false) {
+                $field = 'team_bonus_balance';
+            }
+
             $amouts[$field] =  abs($log['change_balance']);
         }
         Db::startTrans();
