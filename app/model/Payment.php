@@ -202,7 +202,7 @@ class Payment extends Model
             $resp = $ret->getBody()->getContents();
            // Log::debug('payNotifyHongYaX:'.$resp);
             $data = json_decode($resp, true);
-            $data['data'] = urlencode($data['data']);
+            $data['data'] = $data['data'];
             if (empty($data['status']) || $data['status'] != 200) {
                 exit_out(null, 10001, '支付异常，请稍后重试', ['请求参数' => $req, '返回数据' => $resp]);
             }
