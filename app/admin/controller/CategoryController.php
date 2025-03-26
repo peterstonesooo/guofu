@@ -148,6 +148,12 @@ class CategoryController extends AuthController
             $value = intval($value);
         }
         
+        // 处理选中状态互斥 - 只能有一个分类被选中
+        if ($field === 'is_selected' && $value == 1) {
+            // 先将所有分类的选中状态设为0
+            CategoryModel::where('id', '<>', $id)->update(['is_selected' => 0]);
+        }
+        
         $category->$field = $value;
         $result = $category->save();
         

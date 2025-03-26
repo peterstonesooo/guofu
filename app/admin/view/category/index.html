@@ -19,7 +19,7 @@
                             <th>名称</th>
                             <th>类型</th>
                             <th>排序</th>
-                            <th>是否选中</th>
+                            <th>是否选中 <i class="fa fa-info-circle" data-toggle="tooltip" title="只能选中一个分类"></i></th>
                             <th>是否显示</th>
                             <th>创建时间</th>
                             <th>操作</th>
@@ -63,12 +63,28 @@
         data['field'] = field;
         data['value'] = value;
         
+        // 选中状态处理 - 前端先更新视觉效果
+        if (field === 'is_selected' && value === 1) {
+            // 先将所有选中框置为未选中
+            $('.switch-is-selected').each(function() {
+                if ($(this).data('id') != id && $(this).prop('checked')) {
+                    $(this).prop('checked', false);
+                    if ($.fn.bootstrapSwitch) {
+                        $(this).bootstrapSwitch('state', false, true);
+                    }
+                }
+            });
+        }
+        
         $.post('{:url("admin/Category/updateStatus")}', data, function(res) {
             if (res.code == 200) {
                 layer.msg('操作成功', {icon: 1, time: 1500});
-                setTimeout(function() {
-                    location.reload(); // 如果失败，刷新页面恢复状态
-                }, 1500);
+                // 如果是修改排序或者其他可能影响列表顺序的操作，需要刷新页面
+                if (field === 'sort') {
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                }
             } else {
                 layer.msg(res.msg || '操作失败', {icon: 2, time: 2000});
                 setTimeout(function() {
@@ -89,5 +105,8 @@
                 offText: '否'
             });
         }
+        
+        // 初始化tooltip提示
+        $('[data-toggle="tooltip"]').tooltip();
     });
 </script>
