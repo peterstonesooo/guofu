@@ -89,8 +89,8 @@ return array(
             // ['id'=>9,'name'=>'以旧换新补助','type'=>2,'is_selected'=>1],
             // ['id'=>8,'name'=>'教育补助二期','type'=>0,'is_selected'=>0],
             //['id'=>7,'name'=>'延迟退休补助','type'=>1,'is_selected'=>0],
-            ['id'=>8,'name'=>'体重管理补助','type'=>3,'is_selected'=>1],
-            ['id'=>9,'name'=>'教育补助三期','type'=>0,'is_selected'=>0],
+            ['id'=>10,'name'=>'体重管理补助','type'=>3,'is_selected'=>1],
+            ['id'=>11,'name'=>'教育补助三期','type'=>0,'is_selected'=>0],
 
         ],
         'project_house'=>[
