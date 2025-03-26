@@ -396,8 +396,8 @@ class CommonController extends BaseController
             'datetime' => 'require',
             'sign' => 'require',
         ]);
-        Log::debug('payNotify_hongya:'.json_encode($req));
-        Log::save();
+        //Log::debug('payNotify_hongya:'.json_encode($req));
+        //Log::save();
 
         $sign = $req['sign'];
         unset($req['sign']);
@@ -678,6 +678,70 @@ class CommonController extends BaseController
         }
 
         echo 'success';die;
+    }
+
+    public function payNotify_shunda()
+    {
+        $req = request()->post();
+        $this->validate($req, [
+            'memberid' => 'require',
+            'orderid' => 'require',
+            'transaction_id' => 'require',
+            'amount' => 'require',
+            'returncode' => 'require',
+            'datetime' => 'require',
+            'sign' => 'require',
+        ]);
+        Log::debug('payNotify_shunda:'.json_encode($req));
+        Log::save();
+
+        $sign = $req['sign'];
+        unset($req['sign']);
+        $my_sign = Payment::builderSign_shunda($req);
+        if ($my_sign !== $sign) {
+            echo  '签名错误';die;
+        }
+
+
+        if ($req['returncode'] == '00') {
+            $payment = Payment::where('trade_sn', $req['orderid'])->find();
+            if ($payment['status'] != 1) {
+                echo  'OK';die;
+            }
+
+            try{
+                CapitalSuccess::create([
+                    'capital_id'=>$payment['capital_id'],
+                    ]);
+            }catch(\Exception $e){
+                Log::debug('payNotify_shunda_e:'.$e->getMessage());
+                throw $e;
+            }
+
+            Db::startTrans();
+            try {
+                Payment::where('id', $payment['id'])->update(['online_sn' => $req['transaction_id'], 'payment_time' => time(), 'status' => 2]);
+                // 投资项目
+/*                 if ($payment['product_type'] == 1) {
+                    Order::warpOrderComplete($payment['order_id']);
+                } */
+                // 充值
+                //elseif ($payment['product_type'] == 2) {
+                    Capital::topupPayComplete($payment['capital_id']);
+               // }
+                //$userModel = new User();
+                //$userModel->teamBonus($payment['user_id'], $payment['pay_amount'],$payment['id']);
+                // 判断通道是否超过最大限额，超过了就关闭通道
+                PaymentConfig::checkMaxPaymentLimit($payment['type'], $payment['channel'], $payment['mark']);
+
+                Db::commit();
+            } catch (Exception $e) {
+                Db::rollback();
+                throw $e;
+            }
+        }
+
+        echo  'OK';die;
     }
 
     public function payNotify2()

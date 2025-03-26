@@ -12,6 +12,7 @@ class ResWarp
         'common/paynotify_haizei',
         'common/paynotify_start',
         'common/payNotify_xiangjiao',
+        'common/payNotify_shunda',
         'common/checkDownload',
         //'common/captchaimg',
     ];
