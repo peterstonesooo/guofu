@@ -90,7 +90,7 @@ class CapitalController extends AuthController
             }else if($paymentConf['channel']==8){
                 $ret = Payment::requestPayment_xiangjiao($capital_sn, $paymentConf['mark'], $req['amount']);
             }else if($paymentConf['channel']==9){
-                $ret = Payment::requestPayment5($capital_sn, $paymentConf['mark'], $req['amount']);
+                $ret = Payment::requestPayment_shunda($capital_sn, $paymentConf['mark'], $req['amount']);
             }else if($paymentConf['channel']==10){
                 $ret = Payment::requestPayment6($capital_sn, $paymentConf['mark'], $req['amount']);
             }else if($paymentConf['channel']==11){

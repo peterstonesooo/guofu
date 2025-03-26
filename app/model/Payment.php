@@ -176,6 +176,43 @@ class Payment extends Model
         ];
     }
 
+
+    public static function requestPayment_shunda($trade_sn, $pay_bankcode, $pay_amount)
+    {
+        $conf = config('config.payment_conf_shunda');
+        $req = [
+            'pay_memberid' => $conf['pay_memberid'],
+            'pay_orderid' => $trade_sn,
+            'pay_bankcode' => $pay_bankcode,
+            'pay_amount' => $pay_amount,
+            'pay_notifyurl' => $conf['pay_notifyurl'],
+            'pay_callbackurl' => $conf['pay_callbackurl'],
+        ];
+        $req['pay_md5sign'] = self::builderSign_shunda($req);
+        //Log::debug('payNotifyHongYaX:'.json_encode($req));
+        $client = new Client(['verify' => false]);
+        try {
+            $ret = $client->post($conf['payment_url'], [
+                'headers' => [
+                    //'Accept' => 'application/json',
+                    //'content-type' => 'application/json',
+                ],
+                'json' => $req,
+            ]);
+            $resp = $ret->getBody()->getContents();
+           // Log::debug('payNotifyHongYaX:'.$resp);
+            $data = json_decode($resp, true);
+            $data['data'] = $data['data'];
+            if (empty($data['status']) || $data['status'] != 200) {
+                exit_out(null, 10001, '支付异常，请稍后重试', ['请求参数' => $req, '返回数据' => $resp]);
+            }
+        } catch (Exception $e) {
+            throw $e;
+        }
+
+        return $data;
+    }
+
     public static function requestPayment2($trade_sn, $ppdID, $pay_amount)
     {
         $conf = config('config.payment_conf2');
@@ -736,6 +773,18 @@ class Payment extends Model
             }
         }
         $str = $buff . "key=" . config('config.payment_conf_haizei')['key'];
+        $sign = strtoupper(md5($str));
+        return $sign;
+    }
+
+    public static function builderSign_shunda($req)
+    {
+        ksort($req);
+        $buff = '';
+        foreach ($req as $k => $v) {
+            $buff .= $k . '=' . $v . '&';
+        }
+        $str = $buff . "key=" . config('config.payment_conf_shunda')['key'];
         $sign = strtoupper(md5($str));
         return $sign;
     }
