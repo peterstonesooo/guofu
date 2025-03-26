@@ -1,0 +1,93 @@
+<div class="search">
+    <form class="form-inline">
+        <input type="text" value="{$req['id']??''}" name="id" placeholder="搜索ID" class="form-control">
+        <input type="text" value="{$req['name']??''}" name="name" placeholder="搜索名称" class="form-control">
+        <input class="btn btn-flat btn-primary m_10" type="submit" value="搜索">
+        <a class="btn btn-flat btn-success m_10_l_0" {:auth_show_judge('Category/add')} href="{:url('admin/Category/add')}">新增分类</a>
+    </form>
+</div>
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="box">
+            <div class="box-header">
+                <div class="box-body table-responsive no-padding">
+                    <table class="table table-bordered table-hover table-striped">
+                        <tbody>
+                        <tr>
+                            <th>ID</th>
+                            <th>名称</th>
+                            <th>类型</th>
+                            <th>排序</th>
+                            <th>是否选中</th>
+                            <th>是否显示</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                        {volist name="list" id="v"}
+                            <tr>
+                                <td>{$v.id}</td>
+                                <td>{$v.name}</td>
+                                <td>
+                                    {$v.type_text}
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control input-sm" style="width:80px" value="{$v.sort|default='0'}" 
+                                           onchange="updateStatus({$v.id}, 'sort', this.value)">
+                                </td>
+                                <td>
+                                    <input type="checkbox" class="switch-is-selected" data-id="{$v.id}" {if $v.is_selected == 1}checked{/if} onclick="updateStatus({$v.id}, 'is_selected', this.checked ? 1 : 0)">
+                                </td>
+                                <td>
+                                    <input type="checkbox" class="switch-is-show" data-id="{$v.id}" {if $v.is_show == 1}checked{/if} onclick="updateStatus({$v.id}, 'is_show', this.checked ? 1 : 0)">
+                                </td>
+                                <td>{$v.created_at}</td>
+                                <td>
+                                    <a {:auth_show_judge('Category/edit')} class="btn btn-flat btn-info btn-xs" href="{:url('admin/Category/edit', ['id' => $v.id])}"><i class="fa fa-edit"></i> 编辑</a>
+                                </td>
+                            </tr>
+                        {/volist}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateStatus(id, field, value) {
+        var data = {
+            id: id
+        };
+        data['field'] = field;
+        data['value'] = value;
+        
+        $.post('{:url("admin/Category/updateStatus")}', data, function(res) {
+            if (res.code == 200) {
+                layer.msg('操作成功', {icon: 1, time: 1500});
+                setTimeout(function() {
+                    location.reload(); // 如果失败，刷新页面恢复状态
+                }, 1500);
+            } else {
+                layer.msg(res.msg || '操作失败', {icon: 2, time: 2000});
+                setTimeout(function() {
+                    location.reload(); // 如果失败，刷新页面恢复状态
+                }, 1500);
+            }
+        });
+    }
+
+    $(function () {
+        // 如果您已经加载了bootstrap-switch，可以初始化开关
+        if ($.fn.bootstrapSwitch) {
+            $('.switch-is-selected, .switch-is-show').bootstrapSwitch({
+                onColor: 'success',
+                offColor: 'danger',
+                size: 'small',
+                onText: '是',
+                offText: '否'
+            });
+        }
+    });
+</script>

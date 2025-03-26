@@ -1,0 +1,110 @@
+<div class="search">
+    <form class="form-inline">
+        <a class="btn btn-flat btn-primary m_10_l_0" href="{:url('admin/Category/index')}">显示全部</a>
+        <a class="btn btn-flat btn-success m_10 f_r" onclick="javascript:history.back(-1)"><i
+                    class="fa fa-undo m-r-10"></i>返 回</a>
+    </form>
+</div>
+
+<div class="row">
+    <div class="col-sm-12 col-xs-12">
+        <form id="categoryForm">
+            {notempty name="data"}
+                <input type="hidden" class="form-control" value="{$data.id}" name="id">
+            {/notempty}
+            <div class="box box-body">
+                <div class="row dd_input_group">
+                    <div class="form-group">
+                        <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">名称</label>
+                        <div class="col-xs-8 col-sm-6 col-md-4 col-lg-4">
+                            <input type="text" name="name" class="form-control" placeholder="请输入分类名称"
+                                   value="{$data.name|default=''}">
+                        </div>
+                        <div class="col-xs-12 col-sm-4 col-md-6 col-lg-6 dd_ts">*</div>
+                    </div>
+                </div>
+                <div class="row dd_input_group">
+                    <div class="form-group">
+                        <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">类型</label>
+                        <div class="col-xs-8 col-sm-6 col-md-4 col-lg-4">
+                            <select name="type" class="form-control">
+                                {foreach($teamplateType as $k => $v}
+                                    <option value="{$k}" {if isset($data.type) && $data.type == $k}selected="selected"{/if}>{$v}</option>
+                                {/foreach}
+                            </select>
+                            
+                        </div>
+                        <div class="col-xs-12 col-sm-4 col-md-6 col-lg-6 dd_ts">*</div>
+                    </div>
+                </div>
+                <div class="row dd_input_group">
+                    <div class="form-group">
+                        <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">排序</label>
+                        <div class="col-xs-8 col-sm-6 col-md-4 col-lg-4">
+                            <input type="number" name="sort" class="form-control" placeholder="数字越大越靠前"
+                                   value="{$data.sort|default='0'}">
+                        </div>
+                        <div class="col-xs-12 col-sm-4 col-md-6 col-lg-6 dd_ts">数字越大越靠前</div>
+                    </div>
+                </div>
+                <div class="row dd_input_group">
+                    <div class="form-group">
+                        <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">是否选中</label>
+                        <div class="col-xs-8 col-sm-6 col-md-4 col-lg-4">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" name="is_selected" value="1" {if !empty($data) && $data.is_selected == 1}checked{/if}> 是
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row dd_input_group">
+                    <div class="form-group">
+                        <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">是否显示</label>
+                        <div class="col-xs-8 col-sm-6 col-md-4 col-lg-4">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" name="is_show" value="1" {if empty($data) || $data.is_show == 1}checked{/if}> 是
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row dd_input_group">
+                    <div class="form-group">
+                        <div class="col-xs-12 col-sm-8 col-md-6 col-lg-5 text-center">
+                            <button type="button" class="btn btn-flat btn-primary" onclick="submitForm()">提 交</button>
+                            <button type="button" class="btn btn-flat btn-default" onclick="javascript:history.back(-1)">返 回</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        var url = "{:url('admin/Category/index')}";
+        $('a[href="' + url + '"]').parents('.menu-li').addClass('active');
+        var headerText = $('a[href="' + url + '"]').children('span').text();
+        var is_add = "{:empty($data) ? '1' : '0'}";
+        var headerTitle = is_add == "1" ? headerText + '-添加' : headerText + '-编辑';
+        $('#content-header-title').text(headerTitle);
+    });
+
+    function submitForm() {
+        var is_selected = $('input[name="is_selected"]').is(':checked') ? 1 : 0;
+        var is_show = $('input[name="is_show"]').is(':checked') ? 1 : 0;
+        
+        var formData = $('#categoryForm').serialize() + '&is_selected=' + is_selected + '&is_show=' + is_show;
+
+        $.post('{:empty($data) ? url("admin/Category/save") : url("admin/Category/update")}', formData, function (res) {
+            if (res.code == 200) {
+                layer.msg('操作成功', {icon: 1, time: 1500});
+                setTimeout(function() {
+                    window.location.href = '{:url("admin/Category/index")}';
+                }, 1500);
+            } else {
+                layer.msg(res.msg || '操作失败', {icon: 5, time: 3000});
+            }
+        });
+    }
+</script>

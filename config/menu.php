@@ -48,6 +48,11 @@ return array(
                             'icon' => 'fa-circle-o',
                             'url' => 'admin/Project/projectList',
                          ),
+                    '项目分类' =>
+                        array(
+                            'icon' => 'fa-circle-o',
+                            'url' => 'admin/Category/index',
+                         ),
                      /*'税务抵用券' =>
                         array(
                             'icon' => 'fa-circle-o',
