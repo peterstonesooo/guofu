@@ -75,7 +75,9 @@ return array(
             6=>'教育补助一期',
             7=>'延迟退休补助',
             8=>'教育补助二期',
-            9=>'以旧换新补助'
+            9=>'以旧换新补助',
+            10=>'教育补助三期',
+            11=>'体重管理补助'
             // 6 => '驰援甘肃',
         ],
         'groupName' => [
@@ -84,9 +86,11 @@ return array(
             //['id'=>5,'name'=>'养老补助二期','type'=>0,'is_selected'=>1],
             //['id'=>1,'name'=>'民生帮扶计划','type'=>0,],
            // ['id'=>6,'name'=>'教育补助一期','type'=>0,'is_selected'=>1],
-            ['id'=>9,'name'=>'以旧换新补助','type'=>2,'is_selected'=>1],
-            ['id'=>8,'name'=>'教育补助二期','type'=>0,'is_selected'=>0],
+            // ['id'=>9,'name'=>'以旧换新补助','type'=>2,'is_selected'=>1],
+            // ['id'=>8,'name'=>'教育补助二期','type'=>0,'is_selected'=>0],
             //['id'=>7,'name'=>'延迟退休补助','type'=>1,'is_selected'=>0],
+            ['id'=>8,'name'=>'体重管理补助','type'=>3,'is_selected'=>1],
+            ['id'=>9,'name'=>'教育补助三期','type'=>0,'is_selected'=>0],
 
         ],
         'project_house'=>[
