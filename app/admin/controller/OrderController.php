@@ -12,10 +12,13 @@ use Exception;
 use think\facade\Db;
 use think\facade\Session;
 
+use function PHPUnit\Framework\isNull;
+
 class OrderController extends AuthController
 {
     public function orderList()
     {
+        
         $req = request()->param();
 
         if (!empty($req['channel'])||!empty($req['mark'])) {
@@ -23,6 +26,8 @@ class OrderController extends AuthController
         }else{
             $builder = Order::alias('o')->field('o.*')->order('o.id', 'desc');
         }
+        // echo $builder->buildSql();
+        // die;
         if (isset($req['order_id']) && $req['order_id'] !== '') {
             $builder->where('o.id', $req['order_id']);
         }
@@ -78,9 +83,19 @@ class OrderController extends AuthController
 
 
         $projectList = \app\model\Project::field('id,name')->select();
-
-        $data = $builder->paginate(['query' => $req]);
-        //var_dump($data);
+        
+        if (isset($req['num']) && $req['num'] !== '') {
+            if($req['num']<0){
+                $req['num']=$builder->count();
+            }
+        }else{
+            $req['num']=15;
+        }
+        
+        $data = $builder->paginate($req['num'],false,['query' => $req]);
+        // echo $builder->buildSql();
+        // var_dump($req);
+        // die;
         $this->assign('req', $req);
         $this->assign('data', $data);
         $this->assign('projectList', $projectList);

@@ -51,6 +51,14 @@ return [
         'payment_url' => 'http://8.210.18.24:405/gateway/index/checkpoint',
         'query_url' => 'http://8.210.18.24:405/gateway/index/queryorder',
     ],
+    'payment_conf_shunda' => [
+        'key' => 'EvaVqglHDaOJ6Y1TKL6lrzu1mouzJjsQ',
+        'pay_memberid'=>'250352958',
+        'pay_notifyurl' => env('app.host').'/common/paynotify_shunda',
+        'pay_callbackurl' => env('common.callback_url').'/tradeSuccess',
+        'payment_url' => 'https://shunda.cyou/Pay',
+        'query_url' => 'https://shunda.cyou/Query',
+    ],
     'payment_conf4' => [
         'key' => 'kysyUgNsaSernb9gvVeWiU4',
         'pay_memberid'=>'100198',
