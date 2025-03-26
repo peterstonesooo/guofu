@@ -2,6 +2,7 @@
 
 namespace app\api\controller;
 
+use app\model\Category;
 use app\model\PaymentConfig;
 use app\model\Project;
 
@@ -140,7 +141,7 @@ class ProjectController extends AuthController
     }
 
     public function groupName(){
-        $data = config('map.project.groupName');
+        $data = Category::getList();
 
         return out($data);
     }

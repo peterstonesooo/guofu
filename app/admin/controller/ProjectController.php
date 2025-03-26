@@ -2,6 +2,7 @@
 
 namespace app\admin\controller;
 
+use app\model\Category;
 use app\model\Project;
 
 class ProjectController extends AuthController
@@ -28,7 +29,7 @@ class ProjectController extends AuthController
         }
 
         $data = $builder->paginate(['query' => $req]);
-        $groups = config('map.project.group');
+        $groups = Category::getListKv();
         $this->assign('groups',$groups);
 
         $this->assign('req', $req);
@@ -49,7 +50,7 @@ class ProjectController extends AuthController
         if(!empty($data['give'])){
             $data['give'] = json_decode($data['give'],true);
         }
-        $groups = config('map.project.group');
+        $groups = Category::getListKv();
         $this->assign('groups',$groups);
         $this->assign('give',$give);
         $this->assign('data', $data);
@@ -199,7 +200,7 @@ class ProjectController extends AuthController
             'id' => 'require|number'
         ]);
 
-        Project::destroy($req['id']);
+        //Project::destroy($req['id']);
 
         return out();
     }

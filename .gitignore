@@ -17,3 +17,4 @@
 /config/cache.php
 /.htaccess
 /public/.htaccess
+/public/storage/*
