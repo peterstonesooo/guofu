@@ -252,7 +252,7 @@ class UserController extends AuthController
                 break;
             case 2:
                 $filed = 'integral';
-                $log_type = 4;
+                $log_type = 2;
                 $balance_type = 15;
                 $text = '积分';
                 break;
@@ -302,6 +302,17 @@ class UserController extends AuthController
                 }
                 return out(null,200,'请去充值列表手动确认');
                 break;
+            case 6:
+                $filed = 'lottery_num';
+                $log_type = 3;
+                $text = '抽奖次数';
+                break;
+            case 7:
+                $filed = 'income_balance';
+                $log_type = 4;
+                $balance_type = 15;
+                $text = '民生养老金';
+                break;
             default:
                 return out(null, 10001, '类型错误');
         }
@@ -312,7 +323,12 @@ class UserController extends AuthController
         }
         //User::changeBalance($req['user_id'], $req['money'], 15, 0, 1, $req['remark']??'', $adminUser['id']);
         $text = $req['remark']==''?$r_text:$req['remark'];
-        User::changeInc($req['user_id'],$req['money'],$filed,$balance_type,0,$log_type,$text,$adminUser['id']);
+        if($req['type']==6){
+                    
+            User::changelottery($req['user_id'],$req['money'],1);
+        }else{
+            User::changeInc($req['user_id'],$req['money'],$filed,$balance_type,0,$log_type,$text,$adminUser['id']);
+        }
 
         return out();
     }
@@ -370,7 +386,7 @@ class UserController extends AuthController
                 break;
             case 2:
                 $filed = 'integral';
-                $log_type = 4;
+                $log_type = 2;
                 $balance_type = 15;
                 $text = '积分';
                 break;
@@ -380,6 +396,18 @@ class UserController extends AuthController
                 $log_type = 2;
                 $balance_type = 8;
                 $text = '团队奖励';
+                break;
+            case 6:
+                $filed = 'lottery_num';
+                $log_type = 3;
+                $text = '抽奖次数';
+                break;
+            case 7:
+                $filed = 'income_balance';
+                $log_type = 4;
+                $balance_type = 15;
+                $text = '民生养老金';
+            break;
                 break;
             default:
                 return out(null, 10001, '类型错误');
@@ -400,17 +428,22 @@ class UserController extends AuthController
             $phoneList[$key] = trim($phone);
         }
         $ids = User::whereIn('phone',$phoneList)->column('id');
+       
         Db::startTrans();
         try{
             foreach($ids as $id){
-                User::changeInc($id,$req['money'],$filed,$balance_type,0,$log_type,$text,$adminUser['id']);
+                if($req['type']==6){
+                    
+                    User::changelottery($id,$req['money'],1);
+                }else{
+                    User::changeInc($id,$req['money'],$filed,$balance_type,0,$log_type,$text,$adminUser['id']);
+                }
             }
         }catch(\Exception $e){
             Db::rollback();
             return out(null, 10001, $e->getMessage());
         }
         Db::commit();
-
         return out();
     }
 

@@ -6,6 +6,8 @@ use Exception;
 use think\Model;
 use think\facade\Db;
 
+use app\model\UserLottery;
+use app\model\UserLotteryLog;
 class User extends Model
 {
     public function getStatusTextAttr($value, $data)
@@ -391,6 +393,48 @@ class User extends Model
                     'admin_user_id' =>$admin_user_id,
                     'status' => $status,
                     'order_sn'=>$sn,
+                ]);
+            }
+
+            Db::commit();
+            return 'success';
+        }catch(\Exception $e){
+            Db::rollback();
+            //return $e->getMessage();
+            throw $e;
+        }
+    }
+
+    public static function changelottery($user_id,$amount,$log_type = 1){
+        $user = UserLottery::where('user_id', $user_id)->find();
+        $after_balance = $user['lottery_num']+$amount;
+        if($amount<0 && $user['lottery_num']<abs($amount)){
+            throw new Exception('余额不足');
+        }
+
+        
+        Db::startTrans();
+        try {
+            $ret = UserLottery::where('user_id',$user_id)->inc('lottery_num',$amount)->update();
+            if($user['lottery_num'] >0) {
+                UserLotteryLog::create([
+                    'user_id' => $user_id,
+                    'type' => 1,
+                    'log_type' => $log_type,
+                    'relation_id' => 1,
+                    'amount_before' => $user['lottery_num'],
+                    'amount' => $amount,
+                    'amount_after' => $after_balance
+                ]);
+            } else {
+                UserLotteryLog::create([
+                    'user_id' => $user_id,
+                    'type' => 1,
+                    'log_type' => $log_type,
+                    'relation_id' => 1,
+                    'amount_before' => $user['lottery_num'],
+                    'amount' => $amount,
+                    'amount_after' => $after_balance
                 ]);
             }
 
