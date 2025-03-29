@@ -405,7 +405,7 @@ class User extends Model
         }
     }
 
-    public static function changelottery($user_id,$amount,$log_type = 1){
+    public static function changelottery($user_id,$amount,$log_type = 1,$admin_id=0){
         $user = UserLottery::where('user_id', $user_id)->find();
         $after_balance = $user['lottery_num']+$amount;
         if($amount<0 && $user['lottery_num']<abs($amount)){
@@ -419,22 +419,25 @@ class User extends Model
             if($user['lottery_num'] >0) {
                 UserLotteryLog::create([
                     'user_id' => $user_id,
-                    'type' => 1,
+                    'type' => 4,
                     'log_type' => $log_type,
-                    'relation_id' => 1,
+                    'relation_id' => 0,
                     'amount_before' => $user['lottery_num'],
                     'amount' => $amount,
-                    'amount_after' => $after_balance
+                    'amount_after' => $after_balance,
+                    'admin_id' => $admin_id,
                 ]);
             } else {
                 UserLotteryLog::create([
                     'user_id' => $user_id,
-                    'type' => 1,
+                    'type' => 4,
                     'log_type' => $log_type,
-                    'relation_id' => 1,
+                    'relation_id' => 0,
                     'amount_before' => $user['lottery_num'],
                     'amount' => $amount,
-                    'amount_after' => $after_balance
+                    'amount_after' => $after_balance,
+                    'admin_id' => $admin_id,
+
                 ]);
             }
 

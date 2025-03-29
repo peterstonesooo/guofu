@@ -7,6 +7,7 @@ use think\console\Output;
 use think\facade\Db;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use app\model\User;
+use app\model\UserLottery;
 
 class BatchRechargeProcess extends Command
 {
@@ -111,8 +112,9 @@ class BatchRechargeProcess extends Command
                                 }
                                 if($type==6){
                                     
-                                    User::changelottery($user['id'],$amount,1);
-                                    
+                                    //User::changelottery($user['id'],$amount,1);
+                                    UserLottery::lotteryInc($user['id'],$amount,4,0,0,1,'lottery_num',$batch['admin_id']);
+
                                     $success++;
                                     
                                     // 记录成功日志

@@ -7,6 +7,7 @@ use app\model\EquityYuanRecord;
 use app\model\LevelConfig;
 use app\model\Realname;
 use app\model\User;
+use app\model\UserLottery;
 use app\model\UserRelation;
 use GuzzleHttp\Psr7\Message;
 use think\facade\Db;
@@ -63,6 +64,7 @@ class UserController extends AuthController
                 $item['invest_amount']=0;
             }
         }
+        
 
         if (!empty($req['export'])) {
             $list = $builder1->select();
@@ -76,6 +78,15 @@ class UserController extends AuthController
                 'real_sub_user_num' => '实名下级人数',
 
             ], '用户-' . date('YmdHis'));
+        }
+
+        foreach($data as &$item){
+            $lotteryNum = UserLottery::where('user_id', $item['id'])->find();
+            if($lotteryNum){
+                $item['lottery_num'] = $lotteryNum['lottery_num'];
+            }else{
+                $item['lottery_num'] = 0;
+            }
         }
 
         $this->assign('req', $req);
@@ -325,7 +336,8 @@ class UserController extends AuthController
         $text = $req['remark']==''?$r_text:$req['remark'];
         if($req['type']==6){
                     
-            User::changelottery($req['user_id'],$req['money'],1);
+            //User::changelottery($req['user_id'],$req['money'],1,$adminUser['id']);
+            UserLottery::lotteryInc($req['user_id'],$req['money'],4,0,0,1,'lottery_num',$adminUser['id']);
         }else{
             User::changeInc($req['user_id'],$req['money'],$filed,$balance_type,0,$log_type,$text,$adminUser['id']);
         }

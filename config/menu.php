@@ -31,6 +31,11 @@ return array(
                             'icon' => 'fa-circle-o',
                             'url' => 'admin/UserBalanceLog/userIntegralLogList',
                         ),
+                    '抽奖次数明细' =>
+                        array(
+                            'icon' => 'fa-circle-o',
+                            'url' => 'admin/UserLotteryLog/userLotteryLogList',
+                        ),     
                     '收货地址' =>
                     array(
                         'icon' => 'fa-circle-o',

@@ -57,8 +57,8 @@
                             {if(session('admin_user')['auth_group_id']!=3)}
                             <th>现金</th>
                             {/if}
-<!--                             <th>生活补助</th>
- -->                            <th>积分</th>
+                            <th>抽奖次数</th>
+                            <th>积分</th>
                             <th>团队奖励</th>
                             <th>邀请码</th>
                             <th>实名</th>
@@ -83,8 +83,8 @@
                                 {if(session('admin_user')['auth_group_id']!=3)}
                                 <td>{$v['topup_balance']}</td>
                                 {/if}
-<!--                                 <td>{$v['poverty_subsidy_amount']}</td>
- -->                                <td>{$v['integral']}</td>
+                                 <td>{$v['lottery_num']}</td>
+                                 <td>{$v['integral']}</td>
                                 <td>{$v['team_bonus_balance']}</td>
                                 <td>{$v['invite_code']}</td>
                                 <td>{$v['realname']}</td>

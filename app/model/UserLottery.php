@@ -12,10 +12,15 @@ use think\facade\Log;
  */
 class UserLottery extends Model
 {
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     /**
      * type1:用户抽奖 2:邀请会员实名  3:购买产品增加抽奖次数 4.使用加速 5.加速账户改变
      */
-    public static function lotteryInc($userId,$num,$type,$userLotteryId,$realationId,$logType = 1,$field='lottery_num'){
+    public static function lotteryInc($userId,$num,$type,$userLotteryId,$realationId,$logType = 1,$field='lottery_num',$adminId =0){
 
         try{
 /*             if(!$userLottery){
@@ -29,6 +34,9 @@ class UserLottery extends Model
                 UserLottery::create(['user_id'=>$userId,'lottery_num'=>0,'speed_up_balance'=>0]);
             }else{
                 $val = $userLottery[$field];
+            }
+            if($num<0 && $val<abs($num)){
+                throw new \Exception('余额不足');
             }
             //抽奖次数
             UserLottery::where('user_id', $userId)->update([
@@ -44,6 +52,7 @@ class UserLottery extends Model
                 'amount_before' => $val,
                 'amount_after' => $val + $num,
                 'log_type' => $logType,
+                'admin_id' => $adminId,
             ];
             UserLotteryLog::create($data);
             Db::commit();
