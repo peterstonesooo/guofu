@@ -35,7 +35,7 @@ class LotteryConfig extends Model
                 $this->where('id', $result['id'])->dec('num')->inc('active_num')->update();
                 $result = $conf;
             }else{
-                $result = $config[0];
+                $result = $configs[0];
                 $this->where('id', $result['id'])->inc('active_num')->update();
             }
 
