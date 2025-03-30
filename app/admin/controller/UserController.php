@@ -447,7 +447,7 @@ class UserController extends AuthController
                 if($req['type']==6){
                     
                     //User::changelottery($id,$req['money'],1);
-                    UserLottery::lotteryInc($req['user_id'],$req['money'],4,0,0,1,'lottery_num',$adminUser['id']);
+                    UserLottery::lotteryInc($id,$req['money'],4,0,0,1,'lottery_num',$adminUser['id']);
 
                 }else{
                     User::changeInc($id,$req['money'],$filed,$balance_type,0,$log_type,$text,$adminUser['id']);
