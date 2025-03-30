@@ -55,7 +55,7 @@
             <option value="30" {$req['num']==30?'selected':''}>每页30条</option>
         </select>
         <input class="btn btn-flat btn-primary m_10" type="submit" value="搜索">
-        <input class="btn btn-flat btn-info m_10" name="export" type="button" value="导出">
+        <input class="btn btn-flat btn-info m_10" name="export" type="submit" value="导出">
     </form>
 </div>
 
@@ -171,14 +171,14 @@
     // 日期范围限制代码保持不变...
 
     // 导出按钮点击事件
-    $('input[name="export"]').click(function(){
+    /*$('input[name="export"]').click(function(){
         // 获取表格元素
         var table = document.querySelector('.table.table-bordered.table-hover.table-striped');
         // 将表格转换为Workbook对象
         var workbook = XLSX.utils.table_to_book(table, {sheet: "Sheet JS"});
         // 写入并下载Excel文件
         XLSX.writeFile(workbook, '订单数据.xlsx');
-    });
+    });*/
     
 
         //日期范围限制
