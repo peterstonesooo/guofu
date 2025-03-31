@@ -22,7 +22,38 @@ class CheckEvents extends Command
 
     public function execute(Input $input, Output $output)
     {
-        $this->SettleAccount2();
+        $this->settleAccount3();
+    }
+
+    public function settleAccount3(){
+        $Rewards = [
+            1=>5,
+            2=>10,
+            3=>20,
+            4=>200,
+            5=>1000,
+        ];
+        $date = date('Y-m-d 00:00:00');
+        echo $date;
+        $data = UserPrize::where('status',0)->where('created_at','<',$date)->chunk(100,function($lists) use($Rewards){
+            foreach($lists as $item){
+                if(isset($Rewards[$item['lottery_id']]) && $Rewards[$item['lottery_id']]>0){
+                    Db::startTrans();
+                    try{
+                        User::changeInc($item['user_id'],$Rewards[$item['lottery_id']],'team_bonus_balance',8,$item['id'],3,'抽奖奖励');
+                        UserPrize::where('id',$item['id'])->update(['status'=>1]);
+                        Db::commit();
+                    }catch(Exception $e){
+                        Db::rollback();
+                        Log::error('结算异常 id:'.$item['id'].' '.$e->getMessage(),['e'=>$e]);
+                        //print_r($e->getMessage());die;
+                    }
+                }
+            }
+
+        });
+
+
     }
 
 
