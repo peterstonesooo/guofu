@@ -67,7 +67,7 @@ class LotteryController extends AuthController
     public function prizeList(){
         $user = $this->user;
         //$data = UserPrize::where('user_id', $user['id'])->order('id','desc')->paginate(15);
-        $userPrize = UserPrize::where('user_id', $user['id'])->field('lottery_id,name,count(lottery_id) ct')->group('lottery_id,name')->select();
+        $userPrize = UserPrize::where('user_id', $user['id'])->where('status',0)->field('lottery_id,name,count(lottery_id) ct')->group('lottery_id,name')->select();
 
         return json(['code' => 200, 'msg' => '', 'data' => $userPrize]);
     }
