@@ -78,6 +78,29 @@ class OrderController extends AuthController
         }
 
         $builder1 = clone $builder;
+        $builder2 = clone $builder;
+        if (!empty($req['export'])) {
+            $list = $builder2->select();
+            foreach ($list as $v) {
+                $v->phone = $v['user']['phone'] ?? '';
+                $v->realname=$v['user']['realname'] ?? '';
+            }
+                create_excel($list, [
+                    'id' => '序号',
+                    'project_name' => '项目名称',
+                    'phone' => '用户',
+                    'realname'=>'姓名',  
+                    'single_amount' => '金额',
+                    'status_text' => '状态',
+                    'period' => '周期',
+                    'daily_bonus' => '日分红',
+                    'sum_amount'=> '收益',
+                    'created_at' => '创建时间'
+                ], '订单记录-' . date('YmdHis'));
+         } 
+        
+
+
         $total_buy_amount = round($builder1->sum('o.buy_num*o.single_amount'), 2);
         $this->assign('total_buy_amount', $total_buy_amount);
 
