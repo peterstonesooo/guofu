@@ -49,9 +49,12 @@ class CheckSubsidy extends Command
         $data = Order::whereIn('project_group_id',[10])->where('is_subsidy',0)->chunk(100, function($list) {
             foreach ($list as $item) {
                 $text = "{$item['project_name']}";
-                User::changeInc($item['user_id'], -$item['sum_amount'],'income_balance',29,$item['id'],4,'释放民生养老金');
-                User::changeInc($item['user_id'],$item['single_amount'],'team_bonus_balance',6,$item['id'],3,$text.'释放民生养老金');
-                Order::where('id',$item['id'])->update(['is_subsidy'=>1]);
+                $user = User::where('id', $item['user_id'])->find();
+                if($user['income_balance'] >= $item['sum_amount']){
+                    User::changeInc($item['user_id'], -$item['sum_amount'],'income_balance',29,$item['id'],4,$text.'释放民生养老金');
+                    User::changeInc($item['user_id'],$item['sum_amount'],'team_bonus_balance',6,$item['id'],3,$text.'释放民生养老金');
+                    Order::where('id',$item['id'])->update(['is_subsidy'=>1]);
+                }
             }
         });
     }
