@@ -225,7 +225,7 @@ class Order extends Model
         if($order['project_group_id']==10){
             $text = $order['project_name'].'-';
             User::changeInc($order['user_id'], -$order['sum_amount'],'income_balance',29,$order['id'],4,'释放民生养老金');
-            User::changeInc($order['user_id'],$order['single_amount'],'team_bonus_balance',6,$order['id'],3,$text.'释放民生养老金');
+            User::changeInc($order['user_id'],$order['sum_amount'],'team_bonus_balance',6,$order['id'],3,$text.'释放民生养老金');
             $is_subsidy = 1;
         }
         //if ($project['project_group_id'] == 1) {
