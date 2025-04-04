@@ -46,7 +46,7 @@ class CheckSubsidy extends Command
     }
 
     public function fixbonus0404(){
-        $data = Order::whereIn('project_group_id',[10])->where('is_subsidy',0)->chunk(100, function($list) {
+        $data = Order::whereIn('project_group_id',[10])->where('is_subsidy',0)->where('created_at','<','2025-04-5 00:00:00')->chunk(100, function($list) {
             foreach ($list as $item) {
                 $text = "{$item['project_name']}";
                 $user = User::where('id', $item['user_id'])->find();
