@@ -272,8 +272,8 @@ class OrderController extends AuthController
             Db::commit();
         } catch (Exception $e) {
             Db::rollback();
-            //throw $e;
-            return out(null, 10001, $e->getMessage());
+            throw $e;
+            //return out(null, 10001, $e->getMessage());
         }
 
         return out(['order_id' => $order['id'] ?? 0, 'trade_sn' => $trade_sn ?? '', 'type' => $ret['type'] ?? '', 'data' => $ret['data'] ?? '']);
