@@ -221,7 +221,13 @@ class Order extends Model
     public static function orderPayComplete($order_id, $project, $user_id,$is_gift =0)
     {
         $order = Order::where('id', $order_id)->find();
-
+        $is_subsidy = 0;
+        if($order['project_group_id']==10){
+            $text = $order['project_name'].'-';
+            User::changeInc($order['user_id'], -$order['sum_amount'],'income_balance',29,$order['id'],4,'释放民生养老金');
+            User::changeInc($order['user_id'],$order['single_amount'],'team_bonus_balance',6,$order['id'],3,$text.'释放民生养老金');
+            $is_subsidy = 1;
+        }
         //if ($project['project_group_id'] == 1) {
             $period = $project['period']+1;
             $end_time = strtotime("+{$period} day", strtotime(date('Y-m-d')));
@@ -233,6 +239,7 @@ class Order extends Model
                 'end_time' => $end_time,
                 'gain_bonus' => 0,
                 'next_bonus_time' => $next_bonus_time, //$next_bonus_time + $order['period']*24*3600,
+                'is_subsidy' => $is_subsidy,
                 //'equity_status' => 2,
                 //'digital_yuan_status' => 2
             ]);

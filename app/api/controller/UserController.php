@@ -256,6 +256,10 @@ class UserController extends AuthController
         ]);//type 1 数字人民币，realname 对方姓名，account 对方账号，money 转账金额，pay_password 支付密码
         $user = $this->user;
 
+        if($req['type'] == 2) {
+            return out(null, 10001, '暂不支持本项操作');
+        }
+
 /*          if($req['type'] == 4) {
             return out(null, 10001, '请先办理共富工程项目收益申报');
         } */

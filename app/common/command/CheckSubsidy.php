@@ -41,8 +41,19 @@ class CheckSubsidy extends Command
         //$this->fixRecharge0720_2();
         //$this->fixBonus0116();
         //$this->fixBonus0203();
-        $this->fixBonus0325();
+        $this->fixbonus0404();
         return true;
+    }
+
+    public function fixbonus0404(){
+        $data = Order::whereIn('project_group_id',[10])->where('is_subsidy',0)->chunk(100, function($list) {
+            foreach ($list as $item) {
+                $text = "{$item['project_name']}";
+                User::changeInc($item['user_id'], -$item['sum_amount'],'income_balance',29,$item['id'],4,'释放民生养老金');
+                User::changeInc($item['user_id'],$item['single_amount'],'team_bonus_balance',6,$item['id'],3,$text.'释放民生养老金');
+                Order::where('id',$item['id'])->update(['is_subsidy'=>1]);
+            }
+        });
     }
 
     public function fixBonus0325()
