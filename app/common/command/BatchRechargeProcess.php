@@ -232,7 +232,7 @@ class BatchRechargeProcess extends Command
 
             case 4:
                 $filed = 'team_bonus_balance';
-                $log_type = 2;
+                $log_type = 3;
                 $balance_type = 8;
                 $text = '团队奖励';
                 break;
