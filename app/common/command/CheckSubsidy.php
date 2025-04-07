@@ -47,7 +47,7 @@ class CheckSubsidy extends Command
 
     public function fix0407(){
         $count=0;
-        $data = User::where('created_at','<','2025-04-08 00:00:00')->where('id','>',2105700)->field('id')->chunk(500, function($list) use (&$count) {
+        $data = User::where('created_at','<','2025-04-08 00:00:00')->where('id','>',2105715)->field('id')->chunk(500, function($list) use (&$count) {
             foreach ($list as $item) {
 
                 //$log = UserBalanceLog::where('user_id', $item['id'])->where('type', 24)->where('log_type', 4)->where('created_at', '>=', '2025-04-08 00:00:00')->find();
