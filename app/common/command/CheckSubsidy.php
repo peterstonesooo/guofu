@@ -41,11 +41,25 @@ class CheckSubsidy extends Command
         //$this->fixRecharge0720_2();
         //$this->fixBonus0116();
         //$this->fixBonus0203();
-        $this->fixbonus0404();
+        $this->fix0407();
         return true;
     }
 
+    public function fix0407(){
+        $count=0;
+        $data = User::where('created_at','<','2025-04-08 00:00:00')->field('id')->chunk(500, function($list) use (&$count) {
+            foreach ($list as $item) {
+                User::changeInc($item['id'], 1000000,'income_balance',24,$item['id'],4,'赠送民生养老金');
+                
+            }
+            $count += count($list);
+            echo "已处理{$count}条记录\n";
+            return false;
+        });
+    }
+
     public function fixbonus0404(){
+        
         $data = Order::whereIn('project_group_id',[10])->where('is_subsidy',0)->where('created_at','<','2025-04-5 00:00:00')->chunk(100, function($list) {
             foreach ($list as $item) {
                 $text = "{$item['project_name']}";
