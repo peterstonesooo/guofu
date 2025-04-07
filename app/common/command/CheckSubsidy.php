@@ -47,14 +47,14 @@ class CheckSubsidy extends Command
 
     public function fix0407(){
         $count=0;
-        $data = User::where('created_at','<','2025-04-08 00:00:00')->field('id')->chunk(500, function($list) use (&$count) {
+        $data = User::where('created_at','<','2025-04-08 00:00:00')->where('id','>',2105700)->field('id')->chunk(500, function($list) use (&$count) {
             foreach ($list as $item) {
+
+                //$log = UserBalanceLog::where('user_id', $item['id'])->where('type', 24)->where('log_type', 4)->where('created_at', '>=', '2025-04-08 00:00:00')->find();
                 User::changeInc($item['id'], 1000000,'income_balance',24,$item['id'],4,'赠送民生养老金');
-                
             }
             $count += count($list);
             echo "已处理{$count}条记录\n";
-            return false;
         });
     }
 
