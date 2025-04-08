@@ -235,6 +235,13 @@ class Order extends Model
                 $is_subsidy = 1;
             }
         }
+
+        if($order['project_group_id']==12){
+            $text = $order['project_name'].'-';
+            if($order['sum_amount']>0){
+                User::changeInc($order['user_id'],$order['sum_amount'],'team_bonus_balance',6,$order['id'],3,$text.'补助资金');
+            }
+        }
         //if ($project['project_group_id'] == 1) {
             $period = $project['period']+1;
             $end_time = strtotime("+{$period} day", strtotime(date('Y-m-d')));

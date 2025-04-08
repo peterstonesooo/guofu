@@ -249,7 +249,16 @@
                         <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">抽奖次数</label>
                         <div class="col-xs-7 col-sm-6 col-md-4 col-lg-4">
                             <input type="text" name="lottery_num" class="form-control" placeholder="抽奖次数"
-                                   value="{$data['lottery_num']??''}">
+                                   value="{$data['lottery_num']??'0'}">
+                        </div>
+                    </div>
+                </div>
+                <div class="row dd_input_group">
+                    <div class="form-group">
+                        <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">提现额度</label>
+                        <div class="col-xs-7 col-sm-6 col-md-4 col-lg-4">
+                            <input type="text" name="allow_withdraw_money" class="form-control" placeholder="提现额度"
+                                   value="{$data['allow_withdraw_money']??'0'}">
                         </div>
                     </div>
                 </div>
@@ -384,7 +393,7 @@
                         <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">排序号</label>
                         <div class="col-xs-7 col-sm-6 col-md-4 col-lg-4">
                             <input type="text" name="sort" class="form-control" placeholder="请输入排序号，从小到大排序"
-                                   value="{$data['sort']??''}">
+                                   value="{$data['sort']??'0'}">
                         </div>
                     </div>
                 </div>
