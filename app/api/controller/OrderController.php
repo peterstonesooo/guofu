@@ -92,7 +92,7 @@ class OrderController extends AuthController
         Db::startTrans();
         try {
             $user = User::where('id', $user['id'])->lock(true)->find();
-            $project = Project::field('id project_id,name project_name,class,project_group_id,cover_img,single_amount,gift_integral,total_num,daily_bonus_ratio,sum_amount,dividend_cycle,period,single_gift_equity,single_gift_digital_yuan,sham_buy_num,progress_switch,bonus_multiple,settlement_method,withdrawal_limit,digital_red_package,review_period,single_gift_gf_purse,poverty_subsidy_amount,lottery_num')
+            $project = Project::field('id project_id,name project_name,class,project_group_id,cover_img,single_amount,gift_integral,total_num,daily_bonus_ratio,sum_amount,dividend_cycle,period,single_gift_equity,single_gift_digital_yuan,sham_buy_num,progress_switch,bonus_multiple,settlement_method,withdrawal_limit,digital_red_package,review_period,single_gift_gf_purse,poverty_subsidy_amount,lottery_num,allow_withdraw_money')
                         ->where('id', $req['project_id'])
                         //->lock(true)
                         ->append(['all_total_buy_num'])
