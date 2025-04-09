@@ -138,6 +138,7 @@ class CapitalController extends AuthController
 
     public function applyWithdraw()
     {
+        return out(null, 10001, '此功能暂时关闭');
         //return out(null, 10001, '春节假期期间,提现功能暂停服务,2月5日（正月初八）恢复正常');
 /*         if(!domainCheck()){
             return out(null, 10001, '请联系客服下载最新app');
