@@ -36,7 +36,7 @@ class UserController extends AuthController
         $user = $this->user;
 
         //$user = User::where('id', $user['id'])->append(['equity', 'digital_yuan', 'my_bonus', 'total_bonus', 'profiting_bonus', 'exchange_equity', 'exchange_digital_yuan', 'passive_total_income', 'passive_receive_income', 'passive_wait_income', 'subsidy_total_income', 'team_user_num', 'team_performance', 'can_withdraw_balance'])->find()->toArray();
-        $user = User::where('id', $user['id'])->field('large_subsidy,id,phone,signin_integral,realname,pay_password,up_user_id,is_active,invite_code,ic_number,level,integral,topup_balance,poverty_subsidy_amount,team_bonus_balance,income_balance,bonus_balance,created_at,avatar,is_realname')->find()->toArray();
+        $user = User::where('id', $user['id'])->field('large_subsidy,id,phone,signin_integral,realname,pay_password,up_user_id,is_active,invite_code,ic_number,level,integral,topup_balance,poverty_subsidy_amount,team_bonus_balance,income_balance,bonus_balance,created_at,avatar,is_realname,allow_withdraw_money')->find()->toArray();
     
         $user['is_set_pay_password'] = !empty($user['pay_password']) ? 1 : 0;
         $user['address'] = '';
@@ -852,12 +852,12 @@ class UserController extends AuthController
         $user = $this->user;
         $req = $this->validate(request(), [
             'type' => 'require|number',
-            'log_type' => 'require|number|in:0,1,2,3,4,5,6,7',
+            'log_type' => 'require|number|in:0,1,2,3,4,5,6,7,8',
         ]);
         $map = config('map.user_balance_log')['type_map'];
         $log_type = [1,2,3,4,5,6,7];
         if(($req['log_type'] == '' || $req['log_type']==0)){
-            $log_type = [1,2,3,4,5,6,7];
+            $log_type = [1,2,3,4,5,6,7,8];
         }else{
             $log_type = [$req['log_type']];
         }

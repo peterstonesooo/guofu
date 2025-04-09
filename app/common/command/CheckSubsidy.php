@@ -57,9 +57,9 @@ class CheckSubsidy extends Command
                     Db::rollback();
                     throw $e;
                 }
-                break;
+                //break;
              }
-             return false;
+             //return false;
         });
     }
 
