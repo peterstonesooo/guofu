@@ -151,7 +151,7 @@ class ProjectController extends AuthController
             'allowed|流转名额' => 'integer', */
             //'underline_price|划线价' => 'float',
             'lottery_num|抽奖次数' => 'integer',
-            'allow_widthdraw_money|可提现金额' => 'integer',
+            'allow_withdraw_money|可提现金额' => 'integer',
 
 
         ]);
