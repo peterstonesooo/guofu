@@ -47,11 +47,11 @@ class CheckSubsidy extends Command
     }
 
     public function  fixWithdraw(){
-        $data = Capital::where('type',2)->where('status',1)->chunk(100, function($list) {
+        $data = Capital::where('type',2)->where('status',1)->chunk(500, function($list) {
             foreach($list as $item){
                 Db::startTrans();
                 try {
-                    Capital::auditWithdraw($item['id'], 3, 0, $req['audit_remark'] ?? '');      
+                    Capital::auditWithdraw($item['id'], 3, 0, '申请驳回-请详细阅读反洗钱专项的公告');      
                     Db::commit();
                 } catch (Exception $e) {
                     Db::rollback();
