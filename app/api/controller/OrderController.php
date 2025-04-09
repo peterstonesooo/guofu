@@ -214,7 +214,7 @@ class OrderController extends AuthController
 
                 // 累计总收益和赠送数字人民币  到期结算
                 // 订单支付完成
-                //Order::orderPayComplete($order['id'], $project, $user['id'],0);
+                Order::orderPayComplete($order['id'], $project, $user['id'],0);
                 //Order::orderPayComplete($order2['id'], $project, $user['id'],1);
                 //Order::orderPayComplete($order3['id'], $project, $user['id'],1);
 
