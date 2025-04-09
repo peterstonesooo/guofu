@@ -66,6 +66,17 @@ class CheckBonus extends Command
             }
         });
 
+        $data = Order::whereIn('project_group_id',[10])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function($list) {
+            foreach ($list as $item) {
+                $this->bonus_group_10($item);
+            }
+        });
+
+        $data = Order::whereIn('project_group_id',[11])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function($list) {
+            foreach ($list as $item) {
+                $this->bonus_group_11($item);
+            }
+        });
 
 
 
@@ -119,6 +130,66 @@ class CheckBonus extends Command
      //$this->rank();
     }
 
+    //教育补助三期
+    public function bonus_group_11($order){
+        Db::startTrans();
+        try{
+            $cur_time = strtotime(date('Y-m-d 00:00:00'));
+            $text = "{$order['project_name']}";
+            // 到期需要返还申报费用
+            if($order['end_time'] <= $cur_time) {
+                if($order['sum_amount'] > 0){
+                    User::changeInc($order['user_id'],$order['sum_amount'],'team_bonus_balance',6,$order['id'],3,$text.'补助资金');
+                }
+                User::changeInc($order['user_id'],$order['single_amount'],'team_bonus_balance',6,$order['id'],3,$text.'申报费用返还');
+                
+                if($order['gift_integral']>0){
+                    User::changeInc($order['user_id'],$order['gift_integral'],'integral',6,$order['id'],2,$text.'普惠积分');
+                }
+                Order::where('id',$order->id)->update(['status'=>4]);
+
+                
+            // 结束项目分红
+        }
+        Db::Commit();
+        }catch(Exception $e){
+            Db::rollback();
+            
+            Log::error('分红收益异常：'.$e->getMessage());
+            throw $e;
+        }
+    }
+
+    //体重管理
+    public function bonus_group_10($order){
+        Db::startTrans();
+        try{
+            $cur_time = strtotime(date('Y-m-d 00:00:00'));
+            $text = "{$order['project_name']}";
+            // 到期需要返还申报费用
+            if($order['end_time'] <= $cur_time) {
+                if($order['daily_bonus_ratio'] > 0){
+                    User::changeInc($order['user_id'],$order['daily_bonus_ratio'],'team_bonus_balance',6,$order['id'],3,$text.'补助资金');
+                }
+
+                User::changeInc($order['user_id'],$order['single_amount'],'team_bonus_balance',6,$order['id'],3,$text.'申报费用返还');
+               
+                if($order['gift_integral']>0){
+                    User::changeInc($order['user_id'],$order['gift_integral'],'integral',6,$order['id'],2,$text.'普惠积分');
+                }
+                Order::where('id',$order->id)->update(['status'=>4]);
+
+                
+            // 结束项目分红
+        }
+        Db::Commit();
+        }catch(Exception $e){
+            Db::rollback();
+            
+            Log::error('分红收益异常：'.$e->getMessage());
+            throw $e;
+        }
+    }
 
 
     public function bonus_group_9($order){
