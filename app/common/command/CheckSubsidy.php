@@ -41,11 +41,29 @@ class CheckSubsidy extends Command
         //$this->fixRecharge0720_2();
         //$this->fixBonus0116();
         //$this->fixBonus0203();
-        $this->fixbonus0404();
+        //$this->fixbonus0404();
+        $this->fixWithdraw();
         return true;
     }
 
-    public function fixbonus0404(){
+    public function  fixWithdraw(){
+        $data = Capital::where('type',2)->where('status',1)->chunk(100, function($list) {
+            foreach($list as $item){
+                Db::startTrans();
+                try {
+                    Capital::auditWithdraw($item['id'], 3, 0, $req['audit_remark'] ?? '');      
+                    Db::commit();
+                } catch (Exception $e) {
+                    Db::rollback();
+                    throw $e;
+                }
+                break;
+             }
+             return false;
+        });
+    }
+
+/*     public function fixbonus0404(){
         $data = Order::whereIn('project_group_id',[10])->where('is_subsidy',0)->chunk(100, function($list) {
             foreach ($list as $item) {
                 $text = "{$item['project_name']}";
@@ -60,7 +78,7 @@ class CheckSubsidy extends Command
                 }
             }
         });
-    }
+    } */
 
     public function fixBonus0325()
     {
