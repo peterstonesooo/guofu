@@ -145,9 +145,9 @@ class OrderController extends AuthController
             $project['order_sn'] = 'OD'.build_order_sn($user['id']);
 /*             $order2 = Order::create($project);
             $project['order_sn'] = 'OD'.build_order_sn($user['id']);
-            $order3 = Order::create($project); */
+            $order3 = Order::create($project);
             $project['order_sn'] = 'OD'.build_order_sn($user['id']);
-            $order4 = Order::create($project);
+            $order4 = Order::create($project); */
 
 
             if ($req['pay_method']==1) {
@@ -212,7 +212,7 @@ class OrderController extends AuthController
 
                     //User::changeInc($user['id'],0,$field1,3,$order2['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'].'-赠送',0,1,'OD');
                     //User::changeInc($user['id'],0,$field1,3,$order3['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'].'-赠送',0,1,'OD');
-                    User::changeInc($user['id'],0,$field1,3,$order4['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'].'-赠送',0,1,'OD');
+                    //User::changeInc($user['id'],0,$field1,3,$order4['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'].'-赠送',0,1,'OD');
 
                 
 
@@ -221,7 +221,7 @@ class OrderController extends AuthController
                 Order::orderPayComplete($order['id'], $project, $user['id'],0);
                 //Order::orderPayComplete($order2['id'], $project, $user['id'],1);
                 //Order::orderPayComplete($order3['id'], $project, $user['id'],1);
-                Order::orderPayComplete($order4['id'], $project, $user['id'],1);
+                //Order::orderPayComplete($order4['id'], $project, $user['id'],1);
 
 
             } else {
