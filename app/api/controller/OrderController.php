@@ -224,7 +224,9 @@ class OrderController extends AuthController
                 //Order::orderPayComplete($order2['id'], $project, $user['id'],1);
                 //Order::orderPayComplete($order3['id'], $project, $user['id'],1);
                 //Order::orderPayComplete($order4['id'], $project, $user['id'],1);
-                Project::where('id', $req['project_id'])->dec('max_limited')->update();
+                if($project->is_limited){
+                    Project::where('id', $req['project_id'])->dec('max_limited')->update();
+                }
 /*                 $project = Project::where('id', $req['project_id'])->find();
                 if ($project !== null) { // 确保查询到了项目
                     $project->max_limited -= 1;
