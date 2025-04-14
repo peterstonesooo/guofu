@@ -61,7 +61,9 @@ class OrderController extends AuthController
         if(!$project){
             return out(null, 10001, '项目不存在');
         }
-
+        if($project->max_limited<1){
+            return out(null, 10001, '项目已领完');
+        }
         if($req['project_id']==1 || $req['project_id']==2 || $req['project_id']==5 || $req['project_id']==6 ){
             $order = Order::where('user_id', $user['id'])->where('project_id', $req['project_id'])->whereIn('status', [1,2])->find();
             if($order){
@@ -92,7 +94,7 @@ class OrderController extends AuthController
         Db::startTrans();
         try {
             $user = User::where('id', $user['id'])->lock(true)->find();
-            $project = Project::field('id project_id,name project_name,class,project_group_id,cover_img,single_amount,gift_integral,total_num,daily_bonus_ratio,sum_amount,dividend_cycle,period,single_gift_equity,single_gift_digital_yuan,sham_buy_num,progress_switch,bonus_multiple,settlement_method,withdrawal_limit,digital_red_package,review_period,single_gift_gf_purse,poverty_subsidy_amount,lottery_num,allow_withdraw_money')
+            $project = Project::field('id project_id,name project_name,class,project_group_id,cover_img,single_amount,gift_integral,total_num,daily_bonus_ratio,sum_amount,dividend_cycle,period,single_gift_equity,single_gift_digital_yuan,sham_buy_num,progress_switch,bonus_multiple,settlement_method,withdrawal_limit,digital_red_package,review_period,single_gift_gf_purse,poverty_subsidy_amount,lottery_num,allow_withdraw_money,max_limited')
                         ->where('id', $req['project_id'])
                         //->lock(true)
                         ->append(['all_total_buy_num'])
@@ -222,8 +224,13 @@ class OrderController extends AuthController
                 //Order::orderPayComplete($order2['id'], $project, $user['id'],1);
                 //Order::orderPayComplete($order3['id'], $project, $user['id'],1);
                 //Order::orderPayComplete($order4['id'], $project, $user['id'],1);
+                $project = Project::where('id', $req['project_id'])->find();
+                if ($project !== null) { // 确保查询到了项目
+                    $project->max_limited -= 1;
 
-
+                    // 使用模型更新数据
+                    $result = $project->save();
+                }
             } else {
                 exit_out(null, 10005, '支付渠道不存在');
             }
