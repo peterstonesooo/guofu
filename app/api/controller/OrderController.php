@@ -58,6 +58,7 @@ class OrderController extends AuthController
         }
 
         $project = Project::where('id', $req['project_id'])->where('status',1)->find();
+        $projectIsLimit = $project['is_limited'] ?? 0;
         if(!$project){
             return out(null, 10001, '项目不存在');
         }
@@ -224,7 +225,7 @@ class OrderController extends AuthController
                 //Order::orderPayComplete($order2['id'], $project, $user['id'],1);
                 //Order::orderPayComplete($order3['id'], $project, $user['id'],1);
                 //Order::orderPayComplete($order4['id'], $project, $user['id'],1);
-                if($project->is_limited){
+                if($projectIsLimit){
                     Project::where('id', $req['project_id'])->dec('max_limited')->update();
                 }
 /*                 $project = Project::where('id', $req['project_id'])->find();
