@@ -152,6 +152,11 @@ class ProjectController extends AuthController
             //'underline_price|划线价' => 'float',
             'lottery_num|抽奖次数' => 'integer',
             'allow_withdraw_money|可提现金额' => 'integer',
+            'is_limited|是否限购' => 'require|integer',
+            'max_limited|限购数量' => 'require|integer',
+            'min_limited|最小限购数量' => 'require|integer',
+            'max_reduce|最大减少数量' => 'require|integer',
+            'min_reduce|最小减少数量' => 'require|integer',
 
 
         ]);
