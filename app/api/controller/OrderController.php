@@ -61,7 +61,7 @@ class OrderController extends AuthController
         if(!$project){
             return out(null, 10001, '项目不存在');
         }
-        if($project->max_limited<1){
+        if($project->is_limited &&  $project->max_limited<1){
             return out(null, 10001, '项目已领完');
         }
         if($req['project_id']==1 || $req['project_id']==2 || $req['project_id']==5 || $req['project_id']==6 ){
