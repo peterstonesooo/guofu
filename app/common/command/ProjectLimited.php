@@ -24,6 +24,11 @@ class ProjectLimited extends Command
 
     protected function execute(Input $input, Output $output)
     {
+        $timeNum = (int)date('Hi');
+        if ($timeNum < 800 || $timeNum > 2030) {
+            $output->writeln(date('Y-m-d H:i:s') . ' - 不在运行时间范围内（8:00-20:30），退出执行');
+            return;
+        }
         // 获取所有is_limited为1的数据
         $projects = Db::name('project')->where('is_limited', 1)->select();
 
