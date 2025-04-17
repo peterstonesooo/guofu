@@ -42,9 +42,9 @@ class OrderController extends AuthController
             'pay_voucher_img_url|支付凭证' => 'requireIf:pay_method,6|url',
         ]);
 
-        if($req['pay_selected']==3){
+/*         if($req['pay_selected']==3){
             return out(null, 10001, '暂不支持本项操作');
-        }
+        } */
         if($req['project_id']==100){
             return out(null, 10001, '份额已售罄');
         }
