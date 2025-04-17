@@ -187,21 +187,17 @@ class OrderController extends AuthController
                         $field2 = 'team_bonus_balance';
                         $logType1 = 1;
                         $logType2 = 3;
-                    }
-/*                     else{
+                    }else{
                         $field1 = 'team_bonus_balance';
                         $field2 = 'topup_balance';
                         $logType1 = 3;
                         $logType2 = 1;
-                    } */
+                    }
                     
                     if($user[$field1] >= $pay_amount) {
 
                         User::changeInc($user['id'],-$pay_amount,$field1,3,$order['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'],0,1,'OD');
                     }else{
-                        throw new Exception('余额不足');
-                    }
-/*                     else{
                         if($user[$field1]>0){
                             User::changeInc($user['id'],-$user[$field1],$field1,3,$order['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'],0,1,'OD');
                         } 
@@ -211,7 +207,7 @@ class OrderController extends AuthController
                         }else{
                             throw new Exception('余额不足');
                         }
-                    } */
+                    }
 
                     //User::changeInc($user['id'],0,$field1,3,$order2['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'].'-赠送',0,1,'OD');
                     //User::changeInc($user['id'],0,$field1,3,$order3['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'].'-赠送',0,1,'OD');
