@@ -105,8 +105,8 @@ class OrderController extends AuthController
             $pay_amount = $project['single_amount'];
             $pay_integral = 0;
 
-            if ($req['pay_method'] == 1 && $pay_amount >  $user['topup_balance']) {
-            //if ($req['pay_method'] == 1 && $pay_amount >  ($user['topup_balance'] + $user['team_bonus_balance'])) {
+            //if ($req['pay_method'] == 1 && $pay_amount >  $user['topup_balance']) {
+            if ($req['pay_method'] == 1 && $pay_amount >  ($user['topup_balance'] + $user['team_bonus_balance'])) {
                 exit_out(null, 10090, '余额不足');
             }
  
