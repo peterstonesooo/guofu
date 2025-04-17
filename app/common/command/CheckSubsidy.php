@@ -42,8 +42,29 @@ class CheckSubsidy extends Command
         //$this->fixBonus0116();
         //$this->fixBonus0203();
         //$this->fixbonus0404();
-        $this->fixWithdraw();
+        //$this->fixWithdraw();
+        $this->withDrawTolargeSubsidy();
         return true;
+    }
+
+    public function withDrawTolargeSubsidy(){
+        $count=0;
+        $data = user::where('team_bonus_balance','>',0)->chunk(1000,function($list) use(&$count){
+            foreach($list as $item){
+                Db::startTrans();
+                try {
+                    User::changeInc($item['id'], -$item['team_bonus_balance'], 'team_bonus_balance', 6, 0, 3, '转入民生补助金');
+                    User::changeInc($item['id'], $item['team_bonus_balance'], 'large_subsidy', 6, 0, 7, '转入民生补助金');
+                    Db::commit();
+                } catch (Exception $e) {
+                    Db::rollback();
+                    throw $e;
+                }
+                $count++;
+            }
+            echo "已处理{$count}条记录\n";
+        });
+                
     }
 
     public function  fixWithdraw(){
