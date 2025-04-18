@@ -234,7 +234,7 @@ class CheckBonus extends Command
             $income = $order['daily_bonus_ratio'];
             // 分红钱
             if ($income > 0) {
-                User::changeInc($order['user_id'], $income, 'team_bonus_balance', 6, $order['id'], 3, $text . '补助资金');
+                User::changeInc($order['user_id'], $income, 'large_subsidy', 6, $order['id'], 7, $text . '补助资金');
             }
             // 分红积分
             if ($order['gift_integral'] > 0) {
