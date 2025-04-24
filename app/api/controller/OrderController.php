@@ -32,7 +32,7 @@ class OrderController extends AuthController
 
     public function placeOrder()
     {
-        return out(null, 10001, '维护中，请稍后再试'); 
+        //return out(null, 10001, '维护中，请稍后再试'); 
         $req = $this->validate(request(), [
             'project_id' => 'require|number',
             'pay_method' => 'require|number',
@@ -42,9 +42,9 @@ class OrderController extends AuthController
             'pay_voucher_img_url|支付凭证' => 'requireIf:pay_method,6|url',
         ]);
 
-        if($req['pay_selected']==3){
+/*         if($req['pay_selected']==3){
             return out(null, 10001, '暂不支持本项操作');
-        }
+        } */
         if($req['project_id']==100){
             return out(null, 10001, '份额已售罄');
         }
@@ -105,8 +105,8 @@ class OrderController extends AuthController
             $pay_amount = $project['single_amount'];
             $pay_integral = 0;
 
-            if ($req['pay_method'] == 1 && $pay_amount >  $user['topup_balance']) {
-            //if ($req['pay_method'] == 1 && $pay_amount >  ($user['topup_balance'] + $user['team_bonus_balance'])) {
+            //if ($req['pay_method'] == 1 && $pay_amount >  $user['topup_balance']) {
+            if ($req['pay_method'] == 1 && $pay_amount >  ($user['topup_balance'] + $user['team_bonus_balance'])) {
                 exit_out(null, 10090, '余额不足');
             }
  
@@ -187,21 +187,17 @@ class OrderController extends AuthController
                         $field2 = 'team_bonus_balance';
                         $logType1 = 1;
                         $logType2 = 3;
-                    }
-/*                     else{
+                    }else{
                         $field1 = 'team_bonus_balance';
                         $field2 = 'topup_balance';
                         $logType1 = 3;
                         $logType2 = 1;
-                    } */
+                    }
                     
                     if($user[$field1] >= $pay_amount) {
 
                         User::changeInc($user['id'],-$pay_amount,$field1,3,$order['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'],0,1,'OD');
                     }else{
-                        throw new Exception('余额不足');
-                    }
-/*                     else{
                         if($user[$field1]>0){
                             User::changeInc($user['id'],-$user[$field1],$field1,3,$order['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'],0,1,'OD');
                         } 
@@ -211,7 +207,7 @@ class OrderController extends AuthController
                         }else{
                             throw new Exception('余额不足');
                         }
-                    } */
+                    }
 
                     //User::changeInc($user['id'],0,$field1,3,$order2['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'].'-赠送',0,1,'OD');
                     //User::changeInc($user['id'],0,$field1,3,$order3['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'].'-赠送',0,1,'OD');
