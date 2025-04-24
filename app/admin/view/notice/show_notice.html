@@ -99,7 +99,12 @@
     E.i18nChangeLanguage(LANG)
 
     // 默认内容
-    let html = `{$data['content']|raw}`
+    
+    {if(!empty($data))}
+    let html = `{$data['content']|raw}`;
+    {else}
+    let html ='';
+    {/if}
     if (LANG === 'en') html = `<h1>Simple&nbsp;mode.</h1><ol><li>Simplify&nbsp;toolbar&nbsp;menus</li><li>Hide&nbsp;hover-bar&nbsp;when&nbsp;selected&nbsp;text</li></ol><p><br></p>`
 
     window.editor = E.createEditor({
