@@ -52,7 +52,13 @@
                     <div class="form-group">
                         <div class="col-xs-11 col-sm-11 col-md-11 col-lg-11 ">
                             <label class="text-lable">内容</label>
-                            <textarea  name="content" id="content" style="width: 100%;height: 100px;">{$data['content']??''}</textarea>
+                            
+                            <input type="hidden" name="content" id="content" value=""> 
+                            <!-- 编辑器 DOM -->
+                            <div style="border: 1px solid #ccc;">
+                                <div id="editor-toolbar" style="border-bottom: 1px solid #ccc;"></div>
+                                <div id="editor-text-area" style="height: 500px"></div>
+                            </div>
 
                         </div>
                         <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 dd_ts">*</div>
@@ -80,11 +86,48 @@
         </form>
     </div>
 </div>
-
+<link href="__ADMIN__/bower_components/wangeditor3/wangEditor5.css" rel="stylesheet">
 <link href="__ADMIN__/plugins/summernote/summernote.min.css?a=123" rel="stylesheet"> 
  <script src="__ADMIN__/plugins/summernote/summernote.min.js?a=123"></script>
 <script src="__ADMIN__/plugins/summernote/lang/summernote-zh-CN.js"></script>
+<script type="text/javascript" src="__ADMIN__/bower_components/wangeditor3/wangEditor5.js"></script>
+<script>
+    const E = window.wangEditor
 
+    // 切换语言
+    const LANG = location.href.indexOf('lang=en') > 0 ? 'en' : 'zh-CN'
+    E.i18nChangeLanguage(LANG)
+
+    // 默认内容
+    let html = `{$data['content']|raw}`
+    if (LANG === 'en') html = `<h1>Simple&nbsp;mode.</h1><ol><li>Simplify&nbsp;toolbar&nbsp;menus</li><li>Hide&nbsp;hover-bar&nbsp;when&nbsp;selected&nbsp;text</li></ol><p><br></p>`
+
+    window.editor = E.createEditor({
+      selector: '#editor-text-area',
+      html:html,
+      mode: 'simple',
+      config: {
+        placeholder: '点击输入内容...',
+        MENU_CONF: {
+          uploadImage: {
+            fieldName: 'your-fileName',
+            base64LimitSize: 10 * 1024 * 1024 // 10M 以下插入 base64
+          }
+        },
+        onChange() {
+          console.log(editor.getHtml())
+          $('#content').val(editor.getHtml());
+        }
+      }
+    })
+
+    window.toolbar = E.createToolbar({
+      editor,
+      mode: 'simple',
+      selector: '#editor-toolbar',
+      config: {}
+    })
+  </script>
 
 <script>
     $(function () {

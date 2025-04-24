@@ -42,7 +42,7 @@ class NoticeController extends AuthController
         if(!$data) {
             return out('通知不存在', 20001);
         }
-        $data['content'] = htmlspecialchars ($data['content']);
+        $data['content'] = $data['content'];
 /*         $v['content'] = nl2br($data['content']);  // 将换行符转换为<br>标签
         $v['content'] = str_replace(' ', '&nbsp;', $data['content']);  // 将空格转换为&nbsp;
  */
