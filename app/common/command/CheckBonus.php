@@ -78,57 +78,43 @@ class CheckBonus extends Command
             }
         });
 
+        $data = Order::whereIn('project_group_id',[13])->where('status',2)->where('next_bonus_time', '<=', $cur_time)->chunk(100, function($list) {
+            foreach ($list as $item) {
+                $this->bonus_group_13($item);
+            }
+        });
 
-
-
-/*         $data = Order::whereIn('project_group_id',[7])->where('status',2)->where('end_time', '<=', $cur_time)
-        ->chunk(100, function($list) {
-           foreach ($list as $item) {
-               $this->bonus_7($item);
-           }
-       });*/
-
-/*        $data = Order::whereIn('project_group_id',[5])->where('status',2)->where('next_bonus_time', '<=', $cur_time)
-       ->chunk(100, function($list) {
-          foreach ($list as $item) {
-              $this->bonus_5($item);
-          }
-      });  */
-       
-
-/*         //资产恢复
-        $data = AssetOrder::where('status',2)->where('next_return_time', '<=', $time)
-        ->chunk(100, function($list) {
-           foreach ($list as $item) {
-               $this->bonus_asset_return($item);
-           }
-       }); */
-
-    //    $data = AssetOrder::where('reward_status',0)->where('next_reward_time', '<=', time())
-    //    ->chunk(100, function($list) {
-    //       foreach ($list as $item) {
-    //           $this->bonus_asset_reward($item);
-    //       }
-    //   });
-
-       //共富保障
-    //    $data = EnsureOrder::where('status',2)->where('next_return_time', '<=', $time)
-    //    ->chunk(100, function($list) {
-    //       foreach ($list as $item) {
-    //           $this->bonus_ensure_return($item);
-    //       }
-    //   });
-
-    //   $data = EnsureOrder::where('reward_status',0)->where('next_reward_time', '<=', $time)
-    //   ->chunk(100, function($list) {
-    //      foreach ($list as $item) {
-    //          $this->bonus_ensure_reward($item);
-    //      }
-    //  });
-
-
-     //$this->rank();
     }
+
+    public function bonus_group_13($order){
+        Db::startTrans();
+        try{
+            $cur_time = strtotime(date('Y-m-d 00:00:00'));
+            $text = "{$order['project_name']}";
+            $income = $order['daily_bonus_ratio'];
+            if($income > 0){
+                User::changeInc($order['user_id'],$income,'team_bonus_balance',6,$order['id'],3,$text.'每日补助资金');
+            }
+            // 到期需要返还申报费用
+/*             if($order['end_time'] <= $cur_time) {
+                if($order['sum_amount'] > 0){
+                    User::changeInc($order['user_id'],$order['sum_amount'],'team_bonus_balance',6,$order['id'],3,$text.'补助资金');
+                }
+                User::changeInc($order['user_id'],$order['single_amount'],'team_bonus_balance',6,$order['id'],3,$text.'申报费用返还');
+                
+
+                Order::where('id',$order->id)->update(['status'=>4]);
+                
+            } */
+        Db::Commit();
+        }catch(Exception $e){
+            Db::rollback();
+            
+            Log::error('分红收益异常：'.$e->getMessage());
+            throw $e;
+        }
+    }
+
 
     //教育补助三期
     public function bonus_group_11($order){
