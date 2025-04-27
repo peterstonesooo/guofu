@@ -62,11 +62,17 @@ class CheckSubsidy extends Command
                 $sql = "select sum(amount) recharge_sum  from mp_capital where type=1 and status = 2 and user_id in (select id from mp_user_path where path like'{$path}%')";
                 $query = Db::query($sql);
                 $recharge_sum = $query[0]['recharge_sum'];
+                $sql2 = "select sum(amount) withdraw_sum  from mp_capital where type=2 and status = 2 and user_id in (select id from mp_user_path where path like'{$path}%')";
+                $query = Db::query($sql2);
+                $withdraw_sum = $query[0]['withdraw_sum'];
+
+
                 $rechargeArr[] = [
                     'user_id'=>$user['id'],
                     'phone'=>$user['phone'],
                     'realname'=>$user['realname'],
                     'recharge_sum'=>$recharge_sum,
+                    'withdraw_sum'=>$withdraw_sum,
                 ];
             }else{
                 echo "用户{$phone} 不存在\n";
@@ -78,7 +84,7 @@ class CheckSubsidy extends Command
             'phone' => '电话',
             'realname' => '姓名',
             'recharge_sum' => '充值总金额',
-
+            'withdraw_sum' => '提现总金额',
         ], '充值统计-' . date('YmdHis'));
     }
 
