@@ -95,7 +95,7 @@ class OrderController extends AuthController
         Db::startTrans();
         try {
             $user = User::where('id', $user['id'])->lock(true)->find();
-            $project = Project::field('id project_id,name project_name,class,project_group_id,cover_img,single_amount,gift_integral,total_num,daily_bonus_ratio,sum_amount,dividend_cycle,period,single_gift_equity,single_gift_digital_yuan,sham_buy_num,progress_switch,bonus_multiple,settlement_method,withdrawal_limit,digital_red_package,review_period,single_gift_gf_purse,poverty_subsidy_amount,lottery_num,allow_withdraw_money,max_limited,is_limited')
+            $project = Project::field('id project_id,name project_name,class,project_group_id,cover_img,single_amount,gift_integral,total_num,daily_bonus_ratio,sum_amount,dividend_cycle,period,single_gift_equity,single_gift_digital_yuan,sham_buy_num,progress_switch,bonus_multiple,settlement_method,withdrawal_limit,digital_red_package,review_period,single_gift_gf_purse,poverty_subsidy_amount,lottery_num,allow_withdraw_money,max_limited,is_limited,week,start_time,end_time')
                         ->where('id', $req['project_id'])
                         //->lock(true)
                         ->append(['all_total_buy_num'])
@@ -106,8 +106,35 @@ class OrderController extends AuthController
             $pay_integral = 0;
 
             //if ($req['pay_method'] == 1 && $pay_amount >  $user['topup_balance']) {
-            if ($req['pay_method'] == 1 && $pay_amount >  ($user['topup_balance'] + $user['team_bonus_balance'])) {
-                exit_out(null, 10090, '余额不足');
+            if(in_array($project['project_group_id'],[14])){
+                    //计算今天是周几
+                    $weekConf = config('map.week');
+                    $weekText = $weekConf[$project['week']];
+                    $errText = "活动未开放，请在 {$weekText} {$project['start_time']} - {$project['end_time']} 报名";
+                    if($project['week'] == 0){
+                       return out(null, 10001, '$errText');
+                    }
+                    $week = date('w');
+                    if($week == 0){
+                        $week = 7;
+                    }
+                    $time1 = date('H:i:s');
+                    if($week !=$project['week']){
+                        return out(null, 10001, $errText);
+                    }
+                    if($time1 < $project['start_time'] || $time1 > $project['end_time']){
+                        
+                        return out(null, 10001, $errText);
+                    }
+                    if($pay_amount > $user['ph_wallet']){
+                        return out(null, 10001, '余额不足');
+                    }
+                    
+            }else{
+
+                if ($req['pay_method'] == 1 && $pay_amount >  ($user['topup_balance'] + $user['team_bonus_balance'])) {
+                    exit_out(null, 10090, '余额不足');
+                }
             }
  
             //没有团队奖励支付方式先屏蔽
@@ -181,34 +208,44 @@ class OrderController extends AuthController
                             } 
                         }
                     }*/
-                    $txtArr = [1=>'可用余额',3=>'可提余额'];
-                    if($req['pay_selected']==1){
-                        $field1 = 'topup_balance';
-                        $field2 = 'team_bonus_balance';
-                        $logType1 = 1;
-                        $logType2 = 3;
-                    }else{
-                        $field1 = 'team_bonus_balance';
-                        $field2 = 'topup_balance';
-                        $logType1 = 3;
-                        $logType2 = 1;
-                    }
-                    
-                    if($user[$field1] >= $pay_amount) {
+                    if(in_array($project['project_group_id'],[14])){
 
-                        User::changeInc($user['id'],-$pay_amount,$field1,3,$order['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'],0,1,'OD');
-                    }else{
-                        if($user[$field1]>0){
-                            User::changeInc($user['id'],-$user[$field1],$field1,3,$order['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'],0,1,'OD');
-                        } 
-                        $topup_amount = bcsub($pay_amount, $user[$field1],2);
-                        if($user[$field2] >= $topup_amount) {
-                            User::changeInc($user['id'],-$topup_amount,$field2,3,$order['id'],$logType2,$txtArr[$logType2].'-'.$project['project_name'],0,1,'OD');
+                        if($user['ph_wallet'] >= $pay_amount){
+                            User::changeInc($user['id'],-$pay_amount,'ph_wallet',3,$order['id'],9,'普惠钱包'.'-'.$project['project_name'],0,1,'OD');
+
                         }else{
-                            throw new Exception('余额不足');
+                            return out(null, 10001, '余额不足');
+                        }
+                    }else{
+
+                        $txtArr = [1=>'可用余额',3=>'可提余额'];
+                        if($req['pay_selected']==1){
+                            $field1 = 'topup_balance';
+                            $field2 = 'team_bonus_balance';
+                            $logType1 = 1;
+                            $logType2 = 3;
+                        }else{
+                            $field1 = 'team_bonus_balance';
+                            $field2 = 'topup_balance';
+                            $logType1 = 3;
+                            $logType2 = 1;
+                        }
+                        
+                        if($user[$field1] >= $pay_amount) {
+
+                            User::changeInc($user['id'],-$pay_amount,$field1,3,$order['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'],0,1,'OD');
+                        }else{
+                            if($user[$field1]>0){
+                                User::changeInc($user['id'],-$user[$field1],$field1,3,$order['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'],0,1,'OD');
+                            } 
+                            $topup_amount = bcsub($pay_amount, $user[$field1],2);
+                            if($user[$field2] >= $topup_amount) {
+                                User::changeInc($user['id'],-$topup_amount,$field2,3,$order['id'],$logType2,$txtArr[$logType2].'-'.$project['project_name'],0,1,'OD');
+                            }else{
+                                throw new Exception('余额不足');
+                            }
                         }
                     }
-
                     //User::changeInc($user['id'],0,$field1,3,$order2['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'].'-赠送',0,1,'OD');
                     //User::changeInc($user['id'],0,$field1,3,$order3['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'].'-赠送',0,1,'OD');
                     //User::changeInc($user['id'],0,$field1,3,$order4['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'].'-赠送',0,1,'OD');

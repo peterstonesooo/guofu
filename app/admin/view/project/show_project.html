@@ -262,6 +262,38 @@
                         </div>
                     </div>
                 </div>
+                <div class="row dd_input_group">
+                    <div class="form-group">
+                        <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">活动每周</label>
+                        <div class="col-xs-7 col-sm-6 col-md-4 col-lg-4">
+                            <select name="week">
+                                <option value="0">不开启</option>
+                                {foreach($week as $key=>$v})}
+                                <option value="{$key}" {if(isset($data['week']) && $data['week']==$key)} selected {/if}>{$v}</option>
+                                {/foreach}
+                            </select>
+                        </div>
+                        <div class="col-xs-1 col-sm-4 col-md-6 col-lg-6 dd_ts"></div>
+                    </div>
+                </div>
+                <div class="row dd_input_group">
+                    <div class="form-group">
+                        <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">开始时间</label>
+                        <div class="col-xs-7 col-sm-6 col-md-4 col-lg-4">
+                            <input type="text" id="start_time" name="start_time" class="form-control" placeholder="开始时间"
+                                   value="{$data['start_time']??'00:00:00'}">
+                        </div>
+                    </div>
+                </div>
+                <div class="row dd_input_group">
+                    <div class="form-group">
+                        <label class="col-xs-4 col-sm-2 col-md-2 col-lg-1 control-label dd_input_l">结束时间</label>
+                        <div class="col-xs-7 col-sm-6 col-md-4 col-lg-4">
+                            <input type="text" id="end_time" name="end_time" class="form-control" placeholder="开始时间"
+                                   value="{$data['end_time']??'00:00:00'}">
+                        </div>
+                    </div>
+                </div>
 
  <!--                <div class="row dd_input_group">
                     <div class="form-group">
@@ -539,4 +571,21 @@
             }
         });
     }
+
+    $(function () {
+        //日期范围限制
+        var start = {
+            elem: '#start_time',
+            format: 'HH:mm:ss',
+            type:'time'
+        };
+        var end = {
+            elem: '#end_time',
+            format: 'HH:mm:ss',
+            type:'time'
+        };
+        laydate.render(start);
+        laydate.render(end);
+    });
+
 </script>

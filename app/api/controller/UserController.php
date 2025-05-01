@@ -15,6 +15,7 @@ use app\model\UserRelation;
 use app\model\KlineChartNew;
 use app\model\Capital;
 use app\model\Certificate;
+use app\model\MettingLog;
 use app\model\Payment;
 use app\model\Realname;
 use app\model\TaxOrder;
@@ -36,7 +37,7 @@ class UserController extends AuthController
         $user = $this->user;
 
         //$user = User::where('id', $user['id'])->append(['equity', 'digital_yuan', 'my_bonus', 'total_bonus', 'profiting_bonus', 'exchange_equity', 'exchange_digital_yuan', 'passive_total_income', 'passive_receive_income', 'passive_wait_income', 'subsidy_total_income', 'team_user_num', 'team_performance', 'can_withdraw_balance'])->find()->toArray();
-        $user = User::where('id', $user['id'])->field('large_subsidy,id,phone,signin_integral,realname,pay_password,up_user_id,is_active,invite_code,ic_number,level,integral,topup_balance,poverty_subsidy_amount,team_bonus_balance,income_balance,bonus_balance,created_at,avatar,is_realname,allow_withdraw_money')->find()->toArray();
+        $user = User::where('id', $user['id'])->field('large_subsidy,id,phone,signin_integral,realname,pay_password,up_user_id,is_active,invite_code,ic_number,level,integral,topup_balance,poverty_subsidy_amount,team_bonus_balance,income_balance,bonus_balance,created_at,avatar,is_realname,allow_withdraw_money,ph_wallet')->find()->toArray();
     
         $user['is_set_pay_password'] = !empty($user['pay_password']) ? 1 : 0;
         $user['address'] = '';
@@ -1072,4 +1073,27 @@ class UserController extends AuthController
         $realname = Realname::where('user_id',$user['id'])->find();
         return out($realname);
     }
+
+    public function mettingImg(){
+        $req = $this->validate(request(), [
+            'metting_img|会议凭证' => 'require',
+        ]);
+        $date = date('Y-m-d',time());
+        $metting = MettingLog::where('user_id',$this->user['id'])->where('date',$date)->find();
+        if($metting){
+            return out(null,10001,'每天只能上传一次');
+        }
+        $user = $this->user;
+        $endTime = time()+10*60;
+        $data = [
+            'metting_img' => $req['metting_img'],
+            'user_id' => $user['id'],
+            'date' => $date,
+            'end_time' => $endTime,
+        ];
+        MettingLog::create($data);
+        return out();
+    }
+
+    
 }

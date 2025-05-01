@@ -89,7 +89,38 @@ class CheckBonus extends Command
                 $this->bonus_group_13($item);
             }
         });
+
+        $data = Order::whereIn('project_group_id', [14])->where('status', 2)->where('end_time', '<=', $cur_time)->chunk(100, function ($list) {
+            foreach ($list as $item) {
+                $this->bonus_group_14($item);
+            }
+        });
     }
+
+
+    //普惠活动
+    public function bonus_group_14($order)
+    {
+        Db::startTrans();
+        try {
+            $cur_time = strtotime(date('Y-m-d 00:00:00'));
+            $text = "{$order['project_name']}";
+            // 到期需要返还申报费用
+            if ($order['end_time'] <= $cur_time) {
+                User::changeInc($order['user_id'], $order['single_amount'], 'team_bonus_balance', 6, $order['id'], 3, $text . '');
+                Order::where('id', $order->id)->update(['status' => 4]);
+                // 结束项目分红
+            }
+            Db::Commit();
+        } catch (Exception $e) {
+            Db::rollback();
+
+            Log::error('分红收益异常：' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+
     //反制裁强国补贴
     public function bonus_group_13($order)
     {

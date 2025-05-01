@@ -81,7 +81,7 @@ class SigninController extends AuthController
             // 添加签到奖励积分
             //User::changeBalance($user['id'], dbconfig('signin_integral'), 17, $signin['id'], 6,'积分-每日签到奖励');
 
-           User::changeInc($user['id'], dbconfig('signin_integral'),'signin_integral',17,$signin['id'],6,'每日签到奖励',0,1,'QD');
+           User::changeInc($user['id'], dbconfig('signin_integral'),'integral',17,$signin['id'],6,'每日签到奖励',0,1,'QD');
            // User::changeInc($user['id'],$level_config['cash_reward_amount'],'signin_balance',17,$signin['id'],3,'等级签到奖励',0,1,'QD');
            
             $signinYesterDay = UserSignin::where('user_id', $user['id'])->where('signin_date', $yesterday)->find();

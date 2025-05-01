@@ -24,5 +24,6 @@ return [
         'sysncUser'  =>'app\common\command\SysncUser',
         'batchRecharge'  =>'app\common\command\BatchRechargeProcess',
         'ProjectLimited'  =>'app\common\command\ProjectLimited',
+        'mettingAudit'  =>'app\common\command\MettingAudit',
     ],
 ];

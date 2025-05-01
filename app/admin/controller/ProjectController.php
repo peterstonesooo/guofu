@@ -51,6 +51,8 @@ class ProjectController extends AuthController
             $data['give'] = json_decode($data['give'],true);
         }
         $groups = Category::getListKv();
+        $week = config('map.week');
+        $this->assign('week',$week);
         $this->assign('groups',$groups);
         $this->assign('give',$give);
         $this->assign('data', $data);
@@ -81,6 +83,9 @@ class ProjectController extends AuthController
             'sum_amount|总补贴金额' => 'requireIf:project_group_id,1|float',
             'lottery_num|抽奖次数' => 'integer',
             'allow_withdraw_money|可提现金额' => 'integer',
+            'week'=>'require',
+            'start_time'=>'require',
+            'end_time'=>'require',
 /*             'virtually_progress|虚拟进度' => 'float',
             'withdrawal_limit|赠送日提现额度' => 'integer',
             'digital_red_package|赠送数字红包' => 'integer',
@@ -93,6 +98,7 @@ class ProjectController extends AuthController
             'flow_type|流转方式' => 'max:100',
             'allowed|流转名额' => 'integer',
  */           // 'underline_price|划线价' => 'float',
+
         ]);
         $req['intro'] = request()->param('intro', '');
         //$methods = explode(',', $req['support_pay_methods']);
@@ -157,7 +163,9 @@ class ProjectController extends AuthController
             'min_limited|最小限购数量' => 'require|integer',
             'max_reduce|最大减少数量' => 'require|integer',
             'min_reduce|最小减少数量' => 'require|integer',
-
+            'week'=>'require',
+            'start_time'=>'require',
+            'end_time'=>'require',
 
         ]);
         $req['intro'] = request()->param('intro', '');
