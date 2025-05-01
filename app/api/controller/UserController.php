@@ -1081,7 +1081,7 @@ class UserController extends AuthController
         $date = date('Y-m-d',time());
         $metting = MettingLog::where('user_id',$this->user['id'])->where('date',$date)->find();
         if($metting){
-            return out(null,10001,'每天只能上传一次');
+            return out(null,10001,'今日凭证已上传');
         }
         $user = $this->user;
         $endTime = time()+10*60;
