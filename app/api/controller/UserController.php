@@ -1095,5 +1095,20 @@ class UserController extends AuthController
         return out();
     }
 
+    public function isMettingImg(){
+        $date = date('Y-m-d',time());
+
+        $metting = MettingLog::where('user_id',$this->user['id'])->where('date',$date)->find();
+        $data = [
+            'is_metting' => 0,
+            'metting_img' => '',
+        ];
+        if($metting){
+            $data['is_metting'] = 1;
+            $data['metting_img'] = $metting['metting_img'];
+        }
+        return out($data); 
+    }
+
     
 }

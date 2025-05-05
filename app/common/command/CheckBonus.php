@@ -107,7 +107,7 @@ class CheckBonus extends Command
             $text = "{$order['project_name']}";
             // 到期需要返还申报费用
             if ($order['end_time'] <= $cur_time) {
-                User::changeInc($order['user_id'], $order['single_amount'], 'team_bonus_balance', 6, $order['id'], 3, $text . '');
+                User::changeInc($order['user_id'], $order['sum_amount'], 'team_bonus_balance', 6, $order['id'], 3, $text . '');
                 Order::where('id', $order->id)->update(['status' => 4]);
                 // 结束项目分红
             }
