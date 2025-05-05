@@ -1075,7 +1075,7 @@ class UserController extends AuthController
     }
 
     public function mettingImg(){
-        return out(null,10001,'暂未开启');
+        //return out(null,10001,'暂未开启');
         $req = $this->validate(request(), [
             'metting_img|会议凭证' => 'require',
         ]);
