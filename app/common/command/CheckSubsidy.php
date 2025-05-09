@@ -45,8 +45,28 @@ class CheckSubsidy extends Command
         //$this->fixbonus0404();
         //$this->fixWithdraw();
         //$this->withDrawTolargeSubsidy();
-        $this->settle0425();
+        //$this->settle0425();
+        $this->siginIntegral2Integral();
         return true;
+    }
+
+    public function siginIntegral2Integral(){
+        $count =0;
+        $data = User::where('signin_integral','>',0)->chunk(1000,function($list) use(&$count){
+            foreach($list as $item){
+                Db::startTrans();
+                try {
+                    User::changeInc($item['id'], -$item['signin_integral'], 'signin_integral', 6, 0, 6, '签到积分转积分');
+                    User::changeInc($item['id'], $item['signin_integral'], 'integral', 6, 0, 2, '签到积分转积分');
+                    Db::commit();
+                } catch (Exception $e) {
+                    Db::rollback();
+                    throw $e;
+                }
+            }
+            $count+=1000;
+            echo "已处理{$count}条记录\n";
+        });
     }
 
     public function settle0425(){

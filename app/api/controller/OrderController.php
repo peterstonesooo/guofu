@@ -170,7 +170,7 @@ class OrderController extends AuthController
             $project['buy_num'] = 1;
             $project['pay_method'] = $req['pay_method'];
             $project['price'] = $pay_amount;
-
+            unset($project['end_time']);
             $order = Order::create($project);
             $project['order_sn'] = 'OD'.build_order_sn($user['id']);
 /*             $order2 = Order::create($project);
