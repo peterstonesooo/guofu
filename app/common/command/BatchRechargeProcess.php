@@ -107,7 +107,7 @@ class BatchRechargeProcess extends Command
 /*                                 if($user['is_realname'] != 1) {
                                     throw new \Exception('用户未实名');
                                 } */
-                                if(in_array($type,[1,2,4,6,7]) == false){
+                                if(in_array($type,[1,2,4,6,7,8]) == false){
                                     throw new \Exception('类型错误 '.$type);
                                 }
                                 if($type==6){
