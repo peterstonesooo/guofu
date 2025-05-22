@@ -14,6 +14,7 @@ use think\console\Output;
 use think\facade\Db;
 use app\model\Capital;
 use app\model\PovertySubsidy;
+use app\model\Realname;
 use app\model\UserBalanceLog;
 use app\model\UserPath;
 use Exception;
@@ -46,8 +47,71 @@ class CheckSubsidy extends Command
         //$this->fixWithdraw();
         //$this->withDrawTolargeSubsidy();
         //$this->settle0425();
-        $this->siginIntegral2Integral();
+        $this->autoRealname();
         return true;
+    }
+
+    public function autoRealname(){
+        $phoneArr = ['19952100200','19952100300','19952100400','19952100500','19952100600','19952100700','19952100800','19952100900','19952100101','19952100110','19952100120','19952100130','19952100140','19952100150','19952100160','19952100170','19952100180','19952100190','19952100201'];
+        $count = 0;
+        $generatedData = [];
+
+        $surnames = ['赵', '钱', '孙', '李', '周', '吴', '郑', '王', '冯', '陈', '褚', '卫', '蒋', '沈', '韩', '杨', '张',]; // 常见姓氏
+        $givenNameChars = ['伟', '芳', '娜', '秀', '英', '敏', '静', '丽', '强', '磊', '军', '洋', '勇', '艳', '杰', '娟', '涛', '明', '超', '兰', '霞', '平', '刚', '桂', '红', '波', '云', '龙']; // 常用名选字
+
+        foreach ($phoneArr as $phone) {
+            // 生成随机姓名
+            $surname = $surnames[array_rand($surnames)];
+            $givenNameLength = rand(1, 2); // 名字长度1或2个字
+            $givenName = '';
+            for ($i = 0; $i < $givenNameLength; $i++) {
+                $givenName .= $givenNameChars[array_rand($givenNameChars)];
+            }
+            $name = $surname . $givenName;
+
+            // 生成随机身份证号 (18位)
+            // 1. 地址码 (前6位) - 随机生成一个大致范围的数字
+            $addressCode = str_pad(rand(110000, 659999), 6, '0', STR_PAD_LEFT);
+            
+            // 2. 出生日期 (中间8位 YYYYMMDD)
+            $year = rand(1950, 2005);
+            $month = str_pad(rand(1, 12), 2, '0', STR_PAD_LEFT);
+            // 为了简化，日期范围1-28
+            $day = str_pad(rand(1, 28), 2, '0', STR_PAD_LEFT);
+            $birthDate = $year . $month . $day;
+
+            // 3. 顺序码 (接下来的3位)
+            $sequenceCode = str_pad(rand(0, 999), 3, '0', STR_PAD_LEFT);
+
+            // 4. 校验码 (最后1位) - 随机数字或X
+            $checksumOptions = array_merge(range(0, 9), ['X']);
+            $checksum = $checksumOptions[array_rand($checksumOptions)];
+            
+            $idNumber = $addressCode . $birthDate . $sequenceCode . $checksum;
+
+            $generatedData[] = [
+                'phone' => $phone,
+                'name' => $name,
+                'id_number' => $idNumber,
+            
+            ];
+            echo "手机号: $phone, 姓名: $name, 身份证号: $idNumber\n";
+            $user = User::where('phone',$phone)->find();
+            $data = [
+                'user_id'=>$user['id'],
+                'realname'=>$name,
+                'ic_number'=>$idNumber,
+                'img1'=>'',
+                'img2'=>'',
+                'img3'=>'',
+                'status'=>1,
+                'phone'=>$phone,
+            ];
+            Realname::create($data);
+            User::where('id',$user['id'])->update(['realname'=>$name,'ic_number'=>$idNumber]);
+            $count++;
+        }
+
     }
 
     public function siginIntegral2Integral(){

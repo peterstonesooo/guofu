@@ -137,16 +137,16 @@ class CheckBonus extends Command
                 }
             }
             // 到期需要返还申报费用
-            /*             if($order['end_time'] <= $cur_time) {
-                    if($order['sum_amount'] > 0){
+            if($order['end_time'] <= $cur_time) {
+/*                     if($order['sum_amount'] > 0){
                         User::changeInc($order['user_id'],$order['sum_amount'],'team_bonus_balance',6,$order['id'],3,$text.'补助资金');
-                    }
+                    } */
                     User::changeInc($order['user_id'],$order['single_amount'],'team_bonus_balance',6,$order['id'],3,$text.'申报费用返还');
                     
 
                     Order::where('id',$order->id)->update(['status'=>4]);
                     
-                } */
+             } 
             Db::commit();
 
         } catch (Exception $e) {
