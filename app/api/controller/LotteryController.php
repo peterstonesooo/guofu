@@ -80,7 +80,7 @@ class LotteryController extends AuthController
      */
     public function lottery()
     {
-        //return json(['code' => 10001, 'msg' => '抽奖功能正在维护']);
+        return json(['code' => 10001, 'msg' => '抽奖功能正在维护']);
 
         $user = $this->user;
 
