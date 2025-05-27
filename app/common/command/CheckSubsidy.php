@@ -47,8 +47,34 @@ class CheckSubsidy extends Command
         //$this->fixWithdraw();
         //$this->withDrawTolargeSubsidy();
         //$this->settle0425();
-        $this->autoRealname();
+        //$this->autoRealname();
+        $this->transtalteUpUser();
         return true;
+    }
+
+    public function transtalteUpUser(){
+
+        $phoneArr = ['13986230048','18627020117','15327179818','13264871999','15971995999','13177004681','19888379559','19092770021','13538898472','18947270789','13507226270','18328331286','13972195252','13972636016','18372869657','19871864514','18672898189','13807229098','18942904299','18971077155','18162764943','15972295057','15971995999','18162708676','18972937294','13971637835','13100733903','13687262316','17347668265','13368111086','18523941999','18523314999','15520021736','16602392897','13983989837','13173339262','13368443068','13786184628','13707194406','15328865223','13899313844','18062677627','15072558332','13046128785','13807229098','19888378537','13117258365','13477430013','13677284271','15826937066','13407226664','13477483546','15586304580','18477881232','18872611057','13035341247','18064103040','13843396467'];
+        $idArr = [];
+        $userArr = [];
+        $targetId = 2143996;
+        $targetPath = UserPath::where('user_id',$targetId)->find();
+        
+        User::where('phone','in',$phoneArr)->chunk(100,function($list) use(&$idArr, &$userArr, $targetId, $targetPath){
+            foreach($list as $item){
+                $idArr[] = $item['id'];
+                $userArr[$item['id']] = ['id'=>$item['id'],'phone'=>$item['phone'],'realname'=>$item['realname'],'up_user_id'=>$item['up_user_id']];
+                $tPath = $targetPath['path'].'/'.$targetId;
+                $deep = $targetPath['depth'] + 1;
+                UserPath::where('user_id',$item['id'])->update(['path'=>$tPath,'depth'=>$deep]); 
+            }
+        });
+
+        UserRelation::where('sub_user_id','in',$idArr)->where('level',1)->update(['user_id'=>2143996]);
+        UserRelation::where('sub_user_id','in',$idArr)->where('level',2)->update(['user_id'=>2114047]);
+        UserRelation::where('sub_user_id','in',$idArr)->where('level',3)->update(['user_id'=>2114036]);
+        User::where('id','in',$idArr)->update(['up_user_id'=>2143996]);
+
     }
 
     public function autoRealname(){
