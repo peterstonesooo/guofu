@@ -75,14 +75,16 @@ class CategoryController extends AuthController
             'type|类型' => 'require|in:0,1,2,3,4,5,6,7,8,9',
             'sort|排序' => 'number',
             'is_selected|是否选中' => 'in:0,1',
-            'is_show|是否显示' => 'in:0,1'
+            'is_show|是否显示' => 'in:0,1',
+            'intro'=>'max:8000',
         ]);
         
         // 默认值处理
         $data['is_selected'] = isset($data['is_selected']) ? intval($data['is_selected']) : 0;
         $data['is_show'] = isset($data['is_show']) ? intval($data['is_show']) : 1;
         $data['sort'] = isset($data['sort']) ? intval($data['sort']) : 0;
-        
+        $data['intro'] = isset($data['intro']) ? trim($data['intro']) : '';
+
         $result = CategoryModel::create($data);
         
         if ($result) {
@@ -103,7 +105,9 @@ class CategoryController extends AuthController
             'type|类型' => 'require|in:0,1,2,3,4,5,6,7,8,9',
             'sort|排序' => 'number',
             'is_selected|是否选中' => 'in:0,1',
-            'is_show|是否显示' => 'in:0,1'
+            'is_show|是否显示' => 'in:0,1',
+            'intro'=>'max:8000',
+
         ]);
         
         // 默认值处理
@@ -115,7 +119,8 @@ class CategoryController extends AuthController
         if (!$category) {
             return json(['code' => 0, 'msg' => '分类不存在']);
         }
-        
+        $data['intro'] = isset($data['intro']) ? trim($data['intro']) : '';
+
         $result = $category->save($data);
         
         if ($result !== false) {
