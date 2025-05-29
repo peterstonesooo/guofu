@@ -25,6 +25,7 @@ class Category extends Model
 
                 // 将换行符替换为 HTML 换行标签
                 $item['intro'] = nl2br($item['intro']);
+                $item['intro'] = str_replace(["\r", "\n"], "", $item['intro']);
 
             }
         }
