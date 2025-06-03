@@ -15,7 +15,7 @@ class InsuranceController extends AuthController
         $orders = \app\model\Order::where('user_id', $this->user['id'])
             ->where('status', 2)
             ->where('project_group_id', 18)
-            ->field('id,project_id,project_group_id,daily_bonus_ratio,created_at')
+            ->field('id,project_id,project_name,project_group_id,daily_bonus_ratio,created_at')
             ->order('id', 'desc')
             ->select();
         
