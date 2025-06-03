@@ -34,7 +34,7 @@ class InsuranceController extends AuthController
     }
 
     public function apply(){
-        return json(['code' => 200, 'msg' => '未到领取时间，基本保险金每月1日可领取', 'data' => []]);
+        return json(['code' => 10001, 'msg' => '未到领取时间，基本保险金每月1日可领取', 'data' => []]);
     }
 
 }
