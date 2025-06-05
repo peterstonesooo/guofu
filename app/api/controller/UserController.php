@@ -856,6 +856,7 @@ class UserController extends AuthController
         if(($req['log_type'] == '' || $req['log_type']==0)){
             //$log_type = [1,2,3,4,5,6,7,8,9];
             $log_type = [1,3,4,5,6,7,8,9];
+            
         }else{
             $log_type = [$req['log_type']];
         }
