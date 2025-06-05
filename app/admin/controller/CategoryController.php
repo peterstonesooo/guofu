@@ -72,7 +72,7 @@ class CategoryController extends AuthController
     {
         $data = $this->validate(request(), [
             'name|名称' => 'require|max:50',
-            'type|类型' => 'require|in:0,1,2,3,4,5,6,7,8,9',
+            'type|类型' => 'require',
             'sort|排序' => 'number',
             'is_selected|是否选中' => 'in:0,1',
             'is_show|是否显示' => 'in:0,1',
@@ -102,7 +102,7 @@ class CategoryController extends AuthController
         $data = $this->validate(request(), [
             'id|ID' => 'require|number',
             'name|名称' => 'require|max:50',
-            'type|类型' => 'require|in:0,1,2,3,4,5,6,7,8,9',
+            'type|类型' => 'require',
             'sort|排序' => 'number',
             'is_selected|是否选中' => 'in:0,1',
             'is_show|是否显示' => 'in:0,1',
