@@ -48,8 +48,27 @@ class CheckSubsidy extends Command
         //$this->withDrawTolargeSubsidy();
         //$this->settle0425();
         //$this->autoRealname();
-        $this->transtalteUpUser();
+        $this->translateHouseBalance();
         return true;
+    }
+
+    public function translateHouseBalance(){
+        $count = 0;
+        $data = User::where('poverty_subsidy_amount','>',0)->chunk(1000,function($list) use(&$count){
+            foreach($list as $item){
+                Db::startTrans();
+                try {
+                    User::changeInc($item['id'], -$item['poverty_subsidy_amount'], 'poverty_subsidy_amount', 18, 0, 5, '房屋保障金转民生补助金');
+                    User::changeInc($item['id'], $item['poverty_subsidy_amount'], 'large_subsidy', 18, 0, 7, '房屋保障金转民生补助金');
+                    Db::commit();
+                } catch (Exception $e) {
+                    Db::rollback();
+                    throw $e;
+                }
+                $count++;
+            }
+            echo "已处理{$count}条记录\n";
+        });
     }
 
     public function transtalteUpUser(){
