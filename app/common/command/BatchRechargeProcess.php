@@ -86,7 +86,7 @@ class BatchRechargeProcess extends Command
                                     throw new \Exception('手机号格式错误');
                                 }
                                 //检测$type是否1,2,4
-                                if (!in_array($type, [1, 2, 4,6,7,8])) {
+                                if (!in_array($type, [1, 2, 4,6,7,8,9])) {
                                     throw new \Exception('类型错误: ' . $type);
                                 }
                                 //检测$amount是否大于0
