@@ -248,7 +248,12 @@ class BatchRechargeProcess extends Command
                 $balance_type = 15;
                 $text = '民生补助金';
                 break;
-
+            case 9:
+                $filed = 'insurance_balance';
+                $log_type = 5;
+                $balance_type = 15;
+                $text = '基本保险';
+                break;
         }
         //User::changeBalance($req['user_id'], $req['money'], 15, 0, 1, $req['remark']??'', $adminUser['id']);
         if($amount > 0){

@@ -330,6 +330,12 @@ class UserController extends AuthController
                 $balance_type = 15;
                 $text = '民生补助金';
                 break;
+            case 9:
+                $filed = 'insurance_balance';
+                $log_type = 5;
+                $balance_type = 15;
+                $text = '基本保险';
+                break;
             default:
                 return out(null, 10001, '类型错误');
         }
@@ -431,6 +437,12 @@ class UserController extends AuthController
                 $log_type = 7;
                 $balance_type = 15;
                 $text = '民生补助金';
+                break;
+            case 9:
+                $filed = 'insurance_balance';
+                $log_type = 5;
+                $balance_type = 15;
+                $text = '基本保险';
                 break;
             default:
                 return out(null, 10001, '类型错误');
