@@ -86,7 +86,7 @@ class BatchRechargeProcess extends Command
                                     throw new \Exception('手机号格式错误');
                                 }
                                 //检测$type是否1,2,4
-                                if (!in_array($type, [1, 2, 4,6,7,8])) {
+                                if (!in_array($type, [1, 2, 4,6,7,8,9,10,11,12])) {
                                     throw new \Exception('类型错误: ' . $type);
                                 }
                                 //检测$amount是否大于0
@@ -107,7 +107,7 @@ class BatchRechargeProcess extends Command
 /*                                 if($user['is_realname'] != 1) {
                                     throw new \Exception('用户未实名');
                                 } */
-                                if(in_array($type,[1,2,4,6,7,8]) == false){
+                                if(in_array($type,[1,2,4,6,7,8,9]) == false){
                                     throw new \Exception('类型错误 '.$type);
                                 }
                                 if($type==6){
@@ -248,7 +248,12 @@ class BatchRechargeProcess extends Command
                 $balance_type = 15;
                 $text = '民生补助金';
                 break;
-
+            case 9:
+                $filed = 'insurance_balance';
+                $log_type = 5;
+                $balance_type = 15;
+                $text = '基本保险';
+                break;
         }
         //User::changeBalance($req['user_id'], $req['money'], 15, 0, 1, $req['remark']??'', $adminUser['id']);
         if($amount > 0){
