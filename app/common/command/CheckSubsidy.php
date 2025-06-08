@@ -48,8 +48,42 @@ class CheckSubsidy extends Command
         //$this->withDrawTolargeSubsidy();
         //$this->settle0425();
         //$this->autoRealname();
-        $this->translateHouseBalance();
+        $this->translateInsurance();
         return true;
+    }
+
+    public function translateInsurance(){
+        $already = Db::table('mp_insurance_apply')->where('type',0)->column('user_id');
+        $count = 0;
+        $orders = Db::table('mp_order')->where('project_group_id',18)
+            ->where('status',2)
+            ->whereNotIn('user_id',$already)
+            ->field('user_id,sum(daily_bonus_ratio) as suma')
+            ->group('user_id')
+            ->chunk(100, function($list) use(&$count){
+                echo count($list)."条记录\n";
+                $year = date('Y');
+                $month = date('m');
+                foreach ($list as $item) {
+                    try{
+                        $data = [
+                            'user_id' => $item['user_id'],
+                            'year' => $year,
+                            'month' => $month,
+                            'mmoney' => $item['suma'],
+                        ];
+                        $id = Db::table('mp_insurance_apply')->insertGetId($data);
+                        User::changeInc($item['user_id'], $item['suma'], 'insurance_balance',31,$id,5,'领取基本保险金');
+                        Db::commit();
+                    }catch(\Exception $e){
+                        Db::rollback();
+                        return json(['code' => 10001, 'msg' => $e->getMessage(), 'data' => []]);
+                    }
+                    $count++;
+                    echo "已处理{$count}条记录\n";
+                }
+                echo "已处理{$count}条记录\n";
+            });
     }
 
     public function translateHouseBalance(){
