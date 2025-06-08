@@ -57,7 +57,7 @@
                             {if(session('admin_user')['auth_group_id']!=3)}
                             <th>现金</th>
                             {/if}
-                            <th>抽奖次数</th>
+                            <th>基本保险</th>
                             <th>积分</th>
                             <th>团队奖励</th>
                             <th>邀请码</th>
@@ -83,7 +83,7 @@
                                 {if(session('admin_user')['auth_group_id']!=3)}
                                 <td>{$v['topup_balance']}</td>
                                 {/if}
-                                 <td>{$v['lottery_num']}</td>
+                                 <td>{$v['insurance_balance']}</td>
                                  <td>{$v['integral']}</td>
                                 <td>{$v['team_bonus_balance']}</td>
                                 <td>{$v['invite_code']}</td>
