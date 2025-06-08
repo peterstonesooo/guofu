@@ -330,8 +330,6 @@ class UserController extends AuthController
                 $balance_type = 15;
                 $text = '民生补助金';
                 break;
-<<<<<<< Updated upstream
-=======
             case 9:
                 $filed = 'insurance_balance';
                 $log_type = 5;
@@ -344,7 +342,6 @@ class UserController extends AuthController
                 $balance_type = 15;
                 $text = '扶贫补助金';
                 break;
->>>>>>> Stashed changes
             default:
                 return out(null, 10001, '类型错误');
         }
