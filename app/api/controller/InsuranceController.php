@@ -166,7 +166,7 @@ class InsuranceController extends AuthController
         // 获取用户的基本保险金
         $orders = \app\model\Order::where('user_id', $userId)
             ->where('status', 2)
-            ->where('project_group_id', 19)
+            ->where('project_group_id', 20)
             ->field('id,project_id,project_name,project_group_id,daily_bonus_ratio,created_at')
             ->order('id', 'desc')
             ->select();
