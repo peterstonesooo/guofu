@@ -59,13 +59,11 @@ class CheckSubsidy extends Command
             ->where('status',2)
             ->whereNotIn('user_id',$already)
             ->field('user_id,sum(daily_bonus_ratio) as suma')
-            ->group('user_id')
-            ->order('user_id', 'asc')
-            ->chunk(100, function($list) use(&$count){
-                echo count($list)."条记录\n";
+            ->group('user_id');
                 $year = date('Y');
                 $month = date('m');
-                foreach ($list as $item) {
+                foreach ($orders as $item) {
+
                     try{
                         $data = [
                             'user_id' => $item['user_id'],
@@ -84,7 +82,6 @@ class CheckSubsidy extends Command
                     echo "已处理{$count}条记录\n";
                 }
                 echo "已处理{$count}条记录\n";
-            });
     }
 
     public function translateHouseBalance(){
