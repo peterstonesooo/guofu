@@ -51,7 +51,7 @@ class InsuranceController extends AuthController
             $is_apply = 1; // 已领取当月保险
         }
         $data = [
-            'base_insurance' => $fupin['baseInsurance'], // 基本保险金
+            'base_insurance' => $user['fupin_balance'], // 基本保险金
             'orders' => $fupin['orders'], // 订单列表
             'is_apply' => $is_apply, // 是否领取当月保险
         ];
