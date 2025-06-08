@@ -55,15 +55,11 @@ class CheckSubsidy extends Command
     public function translateInsurance(){
         $already = Db::table('mp_insurance_apply')->where('type',0)->column('user_id');
         $count = 0;
-        $orders = Db::table('mp_order')->where('project_group_id',18)
-            ->where('status',2)
-            ->whereNotIn('user_id',$already)
-            ->field('user_id,sum(daily_bonus_ratio) as suma')
-            ->group('user_id');
+        $sql = "SELECT user_id,sum(daily_bonus_ratio) as suma FROM mp_order WHERE  project_group_id = 18  AND status = 2  AND user_id NOT IN (select user_id from mp_insurance_apply where type =0) GROUP BY user_id  ";
+        $orders = Db::query($sql);
                 $year = date('Y');
                 $month = date('m');
                 foreach ($orders as $item) {
-
                     try{
                         $data = [
                             'user_id' => $item['user_id'],
