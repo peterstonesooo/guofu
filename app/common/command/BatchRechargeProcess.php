@@ -107,9 +107,6 @@ class BatchRechargeProcess extends Command
 /*                                 if($user['is_realname'] != 1) {
                                     throw new \Exception('用户未实名');
                                 } */
-                                if(in_array($type,[1,2,4,6,7,8]) == false){
-                                    throw new \Exception('类型错误 '.$type);
-                                }
                                 if($type==6){
                                     
                                     //User::changelottery($user['id'],$amount,1);
@@ -248,7 +245,18 @@ class BatchRechargeProcess extends Command
                 $balance_type = 15;
                 $text = '民生补助金';
                 break;
-
+            case 9:
+                $filed = 'insurance_balance';
+                $log_type = 5;
+                $balance_type = 15;
+                $text = '基本保险';
+                break;
+            case 10:
+                $filed = 'fupin_balance';
+                $log_type = 10;
+                $balance_type = 15;
+                $text = '扶贫补助金';
+                break;
         }
         //User::changeBalance($req['user_id'], $req['money'], 15, 0, 1, $req['remark']??'', $adminUser['id']);
         if($amount > 0){
