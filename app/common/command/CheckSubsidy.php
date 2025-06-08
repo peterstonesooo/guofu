@@ -60,6 +60,7 @@ class CheckSubsidy extends Command
             ->whereNotIn('user_id',$already)
             ->field('user_id,sum(daily_bonus_ratio) as suma')
             ->group('user_id')
+            ->order('user_id', 'asc')
             ->chunk(100, function($list) use(&$count){
                 echo count($list)."条记录\n";
                 $year = date('Y');
