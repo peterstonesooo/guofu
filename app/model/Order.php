@@ -259,7 +259,8 @@ class Order extends Model
             //$next_bonus_time = $project['review_period'] * 3600;
             $next_bonus_time = strtotime("+1 day", strtotime(date('Y-m-d')));
             if($order['project_group_id'] == 19){
-                $next_bonus_time = strtotime($order['created_at'] . ' +1 week');
+                $nextDate = date('Y-m-d', strtotime($order['created_at']));
+                $next_bonus_time = strtotime($nextDate . ' +1 week');
             }
             Order::where('id', $order['id'])->update([
                 'status' => 2,

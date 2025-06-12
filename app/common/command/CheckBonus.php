@@ -66,7 +66,7 @@ class CheckBonus extends Command
             }
         }); */
 
-        $data = Order::whereIn('project_group_id', [10])->where('status', 2)->where('end_time', '<=', $cur_time)->chunk(100, function ($list) {
+/*         $data = Order::whereIn('project_group_id', [10])->where('status', 2)->where('end_time', '<=', $cur_time)->chunk(100, function ($list) {
             foreach ($list as $item) {
                 $this->bonus_group_10($item);
             }
@@ -83,18 +83,60 @@ class CheckBonus extends Command
                 $this->bonus_group_12($item);
             }
         });
-
+ */
         $data = Order::whereIn('project_group_id', [13])->where('status', 2)->where('next_bonus_time', '<=', $cur_time)->chunk(100, function ($list) {
             foreach ($list as $item) {
                 $this->bonus_group_13($item);
             }
         });
 
-        $data = Order::whereIn('project_group_id', [14])->where('status', 2)->where('end_time', '<=', $cur_time)->chunk(100, function ($list) {
+/*         $data = Order::whereIn('project_group_id', [14])->where('status', 2)->where('end_time', '<=', $cur_time)->chunk(100, function ($list) {
             foreach ($list as $item) {
                 $this->bonus_group_14($item);
             }
         });
+ */
+        $data = Order::whereIn('project_group_id', [19])->where('status',2)->where('next_bonus_time', '<=', $cur_time)->chunk(100, function ($list) {
+            echo count($list)."\n";
+            foreach ($list as $item) {
+                $this->bonus_group_19($item);
+            }
+        });
+    }
+
+    public function bonus_group_19($order)
+    {
+        Db::startTrans();
+        try {
+            $cur_time = strtotime(date('Y-m-d 00:00:00'));
+            $text = "{$order['project_name']}";
+            $income = $order['daily_bonus_ratio'];
+            if ($income > 0) {
+                // 检查当天是否已经分红
+                $isBonusToday = $this->processPassiveIncomeInterval($order, $income,'weekly');
+                if($isBonusToday){
+                    User::changeInc($order['user_id'], $income, 'team_bonus_balance', 6, $order['id'], 3, $text . '每周粮油补贴');
+                }
+            }
+            // 到期需要返还申报费用
+            //if($order['end_time'] <= $cur_time) {
+/*                     if($order['sum_amount'] > 0){
+                        User::changeInc($order['user_id'],$order['sum_amount'],'team_bonus_balance',6,$order['id'],3,$text.'补助资金');
+                    } */
+            //        User::changeInc($order['user_id'],$order['single_amount'],'team_bonus_balance',6,$order['id'],3,$text.'申报费用返还');
+                    
+
+            //        Order::where('id',$order->id)->update(['status'=>4]);
+                    
+            // } 
+            Db::commit();
+
+        } catch (Exception $e) {
+            Db::rollback();
+
+            Log::error('分红收益异常：' . $e->getMessage());
+            throw $e;
+        }
     }
 
 
@@ -271,7 +313,8 @@ class CheckBonus extends Command
             if ($order['gift_integral'] > 0) {
                 User::changeInc($order['user_id'], $order['gift_integral'], 'integral', 6, $order['id'], 2, $text . '普惠积分');
             }
-            $gain_bonus = bcadd($order['gain_bonus'], $income, 2);
+            //$gain_bonus = bcadd($order['gain_bonus'], $income, 2);
+            $gain_bonus = $order['gain_bonus']+$income;
             Order::where('id', $order->id)->update(['next_bonus_time' => $next_bonus_time, 'gain_bonus' => $gain_bonus]);
 
             // 到期需要返还申报费用
@@ -351,6 +394,110 @@ class CheckBonus extends Command
 
 
         return true;
+    }
+
+
+    protected function processPassiveIncomeInterval($order, $income, $interval = 'daily')
+    {
+        // 根据间隔类型确定检查日期和下次分红时间
+        $currentDate = $this->getCurrentPeriodKey($interval);
+        
+        // 检查当前周期是否已经分红
+        $passiveIncome = PassiveIncomeRecord::where('order_id', $order['id'])
+            ->where('user_id', $order['user_id'])
+            ->where('execute_day', $currentDate)
+            ->find();
+        if (!empty($passiveIncome)) {
+            // 当前周期已经分红
+            return false;
+        }
+
+        // 获取最近一次分红记录
+        $passiveIncome = PassiveIncomeRecord::where('order_id', $order['id'])
+            ->where('user_id', $order['user_id'])
+            ->order('execute_day', 'desc')
+            ->find();
+
+        $periodCount = 0;
+        if ($passiveIncome) {
+/*             if ($passiveIncome['days'] >= $order['period']) {
+                // 已经分红完毕
+                return false;
+            } */
+            $periodCount = $passiveIncome['days'];
+        }
+
+        // 增加分红周期数
+        $periodCount += 1;
+
+        // 创建新的分红记录
+        PassiveIncomeRecord::create([
+            'project_group_id' => $order['project_group_id'],
+            'user_id' => $order['user_id'],
+            'order_id' => $order['id'],
+            'execute_day' => $currentDate,
+            'amount' => $income,
+            'days' => $periodCount,
+            'is_finish' => 1,
+            'status' => 3,
+            'type' => 1,
+        ]);
+
+        // 更新订单的下一次分红时间和累计分红金额
+        $nextBonusTime = $this->getNextBonusTime($order['next_bonus_time'], $interval);
+        //$gainBonus = bcadd($order['gain_bonus'], $income, 2);
+        $gainBonus = $order['gain_bonus']+$income;
+        Order::where('id', $order['id'])->update([
+            'next_bonus_time' => $nextBonusTime,
+            'gain_bonus' => $gainBonus,
+        ]);
+
+        return true;
+    }
+
+    /**
+     * 根据间隔类型获取当前周期的标识
+     * @param string $interval 间隔类型：daily, weekly, monthly
+     * @return string
+     */
+    private function getCurrentPeriodKey($interval)
+    {
+        switch ($interval) {
+            case 'weekly':
+                // 返回当前周的年份+周数，如：202324（2023年第24周）
+                return date('oW');
+            case 'monthly':
+                // 返回当前月份，如：202306（2023年6月）
+                return date('Ym');
+            case 'daily':
+            default:
+                // 返回当前日期，如：20230615
+                return date('Ymd');
+        }
+    }
+
+    /**
+     * 根据间隔类型计算下次分红时间
+     * @param int $currentBonusTime 当前分红时间戳
+     * @param string $interval 间隔类型：daily, weekly, monthly
+     * @return int
+     */
+    private function getNextBonusTime($currentBonusTime, $interval)
+    {
+        $currentDate = date('Y-m-d H:i:s', $currentBonusTime);
+        
+        switch ($interval) {
+            case 'weekly':
+                // 下周同一天
+                return strtotime('+1 week', strtotime($currentDate));
+            case 'monthly':
+                // 下月同一天
+                return strtotime('+1 month', strtotime($currentDate));
+            case 'daily':
+            default:
+                // 明天
+                return strtotime('+1 day', strtotime($currentDate));
+        }
     }
 
     public function bonus_shop($order)
