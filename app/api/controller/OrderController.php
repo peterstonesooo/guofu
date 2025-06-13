@@ -80,8 +80,8 @@ class OrderController extends AuthController
 /*         if($project['project_group_id']==7){
             return out(null, 10001, '暂时不能购买');
         } */
-        if($project['id']==22){
-            $order = Order::where('user_id', $user['id'])->where('project_id',22)->whereIn('status', [1,2])->find();
+        if($project['project_group_id']==21){
+            $order = Order::where('user_id', $user['id'])->where('project_group_id',21)->whereIn('status', [1,2])->find();
             if($order){
                 return out(null, 10001, '每个用户只能购买一份');
             }
