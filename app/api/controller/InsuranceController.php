@@ -51,7 +51,7 @@ class InsuranceController extends AuthController
             $is_apply = 1; // 已领取当月保险
         }
         $data = [
-            'base_insurance' => $fupin['baseInsurance'], // 基本保险金
+            'base_insurance' => $user['fupin_balance'], // 基本保险金
             'orders' => $fupin['orders'], // 订单列表
             'is_apply' => $is_apply, // 是否领取当月保险
         ];
@@ -167,14 +167,13 @@ class InsuranceController extends AuthController
         $orders = \app\model\Order::where('user_id', $userId)
             ->where('status', 2)
             ->where('project_group_id', 20)
-            ->field('id,project_id,project_name,project_group_id,daily_bonus_ratio,created_at')
+            ->field('id,project_id,project_name,project_group_id,daily_bonus_ratio,sum_amount,created_at')
             ->order('id', 'desc')
             ->select();
         
-/*         $baseInsurance = 0;
-        foreach ($orders as $order) {
-            $baseInsurance += $order['daily_bonus_ratio'];
-        }         */
+        foreach ($orders as &$order) {
+            $order['daily_bonus_ratio'] = $order['sum_amount'];
+        }        
         return ['baseInsurance' =>0,'orders' => $orders];
     }
 

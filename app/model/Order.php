@@ -258,6 +258,10 @@ class Order extends Model
             $end_time = strtotime("+{$period} day", strtotime(date('Y-m-d')));
             //$next_bonus_time = $project['review_period'] * 3600;
             $next_bonus_time = strtotime("+1 day", strtotime(date('Y-m-d')));
+            if($order['project_group_id'] == 19){
+                $nextDate = date('Y-m-d', strtotime($order['created_at']));
+                $next_bonus_time = strtotime($nextDate . ' +1 week');
+            }
             Order::where('id', $order['id'])->update([
                 'status' => 2,
                 'pay_time' => time(),
@@ -296,7 +300,7 @@ class Order extends Model
 
         // 更新订单
         //$dividend_cycle = explode(' ',$order['dividend_cycle']);
-        $next_bonus_time = strtotime(date('Y-m-d 00:00:00', strtotime('+1 day')));
+        //$next_bonus_time = strtotime(date('Y-m-d 00:00:00', strtotime('+1 day')));
         //$end_time = strtotime(date('Y-m-d 00:00:00', strtotime('+'.($dividend_cycle[0] * $order['period']).' '.$dividend_cycle[1])));
         //$end_time = strtotime(date('Y-m-d 00:00:00', strtotime('+'.$order['period'].' day')));
 

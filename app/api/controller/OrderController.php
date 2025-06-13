@@ -173,7 +173,7 @@ class OrderController extends AuthController
             unset($project['end_time']);
             $order = Order::create($project);
             $project['order_sn'] = 'OD'.build_order_sn($user['id']);
-            if($project['project_group_id'] == 16){
+            if($project['project_group_id'] == 20){
                 $order2 = Order::create($project);
             }
  /*           $project['order_sn'] = 'OD'.build_order_sn($user['id']);
@@ -248,7 +248,7 @@ class OrderController extends AuthController
                             }
                         }
                     }
-                if($project['project_group_id'] == 16){
+                if($project['project_group_id'] == 20){
                     User::changeInc($user['id'],0,$field1,3,$order2['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'].'-赠送',0,1,'OD');
                 }
                     
@@ -260,7 +260,7 @@ class OrderController extends AuthController
                 // 累计总收益和赠送数字人民币  到期结算
                 // 订单支付完成
                 Order::orderPayComplete($order['id'], $project, $user['id'],0);
-                if($project['project_group_id'] == 16){
+                if($project['project_group_id'] == 20){
                     Order::orderPayComplete($order2['id'], $project, $user['id'],1);
                 }
                 //Order::orderPayComplete($order3['id'], $project, $user['id'],1);
