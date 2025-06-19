@@ -18,3 +18,7 @@
 /.htaccess
 /public/.htaccess
 /public/storage/*
+CLAUDE.md
+docker-php-xdebug.ini
+/claude/
+.claude/settings.local.json

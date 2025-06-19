@@ -92,10 +92,11 @@ class OrderController extends AuthController
         }
 
 
+
         Db::startTrans();
         try {
             $user = User::where('id', $user['id'])->lock(true)->find();
-            $project = Project::field('id project_id,name project_name,class,project_group_id,cover_img,single_amount,gift_integral,total_num,daily_bonus_ratio,sum_amount,dividend_cycle,period,single_gift_equity,single_gift_digital_yuan,sham_buy_num,progress_switch,bonus_multiple,settlement_method,withdrawal_limit,digital_red_package,review_period,single_gift_gf_purse,poverty_subsidy_amount,lottery_num,allow_withdraw_money,max_limited,is_limited,week,start_time,end_time')
+            $project = Project::field('id project_id,name project_name,class,project_group_id,cover_img,single_amount,gift_integral,total_num,daily_bonus_ratio,sum_amount,dividend_cycle,period,single_gift_equity,single_gift_digital_yuan,sham_buy_num,progress_switch,bonus_multiple,settlement_method,withdrawal_limit,digital_red_package,review_period,single_gift_gf_purse,poverty_subsidy_amount,lottery_num,allow_withdraw_money,max_limited,is_limited,week,start_time,end_time,buy_gift_num')
                         ->where('id', $req['project_id'])
                         //->lock(true)
                         ->append(['all_total_buy_num'])
@@ -173,9 +174,12 @@ class OrderController extends AuthController
             unset($project['end_time']);
             $order = Order::create($project);
             $project['order_sn'] = 'OD'.build_order_sn($user['id']);
-            if($project['project_group_id'] == 20){
+
+
+
+/*             if($project['project_group_id'] == 20){
                 $order2 = Order::create($project);
-            }
+            } */
  /*           $project['order_sn'] = 'OD'.build_order_sn($user['id']);
             $order3 = Order::create($project);
             $project['order_sn'] = 'OD'.build_order_sn($user['id']);
@@ -248,9 +252,9 @@ class OrderController extends AuthController
                             }
                         }
                     }
-                if($project['project_group_id'] == 20){
+/*                 if($project['project_group_id'] == 20){
                     User::changeInc($user['id'],0,$field1,3,$order2['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'].'-赠送',0,1,'OD');
-                }
+                } */
                     
                     //User::changeInc($user['id'],0,$field1,3,$order3['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'].'-赠送',0,1,'OD');
                     //User::changeInc($user['id'],0,$field1,3,$order4['id'],$logType1,$txtArr[$logType1].'-'.$project['project_name'].'-赠送',0,1,'OD');
@@ -260,9 +264,29 @@ class OrderController extends AuthController
                 // 累计总收益和赠送数字人民币  到期结算
                 // 订单支付完成
                 Order::orderPayComplete($order['id'], $project, $user['id'],0);
-                if($project['project_group_id'] == 20){
+                
+                if(isset($project['buy_gift_num']) && $project['buy_gift_num'] > 0){
+                    for($i = 0; $i < $project['buy_gift_num']; $i++){
+                        // 创建赠送项目数据副本
+                        $giftProject = $project;
+                        $giftProject['order_sn'] = 'OD'.build_order_sn($user['id']);
+                        $giftProject['is_gift'] = 1;
+                        //$giftProject['price'] = 0; // 赠送订单价格为0
+                        //$giftProject['pay_method'] = 0; // 赠送订单无需支付方式
+                        
+                        $giftOrder = Order::create($giftProject);
+                        
+                        // 记录赠送日志（金额为0）
+                        User::changeInc($user['id'], 0, $field1, 3, $giftOrder['id'], $logType1, $txtArr[$logType1].'-'.$project['project_name'].'-赠送', 0, 1, 'OD');
+                        
+                        // 完成赠送订单
+                        Order::orderPayComplete($giftOrder['id'], $giftProject, $user['id'], 1);
+                    }
+                }              
+                
+/*                 if($project['project_group_id'] == 20){
                     Order::orderPayComplete($order2['id'], $project, $user['id'],1);
-                }
+                } */
                 //Order::orderPayComplete($order3['id'], $project, $user['id'],1);
                 //Order::orderPayComplete($order4['id'], $project, $user['id'],1);
                 if($projectIsLimit){

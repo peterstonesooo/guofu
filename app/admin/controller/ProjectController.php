@@ -86,6 +86,8 @@ class ProjectController extends AuthController
             'week'=>'require',
             'start_time'=>'require',
             'end_time'=>'require',
+            'buy_gift_num|买一送X'=>'integer',
+
 /*             'virtually_progress|虚拟进度' => 'float',
             'withdrawal_limit|赠送日提现额度' => 'integer',
             'digital_red_package|赠送数字红包' => 'integer',
@@ -166,6 +168,7 @@ class ProjectController extends AuthController
             'week'=>'require',
             'start_time'=>'require',
             'end_time'=>'require',
+            'buy_gift_num|买一送X'=>'integer',
 
         ]);
         $req['intro'] = request()->param('intro', '');
