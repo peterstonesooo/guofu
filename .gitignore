@@ -20,5 +20,8 @@
 /public/storage/*
 CLAUDE.md
 docker-php-xdebug.ini
+
+CLAUDE.md
+docker-php-xdebug.ini
 /claude/
 .claude/settings.local.json
