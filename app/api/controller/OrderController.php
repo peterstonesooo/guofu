@@ -65,7 +65,7 @@ class OrderController extends AuthController
         if($project->is_limited &&  $project->max_limited<1){
             return out(null, 10001, '项目已领完');
         }
-        if($req['project_id']==1 || $req['project_id']==2 || $req['project_id']==5 || $req['project_id']==6 ){
+/*         if($req['project_id']==1 || $req['project_id']==2 || $req['project_id']==5 || $req['project_id']==6 ){
             $order = Order::where('user_id', $user['id'])->where('project_id', $req['project_id'])->whereIn('status', [1,2])->find();
             if($order){
                 return out(null, 10001, '周期结束前不能重复购买');
@@ -75,6 +75,13 @@ class OrderController extends AuthController
             $order = Order::where('user_id', $user['id'])->where('project_group_id', 2)->whereIn('status', [1,2])->find();
             if($order){
                 return out(null, 10001, '周期结束前不可参与同系列其他财富方案');
+            }
+        } */
+
+        if($project['project_group_id']==23){
+            $order = Order::where('user_id', $user['id'])->where('project_id', $req['project_id'])->find();
+            if($order){
+                return out(null, 10001, '一个用户只能购买一份');
             }
         }
 /*         if($project['project_group_id']==7){
