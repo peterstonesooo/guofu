@@ -49,6 +49,7 @@ class CheckSubsidy extends Command
         //$this->settle0425();
         //$this->autoRealname();
         //$this->translateInsurance();
+        $this->fixProjectGroup24();
         return true;
     }
 
