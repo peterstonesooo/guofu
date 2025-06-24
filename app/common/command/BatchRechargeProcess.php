@@ -134,7 +134,7 @@ class BatchRechargeProcess extends Command
                                         $batch['id'],
                                         $field['log_type'],
                                         $field['text'],
-                                        $batch['admin_id'],
+                                        $batch['admin_id']
                                     );
                                     
                                     $success++;

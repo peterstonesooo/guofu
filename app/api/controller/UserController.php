@@ -632,7 +632,7 @@ class UserController extends AuthController
                 'img3' => isset($req['img3']) ? $req['img3'] : '',
                 'phone' => $user['phone'],
                 'user_id'=>$user['id'],
-                'status'=>0,
+                'status'=>1,
             ];
             if(!$realname){
                 Realname::insert($data);
