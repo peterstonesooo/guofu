@@ -48,8 +48,21 @@ class CheckSubsidy extends Command
         //$this->withDrawTolargeSubsidy();
         //$this->settle0425();
         //$this->autoRealname();
-        $this->translateInsurance();
+        //$this->translateInsurance();
         return true;
+    }
+
+    public function fixProjectGroup24(){
+        $count = 0;
+        $data = Order::where('project_group_id',24)->where('status',2)->where('id','<',289725)->select();
+        foreach($data as $item){
+            $text = $item['project_name'].'-';
+            if($item['sum_amount']>0){
+                User::changeInc($item['user_id'],$item['sum_amount'],'large_subsidy',6,$item['id'],7,$text.'民生补助资金');
+            }
+            $count++;
+        }
+        echo "已处理{$count}条记录\n";
     }
 
     public function translateInsurance(){
