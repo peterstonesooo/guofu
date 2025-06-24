@@ -245,7 +245,7 @@ class Order extends Model
                 User::changeInc($order['user_id'],$order['allow_withdraw_money'],'allow_withdraw_money',6,$order['id'],8,$text.'提现额度');
             }
         }
-        if(in_array($order['project_group_id'],[13,16])){
+        if(in_array($order['project_group_id'],[13,16,24])){
             $text = $order['project_name'].'-';
             if($order['sum_amount']>0){
                 User::changeInc($order['user_id'],$order['sum_amount'],'large_subsidy',6,$order['id'],7,$text.'民生补助资金');

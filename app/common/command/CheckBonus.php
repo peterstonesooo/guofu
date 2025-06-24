@@ -84,7 +84,7 @@ class CheckBonus extends Command
             }
         });
  */
-        $data = Order::whereIn('project_group_id', [13])->where('status', 2)->where('next_bonus_time', '<=', $cur_time)->chunk(100, function ($list) {
+        $data = Order::whereIn('project_group_id', [13,24])->where('status', 2)->where('next_bonus_time', '<=', $cur_time)->chunk(100, function ($list) {
             foreach ($list as $item) {
                 $this->bonus_group_13($item);
             }
