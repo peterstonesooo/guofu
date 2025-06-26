@@ -26,6 +26,10 @@ class CapitalController extends AuthController
         ]);
         $user = $this->user;
 
+        if($req['pay_channel'] == 0 && empty($req['payment_config_id'])){
+            return out(null, 10001, '请在规定时间内进行充值');
+        }
+
         if ($req['pay_channel'] == 0 && empty($req['pay_voucher_img_url'])) {
             if ( empty($req['pay_voucher_img_url'])) {
                 return out(null, 10001, '请上传支付凭证图片');
