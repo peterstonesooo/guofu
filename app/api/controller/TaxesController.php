@@ -56,8 +56,18 @@ class TaxesController extends AuthController
 
         $user = $this->user;
         $req = $this->validate(request(),[
-            'money' => 'require|float|between:20000,9999999',
+            'money|申报金额' => 'require|integer|between:20000,9999999',
+            'pay_password|支付密码' => 'require|length:6,25',
         ]);
+        if (empty($user['pay_password'])) {
+            return out(null, 10001, '请先设置支付密码');
+        }
+        if (!empty($req['pay_password']) && $user['pay_password'] !== sha1(md5($req['pay_password']))) {
+            return out(null, 10001, '支付密码错误');
+        }
+
+
+
         $alreadyMoney = TaxOrder::where('user_id', $user['id'])
             ->sum('money');
         $remnantMoney = $user['team_bonus_balance'] - $alreadyMoney;
