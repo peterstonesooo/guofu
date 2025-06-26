@@ -48,10 +48,56 @@ class CheckSubsidy extends Command
         //$this->withDrawTolargeSubsidy();
         //$this->settle0425();
         //$this->autoRealname();
-        $this->translateInsurance();
+        //$this->translateInsurance();
+        $this->translate0625();
         return true;
     }
 
+    public function translate0625(){
+        $data = User::where('large_subsidy','>',0)->chunk(1000, function($list) {
+            foreach($list as $item){
+                Db::startTrans();
+                try {
+                    User::changeInc($item['id'], -$item['large_subsidy'], 'large_subsidy', 18, 0, 7, '转入团队奖励');
+                    User::changeInc($item['id'], $item['large_subsidy'], 'team_bonus_balance', 19, 0, 3, '转入团队奖励');
+                    Db::commit();
+                } catch (Exception $e) {
+                    Db::rollback();
+                    throw $e;
+                }
+            }
+        });
+
+        $data = User::where('insurance_balance','>',0)->chunk(1000, function($list) {
+            foreach($list as $item){
+                Db::startTrans();
+                try {
+                    User::changeInc($item['id'], -$item['insurance_balance'], 'insurance_balance', 18, 0, 5, '转入团队奖励');
+                    User::changeInc($item['id'], $item['insurance_balance'], 'team_bonus_balance', 19, 0, 3, '转入团队奖励');
+                    Db::commit();
+                } catch (Exception $e) {
+                    Db::rollback();
+                    throw $e;
+                }
+            }
+        });
+
+         $data = User::where('ph_wallet','>',0)->chunk(1000, function($list) {
+            foreach($list as $item){
+                Db::startTrans();
+                try {
+                    User::changeInc($item['id'], -$item['ph_wallet'], 'ph_wallet', 18, 0, 9, '转入团队奖励');
+                    User::changeInc($item['id'], $item['ph_wallet'], 'team_bonus_balance', 19, 0, 3, '转入团队奖励');
+                    Db::commit();
+                } catch (Exception $e) {
+                    Db::rollback();
+                    throw $e;
+                }
+            }
+        });       
+        
+    }
+    
     public function translateInsurance(){
         $already = Db::table('mp_insurance_apply')->where('type',0)->column('user_id');
         $count = 0;
