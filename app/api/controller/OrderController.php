@@ -45,9 +45,7 @@ class OrderController extends AuthController
 /*         if($req['pay_selected']==3){
             return out(null, 10001, '暂不支持本项操作');
         } */
-        if($req['project_id']==100){
-            return out(null, 10001, '份额已售罄');
-        }
+
         $user = $this->user;
 
         if (empty($user['pay_password'])) {
