@@ -109,6 +109,37 @@ class CheckBonus extends Command
                 $this->bonus_group_21($item);
             }
         });
+
+        //以旧换新
+        $data = Order::whereIn('project_group_id', [25])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function ($list) {
+            //echo count($list)."\n";
+            foreach ($list as $item) {
+                $this->bonus_group_25($item);
+            }
+        });
+    }
+
+
+
+    
+    public function bonus_group_25($order)
+    {
+        Db::startTrans();
+        try {
+            $cur_time = strtotime(date('Y-m-d 00:00:00'));
+            $text = "{$order['project_name']}";
+            if ($order['end_time'] <= $cur_time) {
+                User::changeInc($order['user_id'], $order['sum_amount'], 'team_bonus_balance', 6, $order['id'], 3, $text . '');
+                Order::where('id', $order->id)->update(['status' => 4]);
+                // 结束项目分红
+            }
+            Db::commit();
+        } catch (Exception $e) {
+            Db::rollback();
+
+            Log::error('分红收益异常：' . $e->getMessage());
+            throw $e;
+        }
     }
 
 
