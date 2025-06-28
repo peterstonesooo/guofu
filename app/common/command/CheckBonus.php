@@ -6,6 +6,7 @@ use app\model\AssetOrder;
 use app\model\Capital;
 use app\model\EnsureOrder;
 use app\model\Order;
+use app\model\TaxOrder;
 use app\model\project;
 use app\model\PassiveIncomeRecord;
 use app\model\ShopOrder;
@@ -107,6 +108,12 @@ class CheckBonus extends Command
             //echo count($list)."\n";
             foreach ($list as $item) {
                 $this->bonus_group_21($item);
+            }
+        });
+        $today = date('Y-m-d');
+        $data = TaxOrder::where('status',2)->where('end_time', '<=', $today)->chunk(100, function ($list) {
+            foreach ($list as $item) {
+                TaxOrder::where('id',$item['id'])->update(['status'=>3]);
             }
         });
     }

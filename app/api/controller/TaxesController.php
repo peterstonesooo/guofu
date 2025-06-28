@@ -79,11 +79,13 @@ class TaxesController extends AuthController
             return out(null, 10001,'余额不足，请充值');
 
         }
+        $endTime = date('Y-m-d',strtotime(date('Y-m-d', strtotime('+5 days'))));
         $taxesData = [
             'user_id' => $user['id'],
             'money' => $req['money'],
             'taxes_money' => $taxesMoney,
             'status' => 1,  
+            'end_time' => $endTime,
         ];
         Db::startTrans();
         try{
