@@ -252,6 +252,15 @@ class Order extends Model
             }
         }
 
+        if($order['project_group_id'] == 26){
+            $text = $order['project_name'].'-';
+            if($order['sum_amount']>0){
+                User::changeInc($order['user_id'],$order['sum_amount'],'team_bonus_balance',6,$order['id'],3,$text.'积分兑换');
+            }
+            $user::changeInc($order['user_id'],$order['single_amount'],'team_bonus_balance',6,$order['id'],3,$text.'申报分用返还');
+            
+        }
+
 
         //if ($project['project_group_id'] == 1) {
             $period = $project['period']+1;
