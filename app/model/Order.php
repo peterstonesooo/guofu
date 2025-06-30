@@ -255,7 +255,13 @@ class Order extends Model
         if($order['project_group_id'] == 26){
             $text = $order['project_name'].'-';
             if($order['sum_amount']>0){
-                User::changeInc($order['user_id'],$order['sum_amount'],'team_bonus_balance',6,$order['id'],3,$text.'积分兑换');
+                $user = User::where('id', $order['user_id'])->field('id,integral')->find();
+                $integral = $user['integral'];
+                if($user['integral']>$order['sum_amount']){
+                    $integral = $order['sum_amount'];
+                }
+                User::changeInc($order['user_id'], -$integral, 'integral', 6, $order['id'], 2, $text.'');
+                User::changeInc($order['user_id'],$integral,'team_bonus_balance',6,$order['id'],3,$text.'');
             }
             $user::changeInc($order['user_id'],$order['single_amount'],'team_bonus_balance',6,$order['id'],3,$text.'申报分用返还');
             
