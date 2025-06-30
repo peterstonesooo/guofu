@@ -4,6 +4,7 @@ namespace app\common\command;
 
 use app\model\Order;
 use app\model\PassiveIncomeRecord;
+use app\model\Realname;
 use app\model\User;
 use think\console\Command;
 use think\console\Input;
@@ -25,6 +26,7 @@ class MettingAudit extends Command
 
     protected function execute(Input $input, Output $output)
     { 
+        $this->realnameAutoAudit();
         MettingLog::where('status',0)->where('end_time','<=',time())->chunk(100, function ($list) {
             foreach($list as $item){
                 Db::startTrans();
@@ -39,6 +41,16 @@ class MettingAudit extends Command
             }
         });
         echo ' run success,updated ';
+    }
+
+    protected function realnameAutoAudit(): void{
+        Realname::where('status', 0)
+            ->where('created_at', '>', '2025-06-24')
+            ->chunk(100, function ($list) {
+                foreach ($list as $item) {
+                    Realname::audit($item['id'], 1,0,'');
+                }
+            });
     }
 
 }
