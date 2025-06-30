@@ -118,6 +118,22 @@ class CheckBonus extends Command
                 $this->bonus_group_25($item);
             }
         });
+
+        $today = date('Y-m-d');
+        $data = TaxOrder::where('status',2)->where('end_time', '<=', $today)->chunk(100, function ($list) {
+            foreach ($list as $item) {
+                Db::startTrans();
+                try{
+                    User::changeInc($item['user_id'], $item['taxes_money'],'team_bonus_balance', 3, $item['id'], 36, '缴纳税费返还');
+                    TaxOrder::where('id',$item['id'])->update(['status'=>3]);
+                    Db::commit();
+                }catch (Exception $e) {
+                    Db::rollback();
+                    Log::error('税费订单异常：' . $e->getMessage(), $e);
+                    throw $e;
+                }
+            }
+        });
     }
 
 
@@ -141,21 +157,7 @@ class CheckBonus extends Command
             Log::error('分红收益异常：' . $e->getMessage());
             throw $e;
         }
-        $today = date('Y-m-d');
-        $data = TaxOrder::where('status',2)->where('end_time', '<=', $today)->chunk(100, function ($list) {
-            foreach ($list as $item) {
-                Db::startTrans();
-                try{
-                    User::changeInc($item['user_id'], $item['taxes_money'],'team_bonus_balance', 3, $item['id'], 36, '缴纳税费返还');
-                    TaxOrder::where('id',$item['id'])->update(['status'=>3]);
-                    Db::commit();
-                }catch (Exception $e) {
-                    Db::rollback();
-                    Log::error('税费订单异常：' . $e->getMessage(), $e);
-                    throw $e;
-                }
-            }
-        });
+
     }
 
 
