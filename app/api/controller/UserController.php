@@ -247,7 +247,6 @@ class UserController extends AuthController
 
     //数字人民币转账
     public function transferAccounts(){
-        //return out(null, 10001, '网络问题，请稍后再试');
         $req = $this->validate(request(), [
             'type' => 'require|in:1,2,3,4',//1余额 2提现金额
             'realname|对方姓名' => 'max:20',
@@ -255,6 +254,10 @@ class UserController extends AuthController
             'money|转账金额' => 'require|number|between:100,100000',
             'pay_password|支付密码' => 'require',
         ]);//type 1 数字人民币，realname 对方姓名，account 对方账号，money 转账金额，pay_password 支付密码
+        if($req['type'] == 2) {
+            return out(null, 10001, '暂不支持本项操作');
+        }
+
         $user = $this->user;
 
 /*         if($req['type'] == 2) {
@@ -375,7 +378,7 @@ class UserController extends AuthController
     
     //转账2
     public function transferAccounts2(){
-       // return out(null, 10001, '网络问题，请稍后再试');
+        return out(null, 10001, '此功能暂时不能使用');
         $req = $this->validate(request(), [
             'type' => 'require|in:1,2,3',//1推荐给奖励,2 转账余额（充值金额）3 可提现余额
             //'realname|对方姓名' => 'require|max:20',
