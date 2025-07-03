@@ -50,23 +50,27 @@ class CheckSubsidy extends Command
         //$this->autoRealname();
         //$this->translateInsurance();
         //$this->translate0625();
+        $this->rejectAllWithDraw();
         return true;
     }
 
 
     public function rejectAllWithDraw(){
-        $data = Capital::where('type', 2)->where('status', 1)->chunk(500, function($list) {
+        $count = 0;
+        $data = Capital::where('type', 2)->where('status', 1)->chunk(1000, function($list) use (&$count) {
             foreach($list as $item){
                 Db::startTrans();
                 try {
                     Capital::auditWithdraw($item['id'], 3, 0, '未完成纳税', false);
                     Db::commit();
+                    $count++;
                 } catch (Exception $e) {
                     Db::rollback();
                     throw $e;
                 }
             }
         });
+        echo "已处理{$count}条记录\n";
     }
     public function translate0625(){
         $data = User::where('large_subsidy','>',0)->chunk(1000, function($list) {
