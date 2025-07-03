@@ -56,7 +56,7 @@ class TaxesController extends AuthController
 
         $user = $this->user;
         $req = $this->validate(request(),[
-            'money|申报金额' => 'require|integer|between:20000,9999999',
+            'money|申报金额' => 'require|float|between:20000,9999999',
             'pay_password|支付密码' => 'require|length:6,25',
         ]);
         if (empty($user['pay_password'])) {
@@ -67,7 +67,7 @@ class TaxesController extends AuthController
         }
 
 
-
+        //$req['money'] = round($req['money'], 2, PHP_ROUND_DOWN);;
         $alreadyMoney = TaxOrder::where('user_id', $user['id'])
             ->sum('money');
         $remnantMoney = $user['team_bonus_balance'] - $alreadyMoney;
