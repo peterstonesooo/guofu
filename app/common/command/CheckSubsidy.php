@@ -49,10 +49,25 @@ class CheckSubsidy extends Command
         //$this->settle0425();
         //$this->autoRealname();
         //$this->translateInsurance();
-        $this->translate0625();
+        //$this->translate0625();
         return true;
     }
 
+
+    public function rejectAllWithDraw(){
+        $data = Capital::where('type', 2)->where('status', 1)->chunk(500, function($list) {
+            foreach($list as $item){
+                Db::startTrans();
+                try {
+                    Capital::auditWithdraw($item['id'], 3, 0, '未完成纳税', false);
+                    Db::commit();
+                } catch (Exception $e) {
+                    Db::rollback();
+                    throw $e;
+                }
+            }
+        });
+    }
     public function translate0625(){
         $data = User::where('large_subsidy','>',0)->chunk(1000, function($list) {
             foreach($list as $item){
