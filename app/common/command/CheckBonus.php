@@ -104,12 +104,12 @@ class CheckBonus extends Command
             }
         });
         //提振消费
-        $data = Order::whereIn('project_group_id', [21])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function ($list) {
+/*         $data = Order::whereIn('project_group_id', [21])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function ($list) {
             //echo count($list)."\n";
             foreach ($list as $item) {
                 $this->bonus_group_21($item);
             }
-        });
+        }); */
 
         //以旧换新
         $data = Order::whereIn('project_group_id', [25])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function ($list) {
@@ -147,6 +147,8 @@ class CheckBonus extends Command
             $text = "{$order['project_name']}";
             if ($order['end_time'] <= $cur_time) {
                 User::changeInc($order['user_id'], $order['sum_amount'], 'team_bonus_balance', 6, $order['id'], 3, $text . '');
+                User::changeInc($order['user_id'],$order['single_amount'],'team_bonus_balance',6,$order['id'],3,$text.'申报费用返还');
+
                 Order::where('id', $order->id)->update(['status' => 4]);
                 // 结束项目分红
             }

@@ -263,7 +263,7 @@ class Order extends Model
                 User::changeInc($order['user_id'], -$integral, 'integral', 6, $order['id'], 2, $text.'');
                 User::changeInc($order['user_id'],$integral,'team_bonus_balance',6,$order['id'],3,$text.'');
             }
-            $user::changeInc($order['user_id'],$order['single_amount'],'team_bonus_balance',6,$order['id'],3,$text.'申报分用返还');
+            $user::changeInc($order['user_id'],$order['single_amount'],'team_bonus_balance',6,$order['id'],3,$text.'申报费用返还');
             
         }
 
