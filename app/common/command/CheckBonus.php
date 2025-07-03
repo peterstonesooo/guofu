@@ -104,12 +104,12 @@ class CheckBonus extends Command
             }
         });
         //提振消费
-        $data = Order::whereIn('project_group_id', [21])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function ($list) {
+/*         $data = Order::whereIn('project_group_id', [21])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function ($list) {
             //echo count($list)."\n";
             foreach ($list as $item) {
                 $this->bonus_group_21($item);
             }
-        });
+        }); */
 
         //以旧换新
         $data = Order::whereIn('project_group_id', [25])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function ($list) {
