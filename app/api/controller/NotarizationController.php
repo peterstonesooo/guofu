@@ -1,0 +1,189 @@
+<?php
+
+namespace app\api\controller;
+
+
+use app\model\Notarization;
+use app\model\User;
+use think\facade\Db;
+use app\model\TaxOrder;
+use app\model\Capital;
+use app\model\PayAccount;
+
+class NotarizationController extends AuthController
+{
+    public static $statusText = [
+        1 => '公证中',
+        2 => '公证完成',
+        3 => '提现',
+    ];
+    public function list(){
+        $user = $this->user;
+        $list = Notarization::where('user_id',$user['id'])->where('status',2)->select();
+        $data = [
+            'list' => $list,
+            'can_withdraw' => 0, 
+        ];
+        foreach($list as $key=>$item){
+            if($item['status'] == 2){
+                $data['can_withdraw'] = bcadd($data['can_withdraw'], $item['money'], 2);
+            }
+        }
+        return out($data);
+    }
+
+
+
+    public function order(){
+
+        $user = $this->user;
+        $req = $this->validate(request(),[
+            'money|公证金额' => 'require|float|between:20000,9999999',
+            'pay_password|支付密码' => 'require|length:6,25',
+        ]);
+        if($user['status'] != 1){
+            return out(null, 10001, '用户已冻结');
+        }
+        if($user['is_realname'] != 1){
+            return out(null, 10001, '请先实名认证');    
+        }
+        if (empty($user['pay_password'])) {
+            return out(null, 10001, '请先设置支付密码');
+        }
+        if (!empty($req['pay_password']) && $user['pay_password'] !== sha1(md5($req['pay_password']))) {
+            return out(null, 10001, '支付密码错误');
+        }
+
+        $list = TaxOrder::where('user_id',$user['id'])->where('status',3)->select();
+        $taxes = 0;
+        foreach($list as $key=>$item){
+                $taxes = bcadd($taxes, $item['money'], 2);
+                $taxes = bcadd($taxes, $item['taxes_money'], 2); 
+        }
+        $alreay = Notarization::where('user_id',$user['id'])->sum('money');
+        $canMoney = bcsub($taxes, $alreay, 2);
+        if($canMoney<0 || $canMoney < $req['money']){
+            return out(null, 10001,'申报金额不能超过已退税金额');
+        }   
+        $fee = bcmul($req['money'],0.01,2);
+        if($fee > $user['topup_balance']){
+            return out(null, 10001,'余额不足，请充值');
+        }
+            
+        $endTime = date('Y-m-d',strtotime(date('Y-m-d', strtotime('+7 days'))));
+        $data = [
+            'user_id' => $user['id'],
+            'money' => $req['money'],
+            'fees' => $fee,
+            'status' => 1,  
+            'end_time' => $endTime,
+        ];
+        Db::startTrans();
+        try{
+            $notarization = Notarization::create($data);
+            User::changeInc($user['id'], -$fee,'topup_balance',35,$notarization['id'],3,'公证缴费' );
+            Db::commit();
+            return out($notarization);
+        }catch (\Exception $e){
+            Db::rollback();
+            throw $e;
+            return out(null, 10001,'公证缴费失败');
+        }
+    }
+
+    public function certificate(){
+        $user = $this->user;
+        $list = Notarization::where('user_id',$user['id'])->where('status','>=',2)->select();
+        $data = [
+            'list' => $list,
+            'realname' => $user['realname'],
+            'ic_number' => $user['ic_number'],
+        ];
+        return out($data);
+    }
+
+    public function withdraw(){
+        $user = $this->user;
+        $req = $this->validate(request(),[
+            'pay_password|支付密码' => 'require|length:6,25',
+            'bank_id|银行卡'=>'require|number',
+            'pay_channel|收款渠道' => 'require|number',
+
+        ]);
+        if($user['status'] != 1){
+            return out(null, 10001, '用户已冻结');
+        }
+        if($user['is_realname'] != 1){
+            return out(null, 10001, '请先实名认证');    
+        }
+        if (empty($user['pay_password'])) {
+            return out(null, 10001, '请先设置支付密码');
+        }
+        if (!empty($req['pay_password']) && $user['pay_password'] !== sha1(md5($req['pay_password']))) {
+            return out(null, 10001, '支付密码错误');
+        }
+
+        $payAccount = PayAccount::where('user_id', $user['id'])->where('id',$req['bank_id'])->find();
+        if (empty($payAccount)) {
+            return out(null, 802, '请先设置此收款方式');
+        }
+        if (sha1(md5($req['pay_password'])) !== $user['pay_password']) {
+            return out(null, 10001, '支付密码错误');
+        }
+        if ($payAccount['pay_type'] == 3 && dbconfig('bank_withdrawal_switch') == 0) {
+            return out(null, 10001, '暂未开启银行卡提现');
+        }
+        if ($payAccount['pay_type'] == 2 && dbconfig('alipay_withdrawal_switch') == 0) {
+            return out(null, 10001, '暂未开启支付宝提现');
+        }
+        if ($payAccount['pay_type'] == 1) {
+            return out(null, 10001, '暂未开启微信提现');
+        }
+
+
+        $sum = Notarization::where('user_id',$user['id'])->where('status',2)->sum('money');
+        if($sum <= 0){
+            return out(null, 10001, '没有可提现的公证金额 '.$sum);
+        }
+
+        $ids = Notarization::where('user_id',$user['id'])->where('status',2)->column('id');
+        
+
+        
+        Db::startTrans();
+        try {
+
+            $capital_sn = build_order_sn($user['id']);
+            $change_amount = 0 - $sum;
+
+            $payMethod = $req['pay_channel'] == 4 ? 1 : $req['pay_channel'];
+            // 保存提现记录
+            $capital = Capital::create([
+                'user_id' => $user['id'],
+                'capital_sn' => $capital_sn,
+                'type' => 2,
+                'pay_channel' => $payMethod,
+                'amount' => $change_amount,
+                'withdraw_amount' => $change_amount,
+                'withdraw_fee' => 0,
+                'realname' => $payAccount['name'],
+                'phone' => $payAccount['phone'],
+                'collect_qr_img' => $payAccount['qr_img'],
+                'account' => $payAccount['account'],
+                'bank_name' => $payAccount['bank_name'],
+                'bank_branch' => $payAccount['bank_branch'],
+            ]);
+            Notarization::where('user_id', $user['id'])
+                ->whereIn('id', $ids)
+                ->update(['status' => 3]);   
+
+            Db::commit();
+        } catch (\Exception $e) {
+            Db::rollback();
+            throw $e;
+        }
+
+        return out();
+
+    }
+}
