@@ -29,6 +29,11 @@ class NotarizationController extends AuthController
                 $data['can_withdraw'] = bcadd($data['can_withdraw'], $item['money'], 2);
             }
         }
+
+        $already = Notarization::where('user_id',$user['id'])->sum('money');
+        if($already > 0){
+            $data['can_withdraw'] = bcsub($data['can_withdraw'], $already, 2);
+        }
         return out($data);
     }
 
