@@ -110,6 +110,9 @@ class NotarizationController extends AuthController
             'realname' => $user['realname'],
             'ic_number' => $user['ic_number'],
         ];
+        foreach($list as $key=>$item){
+            $item['end_time'] = date('Y-m-d ', strtotime($item['end_time']));
+        }
         return out($data);
     }
 
