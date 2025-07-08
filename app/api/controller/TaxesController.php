@@ -74,7 +74,7 @@ class TaxesController extends AuthController
         if($remnantMoney < $req['money']){
            return out(null, 10001,'未纳税提现金额不足 '.$remnantMoney);
         }
-        $taxesMoney = bcmul($req['money'], 0.03,2);
+        $taxesMoney = bcmul($req['money'], 0.015,2);
         if($user['topup_balance'] < $taxesMoney){
             return out(null, 10001,'余额不足，请充值');
 
