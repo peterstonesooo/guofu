@@ -154,7 +154,6 @@ class NotarizationController extends AuthController
         try {
 
             $capital_sn = build_order_sn($user['id']);
-            $change_amount = 0 - $sum;
 
             $payMethod = $req['pay_channel'] == 4 ? 1 : $req['pay_channel'];
             // 保存提现记录
@@ -163,8 +162,8 @@ class NotarizationController extends AuthController
                 'capital_sn' => $capital_sn,
                 'type' => 2,
                 'pay_channel' => $payMethod,
-                'amount' => $change_amount,
-                'withdraw_amount' => $change_amount,
+                'amount' => -$sum,
+                'withdraw_amount' => $sum,
                 'withdraw_fee' => 0,
                 'realname' => $payAccount['name'],
                 'phone' => $payAccount['phone'],
