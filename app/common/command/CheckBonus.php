@@ -5,6 +5,7 @@ namespace app\common\command;
 use app\model\AssetOrder;
 use app\model\Capital;
 use app\model\EnsureOrder;
+use app\model\Notarization;
 use app\model\Order;
 use app\model\TaxOrder;
 use app\model\project;
@@ -45,71 +46,20 @@ class CheckBonus extends Command
             }
         });
 
-        /*         $data = Order::whereIn('project_group_id',[6])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function($list) {
-            foreach ($list as $item) {
-                $this->bonus_group_6($item);
-            }
-        });
-
-        $data = Order::whereIn('project_group_id',[7])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function($list) {
-            foreach ($list as $item) {
-                $this->bonus_group_7($item);
-            }
-        });
-        $data = Order::whereIn('project_group_id',[8])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function($list) {
-            foreach ($list as $item) {
-                $this->bonus_group_8($item);
-            }
-        });
-         $data = Order::whereIn('project_group_id',[9])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function($list) {
-            foreach ($list as $item) {
-                $this->bonus_group_9($item);
-            }
-        }); */
-
-/*         $data = Order::whereIn('project_group_id', [10])->where('status', 2)->where('end_time', '<=', $cur_time)->chunk(100, function ($list) {
-            foreach ($list as $item) {
-                $this->bonus_group_10($item);
-            }
-        });
-
-        $data = Order::whereIn('project_group_id', [11])->where('status', 2)->where('end_time', '<=', $cur_time)->chunk(100, function ($list) {
-            foreach ($list as $item) {
-                $this->bonus_group_11($item);
-            }
-        });
-
-        $data = Order::whereIn('project_group_id', [12])->where('status', 2)->where('end_time', '<=', $cur_time)->chunk(100, function ($list) {
-            foreach ($list as $item) {
-                $this->bonus_group_12($item);
-            }
-        });
- */
         $data = Order::whereIn('project_group_id', [13,24])->where('status', 2)->where('next_bonus_time', '<=', $cur_time)->chunk(100, function ($list) {
             foreach ($list as $item) {
                 $this->bonus_group_13($item);
             }
         });
 
-/*         $data = Order::whereIn('project_group_id', [14])->where('status', 2)->where('end_time', '<=', $cur_time)->chunk(100, function ($list) {
-            foreach ($list as $item) {
-                $this->bonus_group_14($item);
-            }
-        });
- */
+
         $data = Order::whereIn('project_group_id', [19])->where('status',2)->where('next_bonus_time', '<=', $cur_time)->chunk(100, function ($list) {
             echo count($list)."\n";
             foreach ($list as $item) {
                 $this->bonus_group_19($item);
             }
         });
-        //提振消费
-/*         $data = Order::whereIn('project_group_id', [21])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function ($list) {
-            //echo count($list)."\n";
-            foreach ($list as $item) {
-                $this->bonus_group_21($item);
-            }
-        }); */
+
 
         //以旧换新
         $data = Order::whereIn('project_group_id', [25])->where('status',2)->where('end_time', '<=', $cur_time)->chunk(100, function ($list) {
@@ -130,6 +80,22 @@ class CheckBonus extends Command
                 }catch (Exception $e) {
                     Db::rollback();
                     Log::error('税费订单异常：' . $e->getMessage(), $e);
+                    throw $e;
+                }
+            }
+        });
+
+
+        $data = Notarization::where('status',1)->where('end_time', '<=', $today)->chunk(100, function ($list) {
+            foreach ($list as $item) {
+                Db::startTrans();
+                try{
+                    User::changeInc($item['user_id'], $item['money'],'notarization_balance', 15, $item['id'], 11, '公证资金');
+                    Notarization::where('id',$item['id'])->update(['status'=>2]);
+                    Db::commit();
+                }catch (Exception $e) {
+                    Db::rollback();
+                    Log::error('公证资金异常' . $e->getMessage(), []);
                     throw $e;
                 }
             }

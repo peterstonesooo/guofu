@@ -156,7 +156,7 @@ class NotarizationController extends AuthController
         }
 
 
-        $sum = Notarization::where('user_id',$user['id'])->where('status',2)->sum('money');
+        $sum = $user['notarization_balance'];
         if($sum <= 0){
             return out(null, 10001, '没有可提现的公证金额 '.$sum);
         }
@@ -168,7 +168,7 @@ class NotarizationController extends AuthController
             return out(null, 10001, '提现金额不能大于公证金额 '.$sum);   
         }
 
-        $ids = Notarization::where('user_id',$user['id'])->where('status',2)->column('id');
+        //$ids = Notarization::where('user_id',$user['id'])->where('status',2)->column('id');
         
         $num = Capital::where('user_id', $user['id'])->where('type', 2)->whereIn('log_type',[0,1])->where('created_at', '>=', date('Y-m-d 00:00:00'))->lock(true)->count();
         if ($num >= dbconfig('per_day_withdraw_max_num')) {
@@ -199,10 +199,9 @@ class NotarizationController extends AuthController
                 'bank_name' => $payAccount['bank_name'],
                 'bank_branch' => $payAccount['bank_branch'],
             ]);
-            Notarization::where('user_id', $user['id'])
-                ->whereIn('id', $ids)
-                ->update(['status' => 3]);   
+
             User::changeInc($user['id'],-$req['amount'],$field,2,$capital['id'],$log_type,'',0,1,'WD');
+            User::changeInc($user['id'],-$req['amount'],'notarization_balance',2,$capital['id'],11,'',0,1,'WD');
 
             Db::commit();
         } catch (\Exception $e) {
