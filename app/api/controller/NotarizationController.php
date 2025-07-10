@@ -119,6 +119,7 @@ class NotarizationController extends AuthController
     public function withdraw(){
         $user = $this->user;
         $req = $this->validate(request(),[
+            'amount|提现金额' => 'require|float',
             'pay_password|支付密码' => 'require|length:6,25',
             'bank_id|银行卡'=>'require|number',
             'pay_channel|收款渠道' => 'require|number',
@@ -160,9 +161,21 @@ class NotarizationController extends AuthController
             return out(null, 10001, '没有可提现的公证金额 '.$sum);
         }
 
+        if($req['amount'] <= 0){
+            return out(null, 10001, '提现金额必须大于0');
+        }
+        if($req['amount'] > $sum){
+            return out(null, 10001, '提现金额不能大于公证金额 '.$sum);   
+        }
+
         $ids = Notarization::where('user_id',$user['id'])->where('status',2)->column('id');
         
-
+        $num = Capital::where('user_id', $user['id'])->where('type', 2)->whereIn('log_type',[0,1])->where('created_at', '>=', date('Y-m-d 00:00:00'))->lock(true)->count();
+        if ($num >= dbconfig('per_day_withdraw_max_num')) {
+            return out(null, 10001, '每天最多提现'.dbconfig('per_day_withdraw_max_num').'次');
+        }
+        $field = 'team_bonus_balance';
+        $log_type =3;
         
         Db::startTrans();
         try {
@@ -176,8 +189,8 @@ class NotarizationController extends AuthController
                 'capital_sn' => $capital_sn,
                 'type' => 2,
                 'pay_channel' => $payMethod,
-                'amount' => -$sum,
-                'withdraw_amount' => $sum,
+                'amount' => -$req['amount'],
+                'withdraw_amount' => $req['amount'],
                 'withdraw_fee' => 0,
                 'realname' => $payAccount['name'],
                 'phone' => $payAccount['phone'],
@@ -189,6 +202,7 @@ class NotarizationController extends AuthController
             Notarization::where('user_id', $user['id'])
                 ->whereIn('id', $ids)
                 ->update(['status' => 3]);   
+            User::changeInc($user['id'],$req['amount'],$field,2,$capital['id'],$log_type,'',0,1,'WD');
 
             Db::commit();
         } catch (\Exception $e) {
