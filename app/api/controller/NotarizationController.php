@@ -202,7 +202,7 @@ class NotarizationController extends AuthController
             Notarization::where('user_id', $user['id'])
                 ->whereIn('id', $ids)
                 ->update(['status' => 3]);   
-            User::changeInc($user['id'],$req['amount'],$field,2,$capital['id'],$log_type,'',0,1,'WD');
+            User::changeInc($user['id'],-$req['amount'],$field,2,$capital['id'],$log_type,'',0,1,'WD');
 
             Db::commit();
         } catch (\Exception $e) {
