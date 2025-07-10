@@ -22,14 +22,15 @@ class NotarizationController extends AuthController
         $list = Notarization::where('user_id',$user['id'])->select();
         $data = [
             'list' => $list,
-            'can_withdraw' => 0, 
+            'can_withdraw' => $user['notarization_balance'], 
             'taxes' => 0,
         ];
-        foreach($list as $key=>$item){
+/*         foreach($list as $key=>$item){
             if($item['status'] == 2){
                 $data['can_withdraw'] = bcadd($data['can_withdraw'], $item['money'], 2);
             }
         }
+ */        
         $list2 = TaxOrder::where('user_id',$user['id'])->where('status',3)->select();
         $taxes = 0;
         foreach($list2 as $key=>$item){
