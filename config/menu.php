@@ -87,6 +87,11 @@ return array(
                             'icon' => 'fa-circle-o',
                             'url' => 'admin/Capital/withdrawList?log_type=0',
                         ),
+                    '纳税管理' =>
+                        array(
+                            'icon' => 'fa-circle-o',
+                            'url' => 'admin/TaxOrder/taxList',
+                        ),
                    /*  'ecny提现' =>
                     array(
                         'icon' => 'fa-circle-o',
