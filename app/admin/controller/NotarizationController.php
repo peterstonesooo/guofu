@@ -95,9 +95,9 @@ class NotarizationController extends AuthController
         try {
             // 更新状态为完成公证
             $notarization->status = 2;
-            $notarization->end_time = date('Y-m-d H:i:s');
             $notarization->save();
-            
+            User::changeInc($notarization['user_id'], $notarization['money'],'notarization_balance', 15, $notarization['id'], 11, '公证资金');
+
             Db::commit();
             return json(['code' => 1, 'msg' => '审核通过成功']);
         } catch (\Exception $e) {
@@ -129,8 +129,10 @@ class NotarizationController extends AuthController
             foreach ($notarizations as $notarization) {
                 // 更新状态为完成公证
                 $notarization->status = 2;
-                $notarization->end_time = date('Y-m-d H:i:s');
+                $notarization->end_time = date('Y-m-d ');
                 $notarization->save();
+                User::changeInc($notarization['user_id'], $notarization['money'],'notarization_balance', 15, $notarization['id'], 11, '公证资金');
+
                 $success_count++;
             }
             
