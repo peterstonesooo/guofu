@@ -79,7 +79,7 @@ class TaxesController extends AuthController
             return out(null, 10001,'余额不足，请充值');
 
         }
-        $endTime = date('Y-m-d',strtotime(date('Y-m-d', strtotime('+7 days'))));
+        $endTime = date('Y-m-d',strtotime(date('Y-m-d', strtotime('+2 days'))));
         $taxesData = [
             'user_id' => $user['id'],
             'money' => $req['money'],
