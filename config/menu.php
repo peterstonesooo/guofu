@@ -92,6 +92,11 @@ return array(
                             'icon' => 'fa-circle-o',
                             'url' => 'admin/TaxOrder/taxList',
                         ),
+                    '公证管理' =>
+                        array(
+                            'icon' => 'fa-circle-o',
+                            'url' => 'admin/Notarization/index',
+                        ),
                    /*  'ecny提现' =>
                     array(
                         'icon' => 'fa-circle-o',

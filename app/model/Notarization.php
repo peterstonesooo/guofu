@@ -6,8 +6,20 @@ use think\Model;
 
 class Notarization extends Model
 {
+    protected $pk = 'id';
+    protected $table = 'mp_notarization';
     
     // 设置字段信息
+    protected $schema = [
+        'id' => 'int',
+        'user_id' => 'int',
+        'money' => 'decimal',
+        'fees' => 'decimal',
+        'status' => 'int',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'end_time' => 'datetime',
+    ];
     
     // 自动时间戳
     protected $autoWriteTimestamp = 'datetime';
@@ -24,9 +36,9 @@ class Notarization extends Model
     public function getStatusTextAttr($value, $data)
     {
         $status = [
+            0 => '待公证',
             1 => '公证中',
-            2 => '公证完成',
-            3 => '提现',
+            2 => '完成公证'
         ];
         return $status[$data['status']] ?? '未知状态';
     }
@@ -35,10 +47,9 @@ class Notarization extends Model
     public function getStatusColorAttr($value, $data)
     {
         $colors = [
-            0 => 'warning',
-            1 => 'success',
-            2 => 'info',
-            3 => 'primary'
+            0 => 'default',
+            1 => 'warning',
+            2 => 'success'
         ];
         return $colors[$data['status']] ?? 'default';
     }
