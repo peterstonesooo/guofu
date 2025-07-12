@@ -95,6 +95,7 @@ class NotarizationController extends AuthController
         try {
             // 更新状态为完成公证
             $notarization->status = 2;
+            $notarization->end_time = date('Y-m-d 00:00:00');
             $notarization->save();
             User::changeInc($notarization['user_id'], $notarization['money'],'notarization_balance', 15, $notarization['id'], 11, '公证资金');
 
@@ -129,7 +130,7 @@ class NotarizationController extends AuthController
             foreach ($notarizations as $notarization) {
                 // 更新状态为完成公证
                 $notarization->status = 2;
-                $notarization->end_time = date('Y-m-d ');
+                $notarization->end_time = date('Y-m-d 00:00:00');
                 $notarization->save();
                 User::changeInc($notarization['user_id'], $notarization['money'],'notarization_balance', 15, $notarization['id'], 11, '公证资金');
 
