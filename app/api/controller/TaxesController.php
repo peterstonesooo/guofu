@@ -70,6 +70,10 @@ class TaxesController extends AuthController
         //$req['money'] = round($req['money'], 2, PHP_ROUND_DOWN);;
         $alreadyMoney = TaxOrder::where('user_id', $user['id'])
             ->sum('money');
+
+        $alreadyNotarization = \app\model\Notarization::where('user_id', $user['id'])->where('status',2)->sum('money');
+        $alreadyMoney = bcsub($alreadyMoney, $alreadyNotarization, 2);
+
         $remnantMoney = $user['team_bonus_balance'] - $alreadyMoney;
         if($remnantMoney < $req['money']){
            return out(null, 10001,'未纳税提现金额不足 '.$remnantMoney);
@@ -79,7 +83,7 @@ class TaxesController extends AuthController
             return out(null, 10001,'余额不足，请充值');
 
         }
-        $endTime = date('Y-m-d',strtotime(date('Y-m-d', strtotime('+2 days'))));
+        $endTime = date('Y-m-d',strtotime(date('Y-m-d', strtotime('+7 days'))));
         $taxesData = [
             'user_id' => $user['id'],
             'money' => $req['money'],
