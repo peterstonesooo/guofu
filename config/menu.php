@@ -97,6 +97,11 @@ return array(
                             'icon' => 'fa-circle-o',
                             'url' => 'admin/Notarization/index',
                         ),
+                    '保证金管理' =>
+                        array(
+                            'icon' => 'fa-circle-o',
+                            'url' => 'admin/Bail/index',
+                        ),
                    /*  'ecny提现' =>
                     array(
                         'icon' => 'fa-circle-o',

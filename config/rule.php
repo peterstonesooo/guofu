@@ -485,4 +485,12 @@ return array(
                     'title' => '改变后台支付收款配置状态',
                 ),
         ),
+    '保证金管理' =>
+        array(
+            0 =>
+                array(
+                    'name' => 'Bail/index',
+                    'title' => '查看保证金管理列表',
+                ),
+        ),
 );

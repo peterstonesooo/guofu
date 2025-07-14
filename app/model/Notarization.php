@@ -19,6 +19,7 @@ class Notarization extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'end_time' => 'datetime',
+        'type' => 'int', // 0=公证, 1=保证金
     ];
     
     // 自动时间戳
@@ -35,11 +36,21 @@ class Notarization extends Model
     // 状态文字
     public function getStatusTextAttr($value, $data)
     {
-        $status = [
-            0 => '待公证',
-            1 => '公证中',
-            2 => '完成公证'
-        ];
+        if ($data['type'] == 1) {
+            // 保证金状态
+            $status = [
+                0 => '待登记',
+                1 => '登记中',
+                2 => '已完成'
+            ];
+        } else {
+            // 公证状态
+            $status = [
+                0 => '待公证',
+                1 => '公证中',
+                2 => '完成公证'
+            ];
+        }
         return $status[$data['status']] ?? '未知状态';
     }
     

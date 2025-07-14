@@ -15,6 +15,7 @@ class NotarizationController extends AuthController
         $builder = Notarization::alias('n')
             ->leftJoin('mp_user u', 'n.user_id = u.id')
             ->field('n.*, u.phone, u.realname')
+            ->where('n.type', 0) // 0 公证
             ->order('n.id', 'desc');
         
         // 按用户手机号或用户ID搜索

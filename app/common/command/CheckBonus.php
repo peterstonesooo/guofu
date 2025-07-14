@@ -40,7 +40,7 @@ class CheckBonus extends Command
             }
         }); */
         //养老二期
-        $data = Order::whereIn('project_group_id', [5])->where('status', 2)->where('next_bonus_time', '<=', $cur_time)->chunk(100, function ($list) {
+/*         $data = Order::whereIn('project_group_id', [5])->where('status', 2)->where('next_bonus_time', '<=', $cur_time)->chunk(100, function ($list) {
             foreach ($list as $item) {
                 $this->bonus_group_2($item);
             }
@@ -68,7 +68,7 @@ class CheckBonus extends Command
                 $this->bonus_group_25($item);
             }
         });
-
+ */
         $today = date('Y-m-d');
         $data = TaxOrder::where('status',2)->where('end_time', '<=', $today)->chunk(100, function ($list) {
             foreach ($list as $item) {
@@ -86,7 +86,7 @@ class CheckBonus extends Command
         });
 
 
-        $data = Notarization::where('status',1)->where('end_time', '<=', $today)->chunk(100, function ($list) {
+        $data = Notarization::where('status',1)->where('type',0)->where('end_time', '<=', $today)->chunk(100, function ($list) {
             foreach ($list as $item) {
                 Db::startTrans();
                 try{
@@ -96,6 +96,20 @@ class CheckBonus extends Command
                 }catch (Exception $e) {
                     Db::rollback();
                     Log::error('公证资金异常' . $e->getMessage(), []);
+                    throw $e;
+                }
+            }
+        });
+        $data = Notarization::where('status',1)->where('type',1)->where('end_time', '<=', $today)->chunk(100, function ($list) {
+            foreach ($list as $item) {
+                Db::startTrans();
+                try{
+                    User::changeInc($item['user_id'], $item['money'],'bail_balance', 15, $item['id'], 12, '完成保证金');
+                    Notarization::where('id',$item['id'])->update(['status'=>2]);
+                    Db::commit();
+                }catch (Exception $e) {
+                    Db::rollback();
+                    Log::error('保证金异常' . $e->getMessage(), []);
                     throw $e;
                 }
             }
