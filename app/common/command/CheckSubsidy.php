@@ -5,6 +5,7 @@ namespace app\common\command;
 use app\model\AuthOrder;
 use app\model\Order;
 use app\model\PassiveIncomeRecord;
+use app\model\TaxOrder;
 use app\model\User;
 use app\model\UserRelation;
 use app\model\UserSignin;
@@ -50,8 +51,24 @@ class CheckSubsidy extends Command
         //$this->autoRealname();
         //$this->translateInsurance();
         //$this->translate0625();
-        $this->rejectAllWithDraw();
+        //$this->rejectAllWithDraw();
+        $this->fix0715();
         return true;
+    }
+
+    public function fix0715(){
+        $data = TaxOrder::where('status',3)->where('id','>',20609)->where('id','<=',23765)->where('status',3)->chunk(1000, function($list) {
+            foreach($list as $item){
+                Db::startTrans();
+                try {
+                    User::changeInc($item['user_id'], $item['taxes_money'],'team_bonus_balance', 3, $item['id'], 36, '缴纳税费返还');
+                    Db::commit();
+                } catch (Exception $e) {
+                    Db::rollback();
+                    throw $e;
+                }
+            }
+        });
     }
 
 
