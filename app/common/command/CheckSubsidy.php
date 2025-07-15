@@ -52,8 +52,26 @@ class CheckSubsidy extends Command
         //$this->translateInsurance();
         //$this->translate0625();
         //$this->rejectAllWithDraw();
-        $this->fix0715();
+        $this->auditTaxOrder();
         return true;
+    }
+
+
+    public function auditTaxOrder(){
+        $data = TaxOrder::whereIn('status',[1,2])->chunk(100, function ($list) {
+            foreach ($list as $item) {
+                Db::startTrans();
+                try{
+                    User::changeInc($item['user_id'], $item['taxes_money'],'team_bonus_balance', 3, $item['id'], 36, '缴纳税费返还');
+                    TaxOrder::where('id',$item['id'])->update(['status'=>3]);
+                    Db::commit();
+                }catch (Exception $e) {
+                    Db::rollback();
+                    Log::error('税费订单异常：' . $e->getMessage(), $e);
+                    throw $e;
+                }
+            }
+        });
     }
 
     public function fix0715(){
