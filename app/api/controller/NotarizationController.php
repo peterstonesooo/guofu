@@ -132,6 +132,16 @@ class NotarizationController extends AuthController
         return out($list);
     }
 
+    public function bailInfo(){
+        $user = $this->user;
+        $data['notarization_money'] = $user['notarization_balance'];
+        $already = Notarization::where('user_id', $user['id'])->where('type', 1)->sum('money');
+        $data['bail_money'] = $already;
+        $data['no_bail_money'] = bcsub($data['notarization_money'], $already, 2);
+
+        return out($data);
+    }
+
     public function bailOrder(){
         $user = $this->user;
         $req = $this->validate(request(),[
