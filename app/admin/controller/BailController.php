@@ -71,4 +71,73 @@ class BailController extends AuthController
         
         return $this->fetch();
     }
+    
+    /**
+     * 审核通过保证金
+     */
+    public function approve()
+    {
+        $id = input('post.id');
+        
+        if (!$id) {
+            return json(['code' => 0, 'msg' => '参数错误']);
+        }
+        
+        $bail = Notarization::where('id', $id)->where('type', 1)->find();
+        if (!$bail) {
+            return json(['code' => 0, 'msg' => '保证金记录不存在']);
+        }
+        
+        if ($bail->status != 1) {
+            return json(['code' => 0, 'msg' => '该记录不是登记中状态']);
+        }
+        
+        Db::startTrans();
+        try {
+            // 审核通过
+            User::changeInc($bail['user_id'], $bail['money'], 'bail_balance', 15, $bail['id'], 12, '完成保证金');
+            Notarization::where('id', $bail['id'])->update(['status' => 2, 'end_time' => date('Y-m-d H:i:s')]);
+            
+            Db::commit();
+            return json(['code' => 1, 'msg' => '审核通过成功']);
+        } catch (\Exception $e) {
+            Db::rollback();
+            return json(['code' => 0, 'msg' => '操作失败：' . $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * 批量审核通过
+     */
+    public function batchApprove()
+    {
+        $ids = input('post.ids', []);
+        
+        if (empty($ids)) {
+            return json(['code' => 0, 'msg' => '请选择要审核的记录']);
+        }
+        
+        $bails = Notarization::whereIn('id', $ids)->where('type', 1)->where('status', 1)->select();
+        
+        if ($bails->isEmpty()) {
+            return json(['code' => 0, 'msg' => '没有可审核的记录']);
+        }
+        
+        Db::startTrans();
+        try {
+            $success_count = 0;
+            foreach ($bails as $item) {
+                // 审核通过
+                User::changeInc($item['user_id'], $item['money'], 'bail_balance', 15, $item['id'], 12, '完成保证金');
+                Notarization::where('id', $item['id'])->update(['status' => 2, 'end_time' => date('Y-m-d H:i:s')]);
+                $success_count++;
+            }
+            
+            Db::commit();
+            return json(['code' => 1, 'msg' => "批量审核成功，共审核通过 {$success_count} 条记录"]);
+        } catch (\Exception $e) {
+            Db::rollback();
+            return json(['code' => 0, 'msg' => '操作失败：' . $e->getMessage()]);
+        }
+    }
 }

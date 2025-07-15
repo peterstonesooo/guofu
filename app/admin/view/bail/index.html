@@ -12,6 +12,7 @@
         
         <input class="btn btn-flat btn-primary m_10" type="submit" value="搜索">
         <input class="btn btn-flat btn-info m_10" name="export" type="submit" value="导出">
+        <button type="button" class="btn btn-flat btn-success m_10" id="batchApprove">批量通过</button>
     </form>
 </div>
 
@@ -29,6 +30,7 @@
                 <table class="table table-bordered table-hover table-striped">
                     <thead>
                     <tr>
+                        <th><input type="checkbox" id="checkAll"></th>
                         <th>ID</th>
                         <th>用户手机</th>
                         <th>用户姓名</th>
@@ -37,11 +39,17 @@
                         <th>状态</th>
                         <th>创建时间</th>
                         <th>完成时间</th>
+                        <th>操作</th>
                     </tr>
                     </thead>
                     <tbody>
                     <?php foreach ($data as $k => $v) { ?>
                         <tr>
+                            <td>
+                                <?php if($v['status'] == 1) { ?>
+                                    <input type="checkbox" class="check-item" value="{$v['id']}">
+                                <?php } ?>
+                            </td>
                             <td>{$v['id']}</td>
                             <td>{$v['phone']}</td>
                             <td>{$v['realname']}</td>
@@ -52,6 +60,13 @@
                             </td>
                             <td>{$v['created_at']}</td>
                             <td>{$v['end_time']??'-'}</td>
+                            <td>
+                                <?php if($v['status'] == 1) { ?>
+                                    <button class="btn btn-success btn-xs btn-approve" data-id="{$v['id']}">审核通过</button>
+                                <?php } else { ?>
+                                    -
+                                <?php } ?>
+                            </td>
                         </tr>
                     <?php } ?>
                     </tbody>
@@ -84,5 +99,55 @@ laydate.render({
 laydate.render({
     elem: '#end',
     type: 'date'
+});
+
+// 全选/反选
+$('#checkAll').on('change', function() {
+    $('.check-item').prop('checked', $(this).prop('checked'));
+});
+
+// 单个审核通过
+$('.btn-approve').on('click', function() {
+    var id = $(this).data('id');
+    layer.confirm('确定要审核通过该保证金记录吗？', {
+        btn: ['确定', '取消']
+    }, function() {
+        $.post('{:url("bail/approve")}', {id: id}, function(res) {
+            if (res.code == 1) {
+                layer.msg(res.msg, {icon: 1}, function() {
+                    location.reload();
+                });
+            } else {
+                layer.msg(res.msg, {icon: 2});
+            }
+        }, 'json');
+    });
+});
+
+// 批量审核通过
+$('#batchApprove').on('click', function() {
+    var ids = [];
+    $('.check-item:checked').each(function() {
+        ids.push($(this).val());
+    });
+    
+    if (ids.length == 0) {
+        layer.msg('请选择要审核的记录', {icon: 2});
+        return;
+    }
+    
+    layer.confirm('确定要批量审核通过这 ' + ids.length + ' 条记录吗？', {
+        btn: ['确定', '取消']
+    }, function() {
+        $.post('{:url("bail/batchApprove")}', {ids: ids}, function(res) {
+            if (res.code == 1) {
+                layer.msg(res.msg, {icon: 1}, function() {
+                    location.reload();
+                });
+            } else {
+                layer.msg(res.msg, {icon: 2});
+            }
+        }, 'json');
+    });
 });
 </script>
