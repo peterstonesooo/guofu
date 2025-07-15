@@ -145,7 +145,7 @@ class NotarizationController extends AuthController
     public function bailOrder(){
         $user = $this->user;
         $req = $this->validate(request(),[
-            'money|公证金额' => 'require|float|between:5000,9999999',
+            'money|监管金额' => 'require|float|between:5000,9999999',
             'pay_password|支付密码' => 'require|length:6,25',
         ]);
         if($user['status'] != 1){
@@ -164,7 +164,7 @@ class NotarizationController extends AuthController
         $already = Notarization::where('user_id', $user['id'])->where('type', 1)->sum('money');
         $canMoney = bcsub($user['notarization_balance'], $already, 2);
         if($canMoney<0 || $canMoney < $req['money']){
-            return out(null, 10001,'保证金金额不能超过未监管金额');
+            return out(null, 10001,'监管金额不能超过未监管金额');
         }
 
         $fees = bcmul($req['money'], 0.1, 2);
@@ -184,14 +184,14 @@ class NotarizationController extends AuthController
         Db::startTrans();
         try{
             $notarization = Notarization::create($data);
-            User::changeInc($user['id'], -$fees,'topup_balance',35,$notarization['id'],3,'保证金缴费' );
+            User::changeInc($user['id'], -$fees,'topup_balance',35,$notarization['id'],3,'监管金额缴费' );
             //User::changeInc($user['id'], $req['money'],'bail_balance',2,$notarization['id'],11,'保证金' );
             Db::commit();
             return out($notarization);
         }catch (\Exception $e){
             Db::rollback();
             throw $e;
-            return out(null, 10001,'保证金缴费失败');   
+            return out(null, 10001,'监管金额缴费失败');   
         }
 
     }
