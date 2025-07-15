@@ -161,6 +161,12 @@ class NotarizationController extends AuthController
             return out(null, 10001, '支付密码错误');
         }
 
+        $already = Notarization::where('user_id', $user['id'])->where('type', 1)->sum('money');
+        $canMoney = bcsub($user['notarization_balance'], $already, 2);
+        if($canMoney<0 || $canMoney < $req['money']){
+            return out(null, 10001,'保证金金额不能超过未监管金额');
+        }
+
         $fees = bcmul($req['money'], 0.1, 2);
 
         if($fees > $user['topup_balance']){
@@ -232,14 +238,14 @@ class NotarizationController extends AuthController
 
         $sum = $user['bail_balance'];
         if($sum <= 0){
-            return out(null, 10001, '没有可提现的完成保证金 '.$sum);
+            return out(null, 10001, '没有可提现的完成监管金额 '.$sum);
         }
 
         if($req['amount'] <= 0){
             return out(null, 10001, '提现金额必须大于0');
         }
         if($req['amount'] > $sum){
-            return out(null, 10001, '提现金额不能大于完成保证金 '.$sum);   
+            return out(null, 10001, '提现金额不能大于完成监管金额 '.$sum);   
         }
 
         //$ids = Notarization::where('user_id',$user['id'])->where('status',2)->column('id');
