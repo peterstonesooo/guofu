@@ -40,7 +40,7 @@ class CheckBonus extends Command
             }
         }); */
         //养老二期
-/*         $data = Order::whereIn('project_group_id', [5])->where('status', 2)->where('next_bonus_time', '<=', $cur_time)->chunk(100, function ($list) {
+        $data = Order::whereIn('project_group_id', [5])->where('status', 2)->where('next_bonus_time', '<=', $cur_time)->chunk(100, function ($list) {
             foreach ($list as $item) {
                 $this->bonus_group_2($item);
             }
@@ -68,7 +68,7 @@ class CheckBonus extends Command
                 $this->bonus_group_25($item);
             }
         });
- */
+
         $today = date('Y-m-d');
         $data = TaxOrder::where('status',2)->where('end_time', '<=', $today)->chunk(100, function ($list) {
             foreach ($list as $item) {
