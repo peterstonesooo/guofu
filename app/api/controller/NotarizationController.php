@@ -77,7 +77,7 @@ class NotarizationController extends AuthController
                 $taxes = bcadd($taxes, $item['money'], 2);
                 $taxes = bcadd($taxes, $item['taxes_money'], 2); 
         }
-        $alreay = Notarization::where('user_id',$user['id'])->sum('money');
+        $alreay = Notarization::where('user_id',$user['id'])->where('type',0)->sum('money');
         $canMoney = bcsub($taxes, $alreay, 2);
         if($canMoney<0 || $canMoney < $req['money']){
             return out(null, 10001,'申报金额不能超过已退税金额 '.$canMoney);
