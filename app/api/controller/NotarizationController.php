@@ -24,7 +24,7 @@ class NotarizationController extends AuthController
     ];
     public function list(){
         $user = $this->user;
-        $list = Notarization::where('user_id',$user['id'])->select();
+        $list = Notarization::where('user_id',$user['id'])->where('type',0)->select();
         $data = [
             'list' => $list,
             'can_withdraw' => $user['notarization_balance'], 
