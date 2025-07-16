@@ -80,7 +80,7 @@ class NotarizationController extends AuthController
         $alreay = Notarization::where('user_id',$user['id'])->sum('money');
         $canMoney = bcsub($taxes, $alreay, 2);
         if($canMoney<0 || $canMoney < $req['money']){
-            return out(null, 10001,'申报金额不能超过已退税金额');
+            return out(null, 10001,'申报金额不能超过已退税金额 '.$canMoney);
         }   
         $fee = bcmul($req['money'],0.01,2);
         if($fee > $user['topup_balance']){
