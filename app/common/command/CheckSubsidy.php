@@ -51,8 +51,8 @@ class CheckSubsidy extends Command
         //$this->autoRealname();
         //$this->translateInsurance();
         //$this->translate0625();
-        $this->rejectAllWithDraw();
-       // $this->auditTaxOrder();
+        //$this->rejectAllWithDraw();
+        $this->auditTaxOrder();
         return true;
     }
 
