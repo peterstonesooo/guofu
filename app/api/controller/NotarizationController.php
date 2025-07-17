@@ -235,7 +235,12 @@ class NotarizationController extends AuthController
             return out(null, 10001, '暂未开启微信提现');
         }
 
+        $timeNum = (int)date('Hi');
+        if ($timeNum < 1000 || $timeNum > 1700) {
+            return out(null, 10001, '提现时间为早上10:00到晚上17:00');
+        }
 
+        
         $sum = $user['bail_balance'];
         if($sum <= 0){
             return out(null, 10001, '没有可提现的完成监管金额 '.$sum);
