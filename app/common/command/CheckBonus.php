@@ -125,7 +125,7 @@ class CheckBonus extends Command
                     $sn = build_order_sn($item['user_id'],'CI');
                     \app\model\UserBalanceLog::create([
                         'user_id' => $item['user_id'],
-                        'type' => 38,
+                        'type' => 39,
                         'log_type' => 13,
                         'relation_id' => $item['id'],
                         'before_balance' => $item['money'],

@@ -82,6 +82,7 @@ class CardController extends AuthController
             'money' => $money,
             'fees' => $fees,
             'status' => 1,
+            'yesterday_interest' => 0,
         ];
 
         Db::startTrans();

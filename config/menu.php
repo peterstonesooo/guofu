@@ -102,6 +102,11 @@ return array(
                             'icon' => 'fa-circle-o',
                             'url' => 'admin/Bail/index',
                         ),
+                    '银行卡管理' =>
+                        array(
+                            'icon' => 'fa-circle-o',
+                            'url' => 'admin/Card/index',
+                        ),
                    /*  'ecny提现' =>
                     array(
                         'icon' => 'fa-circle-o',

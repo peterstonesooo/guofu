@@ -1,0 +1,98 @@
+<div class="search">
+    <form class="form-inline">
+        <input type="text" value="{$req['user']??''}" name="user" placeholder="搜索用户ID/手机号" class="form-control">
+        <select name="status" class="form-control">
+            <option value="">全部状态</option>
+            <option value="0" {isset($req['status']) && $req['status']==='0'?'selected':''}>未激活</option>
+            <option value="1" {isset($req['status']) && $req['status']==='1'?'selected':''}>已激活</option>
+        </select>
+        <input placeholder="开始时间" autocomplete="off" value="{$req['start_date']??''}" name="start_date" class="form-control layer-date" id="start">
+        ～
+        <input placeholder="结束时间" autocomplete="off" value="{$req['end_date']??''}" name="end_date" class="form-control layer-date" id="end">
+        
+        <input class="btn btn-flat btn-primary m_10" type="submit" value="搜索">
+        <input class="btn btn-flat btn-info m_10" name="export" type="submit" value="导出">
+    </form>
+</div>
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="box">
+            <div class="box-header">
+                <h3 class="box-title">银行卡管理列表</h3>
+                <div class="box-tools">
+                    <span class="label label-primary">总数量: {$statistics['total_count']}</span>
+                    <span class="label label-info">总金额: ￥{$statistics['total_money']}</span>
+                    <span class="label label-warning">总手续费: ￥{$statistics['total_fees']}</span>
+                    <span class="label label-success">总利息: ￥{$statistics['total_interest']}</span>
+                </div>
+            </div>
+            <div class="box-body table-responsive no-padding">
+                <table class="table table-bordered table-hover table-striped">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>用户手机</th>
+                        <th>用户姓名</th>
+                        <th>金额</th>
+                        <th>手续费</th>
+                        <th>昨日利息</th>
+                        <th>状态</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($data as $k => $v) { ?>
+                        <tr>
+                            <td>{$v['id']}</td>
+                            <td>{$v['phone']}</td>
+                            <td>{$v['realname']}</td>
+                            <td class="text-danger">￥{$v['money']}</td>
+                            <td class="text-warning">￥{$v['fees']}</td>
+                            <td class="text-success">￥{$v['yesterday_interest']}</td>
+                            <td>
+                                <?php if($v['status'] == 1) { ?>
+                                    <span class="label label-success">已激活</span>
+                                <?php } else { ?>
+                                    <span class="label label-default">未激活</span>
+                                <?php } ?>
+                            </td>
+                            <td>{$v['created_at']}</td>
+                            <td>
+                                -
+                            </td>
+                        </tr>
+                    <?php } ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-5">
+        <div class="dataTables_info" id="example2_info" role="status" aria-live="polite">
+            共 {$data->total()} 条记录
+        </div>
+    </div>
+    <div class="col-sm-7">
+        <div class="dataTables_paginate paging_simple_numbers">
+            {$data->render()|raw}
+        </div>
+    </div>
+</div>
+
+<script>
+// 时间选择器
+laydate.render({
+    elem: '#start',
+    type: 'date'
+});
+
+laydate.render({
+    elem: '#end',
+    type: 'date'
+});
+</script>
