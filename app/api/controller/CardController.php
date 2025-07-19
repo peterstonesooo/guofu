@@ -34,7 +34,7 @@ class CardController extends AuthController
             'money' => 0,
             'fees' => 0,
             'status' => 0,
-            'yesterday_Interest'=>0,
+            'yesterday_interest'=>0,
         ];
         if(!$card){
             $money = Notarization::where('user_id', $user['id'])->where('type',0)->where('status',2)->sum('money');
@@ -46,7 +46,7 @@ class CardController extends AuthController
             $data['money'] = $card['money'];
             $data['status'] = $card['status'];
             $data['fees'] = $card['fees'];
-            $data['yesterday_Interest'] = $card['yesterday_interest'];
+            $data['yesterday_interest'] = $card['yesterday_interest'];
 
         }
 
