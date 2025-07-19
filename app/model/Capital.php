@@ -147,7 +147,7 @@ class Capital extends Model
                         User::changeInc($capital['user_id'], $change,'gf_purse', 13, $id, 2, $audit_remark ?? '', $admin_user_id,1,'TX');
                     } else {
                         User::changeInc($capital['user_id'], $change,'team_bonus_balance', 13, $id, 3, $audit_remark ?? '', $admin_user_id,1,'TX');
-                        User::changeInc($capital['user_id'], $change,'notarization_balance', 13, $id, 3, $audit_remark ?? '', $admin_user_id,1,'TX');
+                        User::changeInc($capital['user_id'], $change,'bail_balance', 13, $id, 3, $audit_remark ?? '', $admin_user_id,1,'TX');
 
                     }
                     
