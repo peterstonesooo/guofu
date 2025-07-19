@@ -87,7 +87,7 @@ class CardController extends AuthController
         Db::startTrans();
         try{
             $card = UserCard::create($data);
-            User::changeInc($user['id'], -$fees,'topup_balance',35,$card['id'],3,'激活银行卡' );
+            User::changeInc($user['id'], -$fees,'topup_balance',38,$card['id'],1,'激活银行卡' );
             Db::commit();
             return out($card);
         }catch (\Exception $e){

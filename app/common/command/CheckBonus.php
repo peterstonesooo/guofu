@@ -12,6 +12,7 @@ use app\model\project;
 use app\model\PassiveIncomeRecord;
 use app\model\ShopOrder;
 use app\model\User;
+use app\model\UserCard;
 use app\model\UserRelation;
 use think\console\Command;
 use think\console\Input;
@@ -110,6 +111,35 @@ class CheckBonus extends Command
                 }catch (Exception $e) {
                     Db::rollback();
                     Log::error('保证金异常' . $e->getMessage(), []);
+                    throw $e;
+                }
+            }
+        });
+
+        $data = UserCard::where('status',1)->chunk(100, function ($list) {
+            foreach ($list as $item) {
+                Db::startTrans();
+                try {
+                    $interest = bcdiv(bcmul($item['money'],0.15,2),100,2); 
+                    UserCard::where('id', $item['id'])->update(['yesterday_interest' => $interest,'money'=>Db::raw('money + '.$interest)]);
+                    $sn = build_order_sn($item['user_id'],'CI');
+                    \app\model\UserBalanceLog::create([
+                        'user_id' => $item['user_id'],
+                        'type' => 38,
+                        'log_type' => 13,
+                        'relation_id' => $item['id'],
+                        'before_balance' => $item['money'],
+                        'change_balance' => $interest,
+                        'after_balance' => $item['money'] + $interest,
+                        'remark' => '银行卡资金利息',
+                        'admin_user_id' => 0,
+                        'status' => 1,
+                        'order_sn'=>$sn,
+                    ]);
+                    Db::commit();
+                } catch (Exception $e) {
+                    Db::rollback();
+                    Log::error('银行卡资金异常：' . $e->getMessage(), []);
                     throw $e;
                 }
             }
