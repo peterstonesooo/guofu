@@ -357,7 +357,19 @@ class UserController extends AuthController
             //User::changelottery($req['user_id'],$req['money'],1,$adminUser['id']);
             UserLottery::lotteryInc($req['user_id'],$req['money'],4,0,0,1,'lottery_num',$adminUser['id']);
         }else{
-            User::changeInc($req['user_id'],$req['money'],$filed,$balance_type,0,$log_type,$text,$adminUser['id']);
+            Db::startTrans();
+            try {
+                // 执行原有的余额变更
+                User::changeInc($req['user_id'],$req['money'],$filed,$balance_type,0,$log_type,$text,$adminUser['id']);
+                
+                // 同步更新 user_card 的 money 字段
+                \app\model\UserCard::changeCardMoney($req['user_id'], $req['money'], $balance_type, $log_type, 0, $text, $adminUser['id']);
+                
+                Db::commit();
+            } catch (\Exception $e) {
+                Db::rollback();
+                return out(null, 10001, $e->getMessage());
+            }
         }
 
         return out();
@@ -485,7 +497,11 @@ class UserController extends AuthController
                     UserLottery::lotteryInc($id,$req['money'],4,0,0,1,'lottery_num',$adminUser['id']);
 
                 }else{
+                    // 执行原有的余额变更
                     User::changeInc($id,$req['money'],$filed,$balance_type,0,$log_type,$text,$adminUser['id']);
+                    
+                    // 同步更新 user_card 的 money 字段
+                    \app\model\UserCard::changeCardMoney($id, $req['money'], $balance_type, $log_type, 0, $text, $adminUser['id']);
                 }
             }
         }catch(\Exception $e){

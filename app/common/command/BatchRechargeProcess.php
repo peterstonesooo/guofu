@@ -8,6 +8,7 @@ use think\facade\Db;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use app\model\User;
 use app\model\UserLottery;
+use app\model\UserCard;
 
 class BatchRechargeProcess extends Command
 {
@@ -133,6 +134,17 @@ class BatchRechargeProcess extends Command
                                         $field['balance_type'],
                                         $batch['id'],
                                         $field['log_type'],
+                                        $field['text'],
+                                        $batch['admin_id']
+                                    );
+                                    
+                                    // 同步更新 user_card 的 money 字段
+                                    UserCard::changeCardMoney(
+                                        $user['id'],
+                                        $amount,
+                                        $field['balance_type'],
+                                        $field['log_type'],
+                                        $batch['id'],
                                         $field['text'],
                                         $batch['admin_id']
                                     );
