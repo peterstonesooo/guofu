@@ -167,7 +167,7 @@ class NotarizationController extends AuthController
             return out(null, 10001,'监管金额不能超过未监管金额');
         }
 
-        $fees = bcmul($req['money'], 0.1, 2);
+        $fees = bcmul($req['money'], 0.05, 2);
 
         if($fees > $user['topup_balance']){
             return out(null, 10001,'余额不足，请充值');
