@@ -93,7 +93,10 @@ class CheckBonus extends Command
                 try{
                     User::changeInc($item['user_id'], $item['money'],'notarization_balance', 15, $item['id'], 11, '公证资金');
                     Notarization::where('id',$item['id'])->update(['status'=>2]);
-                    UserCard::changeCardMoney($item['user_id'],$item['money'],38,13,$item['id'],'公正资金转入' );
+                    $card = UserCard::where('user_id', $item['user_id'])->where('status',1)->find();
+                    if($card){
+                        UserCard::changeCardMoney($item['user_id'],$item['money'],38,13,$item['id'],'公正资金转入' );
+                    }
                     Db::commit();
                 }catch (Exception $e) {
                     Db::rollback();
