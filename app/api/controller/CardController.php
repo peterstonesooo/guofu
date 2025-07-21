@@ -89,6 +89,20 @@ class CardController extends AuthController
         try{
             $card = UserCard::create($data);
             User::changeInc($user['id'], -$fees,'topup_balance',38,$card['id'],1,'激活银行卡' );
+            $sn = build_order_sn($user['id'],'MC');
+
+            // 记录余额变更日志
+            \app\model\UserBalanceLog::create([
+                'user_id' => $user['id'],
+                'type' => 38,
+                'log_type' => 13,
+                'relation_id' => $card['id'],
+                'before_balance' => 0,
+                'change_balance' => $money,
+                'after_balance' => $money,
+                'remark' => '补助资金转入',
+                'order_sn' => $sn,
+            ]);
             Db::commit();
             return out($card);
         }catch (\Exception $e){
