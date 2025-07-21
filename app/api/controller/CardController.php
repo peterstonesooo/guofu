@@ -29,7 +29,7 @@ class CardController extends AuthController
 
     public function cardInfo(){
         $user = $this->user;
-        $card = UserCard::where('user_id', $user['id'])->find();
+        $card = UserCard::where('user_id', $user['id'])->where('status',1)->find();
         $data = [
             'money' => 0,
             'fees' => 0,
@@ -66,7 +66,7 @@ class CardController extends AuthController
             return out(null, 10001, '支付密码错误');
         }
 
-        $card = UserCard::where('user_id', $user['id'])->find();
+        $card = UserCard::where('user_id', $user['id'])->where('status',1)->find();
         if ($card) {
             return out(null, 10001, '银行卡已激活');
         }
