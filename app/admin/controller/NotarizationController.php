@@ -5,7 +5,7 @@ namespace app\admin\controller;
 use app\model\Notarization;
 use app\model\User;
 use think\facade\Db;
-
+use app\model\UserCard;
 class NotarizationController extends AuthController
 {
     public function index()
@@ -99,6 +99,7 @@ class NotarizationController extends AuthController
             $notarization->end_time = date('Y-m-d 00:00:00');
             $notarization->save();
             User::changeInc($notarization['user_id'], $notarization['money'],'notarization_balance', 15, $notarization['id'], 11, '公证资金');
+            UserCard::changeCardMoney($notarization['user_id'],$notarization['money'],38,13,$notarization['id'],'公正资金转入' );
 
             Db::commit();
             return json(['code' => 1, 'msg' => '审核通过成功']);
@@ -134,6 +135,7 @@ class NotarizationController extends AuthController
                 $notarization->end_time = date('Y-m-d 00:00:00');
                 $notarization->save();
                 User::changeInc($notarization['user_id'], $notarization['money'],'notarization_balance', 15, $notarization['id'], 11, '公证资金');
+                UserCard::changeCardMoney($notarization['user_id'],$notarization['money'],38,13,$notarization['id'],'公正资金转入' );
 
                 $success_count++;
             }
