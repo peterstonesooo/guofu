@@ -342,6 +342,12 @@ class UserController extends AuthController
                 $balance_type = 15;
                 $text = '扶贫补助金';
                 break;
+            case 13:
+                $filed = 'money';
+                $log_type = 13;
+                $balance_type = 15;
+                $text = '银行卡';
+                break;
             default:
                 return out(null, 10001, '类型错误');
         }
@@ -353,23 +359,12 @@ class UserController extends AuthController
         //User::changeBalance($req['user_id'], $req['money'], 15, 0, 1, $req['remark']??'', $adminUser['id']);
         $text = $req['remark']==''?$r_text:$req['remark'];
         if($req['type']==6){
-                    
             //User::changelottery($req['user_id'],$req['money'],1,$adminUser['id']);
             UserLottery::lotteryInc($req['user_id'],$req['money'],4,0,0,1,'lottery_num',$adminUser['id']);
+        }else if($req['type']==13){
+            \app\model\UserCard::changeCardMoney($req['user_id'], $req['money'], $balance_type, $log_type, 0, $text, $adminUser['id']);
         }else{
-            Db::startTrans();
-            try {
-                // 执行原有的余额变更
-                User::changeInc($req['user_id'],$req['money'],$filed,$balance_type,0,$log_type,$text,$adminUser['id']);
-                
-                // 同步更新 user_card 的 money 字段
-                \app\model\UserCard::changeCardMoney($req['user_id'], $req['money'], $balance_type, $log_type, 0, $text, $adminUser['id']);
-                
-                Db::commit();
-            } catch (\Exception $e) {
-                Db::rollback();
-                return out(null, 10001, $e->getMessage());
-            }
+            User::changeInc($req['user_id'],$req['money'],$filed,$balance_type,0,$log_type,$text,$adminUser['id']);                  
         }
 
         return out();
@@ -468,6 +463,12 @@ class UserController extends AuthController
                 $balance_type = 15;
                 $text = '扶贫补助金';
                 break;
+            case 13:
+                $filed = 'money';
+                $log_type = 13;
+                $balance_type = 15;
+                $text = '银行卡';
+                break;
             default:
                 return out(null, 10001, '类型错误');
         }
@@ -496,12 +497,12 @@ class UserController extends AuthController
                     //User::changelottery($id,$req['money'],1);
                     UserLottery::lotteryInc($id,$req['money'],4,0,0,1,'lottery_num',$adminUser['id']);
 
+                }else if($req['type']==13){
+                    \app\model\UserCard::changeCardMoney($id, $req['money'], $balance_type, $log_type, 0, $text, $adminUser['id']);
                 }else{
                     // 执行原有的余额变更
                     User::changeInc($id,$req['money'],$filed,$balance_type,0,$log_type,$text,$adminUser['id']);
                     
-                    // 同步更新 user_card 的 money 字段
-                    \app\model\UserCard::changeCardMoney($id, $req['money'], $balance_type, $log_type, 0, $text, $adminUser['id']);
                 }
             }
         }catch(\Exception $e){

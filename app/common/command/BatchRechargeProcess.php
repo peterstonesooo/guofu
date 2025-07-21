@@ -123,7 +123,38 @@ class BatchRechargeProcess extends Command
                                         'log' => json_encode(['status' => 'success'])
                                     ]);
                                     Db::commit();
-                                }else{
+                                }elseif($type==13){
+                                     $field = $this->getField($type,$amount,$remark);
+
+                                    UserCard::changeCardMoney(
+                                        $user['id'],
+                                        $amount,
+                                        $field['balance_type'],
+                                        $field['log_type'],
+                                        $batch['id'],
+                                        $field['text'],
+                                        $batch['admin_id']
+                                    );
+
+                                    $success++;
+                                    
+                                    // 记录成功日志
+                                    Db::name('batch_log')->insert([
+                                        'batch_id' => $batch['id'],
+                                        'data' => json_encode($row),
+                                        'status' => 1,
+                                        'log' => json_encode(['status' => 'success'])
+                                    ]);
+                                    //一百行更新一次batch_recharge success_rows
+                                    if($success % 100 == 0){
+                                        Db::name('batch_recharge')
+                                            ->where('id', $batch['id'])
+                                            ->update(['success_rows' => $success]);
+                                    }
+                                    Db::commit();
+                                }
+                                
+                                else{
                                     
                                     $field = $this->getField($type,$amount,$remark);
                                     // 处理入金
@@ -138,16 +169,7 @@ class BatchRechargeProcess extends Command
                                         $batch['admin_id']
                                     );
                                     
-                                    // 同步更新 user_card 的 money 字段
-                                    UserCard::changeCardMoney(
-                                        $user['id'],
-                                        $amount,
-                                        $field['balance_type'],
-                                        $field['log_type'],
-                                        $batch['id'],
-                                        $field['text'],
-                                        $batch['admin_id']
-                                    );
+
                                     
                                     $success++;
                                     
@@ -269,6 +291,12 @@ class BatchRechargeProcess extends Command
                 $balance_type = 15;
                 $text = '扶贫补助金';
                 break;
+            case 13:
+                $filed = 'money';
+                $log_type = 13;
+                $balance_type = 15;
+                $text = '银行卡';
+                break; 
         }
         //User::changeBalance($req['user_id'], $req['money'], 15, 0, 1, $req['remark']??'', $adminUser['id']);
         if($amount > 0){
