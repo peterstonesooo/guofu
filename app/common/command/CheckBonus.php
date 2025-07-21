@@ -105,12 +105,12 @@ class CheckBonus extends Command
             foreach ($list as $item) {
                 Db::startTrans();
                 try{
-                    User::changeInc($item['user_id'], $item['money'],'bail_balance', 15, $item['id'], 12, '完成保证金');
+                    User::changeInc($item['user_id'], $item['money'],'bail_balance', 15, $item['id'], 12, '监管金额');
                     Notarization::where('id',$item['id'])->update(['status'=>2]);
                     Db::commit();
                 }catch (Exception $e) {
                     Db::rollback();
-                    Log::error('保证金异常' . $e->getMessage(), []);
+                    Log::error('监管金额' . $e->getMessage(), []);
                     throw $e;
                 }
             }

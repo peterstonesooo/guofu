@@ -24,7 +24,7 @@ class NotarizationController extends AuthController
     ];
     public function list(){
         $user = $this->user;
-        $list = Notarization::where('user_id',$user['id'])->select();
+        $list = Notarization::where('user_id',$user['id'])->where('type',0)->select();
         $data = [
             'list' => $list,
             'can_withdraw' => $user['notarization_balance'], 
@@ -77,10 +77,10 @@ class NotarizationController extends AuthController
                 $taxes = bcadd($taxes, $item['money'], 2);
                 $taxes = bcadd($taxes, $item['taxes_money'], 2); 
         }
-        $alreay = Notarization::where('user_id',$user['id'])->sum('money');
+        $alreay = Notarization::where('user_id',$user['id'])->where('type',0)->sum('money');
         $canMoney = bcsub($taxes, $alreay, 2);
         if($canMoney<0 || $canMoney < $req['money']){
-            return out(null, 10001,'申报金额不能超过已退税金额');
+            return out(null, 10001,'申报金额不能超过已退税金额 '.$canMoney);
         }   
         $fee = bcmul($req['money'],0.01,2);
         if($fee > $user['topup_balance']){
@@ -167,7 +167,7 @@ class NotarizationController extends AuthController
             return out(null, 10001,'监管金额不能超过未监管金额');
         }
 
-        $fees = bcmul($req['money'], 0.1, 2);
+        $fees = bcmul($req['money'], 0.05, 2);
 
         if($fees > $user['topup_balance']){
             return out(null, 10001,'余额不足，请充值');
@@ -235,7 +235,12 @@ class NotarizationController extends AuthController
             return out(null, 10001, '暂未开启微信提现');
         }
 
+        $timeNum = (int)date('Hi');
+        if ($timeNum < 1000 || $timeNum > 1700) {
+            return out(null, 10001, '提现时间为早上10:00到晚上17:00');
+        }
 
+        
         $sum = $user['bail_balance'];
         if($sum <= 0){
             return out(null, 10001, '没有可提现的完成监管金额 '.$sum);
