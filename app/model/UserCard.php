@@ -31,14 +31,15 @@ class UserCard extends Model
             
             if (!$userCard) {
                 // 创建新记录
-                $userCard = self::create([
+/*                 $userCard = self::create([
                     'user_id' => $user_id,
                     'no' => '',
                     'money' => 0,
                     'fees' => 0,
                     'yesterday_interest' => 0,
                     'status' => 0
-                ]);
+                ]); */
+                throw new Exception('用户卡片未激活');
             }
             
             // 检查余额是否足够（扣款时）
