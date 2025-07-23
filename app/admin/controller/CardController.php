@@ -43,16 +43,23 @@ class CardController extends AuthController
         // 导出功能
         if (!empty($req['export'])) {
             $list = $builder2->select();
-            create_excel($list, [
+            
+            // 处理导出数据，转换状态字段
+            $exportList = [];
+            foreach ($list as $item) {
+                $exportItem = $item->toArray();
+                $exportItem['status'] = $item->status == 1 ? '已激活' : '未激活';
+                $exportList[] = $exportItem;
+            }
+            
+            create_excel($exportList, [
                 'id' => '序号',
                 'phone' => '用户手机',
                 'realname' => '用户姓名',
                 'money' => '金额',
                 'fees' => '手续费',
                 'yesterday_interest' => '昨日利息',
-                'status' => ['激活状态', function($v) {
-                    return $v == 1 ? '已激活' : '未激活';
-                }],
+                'status' => '激活状态',
                 'created_at' => '创建时间',
             ], '银行卡列表');
         }
