@@ -113,7 +113,7 @@ class CardController extends AuthController
             return out($card);
         }catch (\Exception $e){
             Db::rollback();
-            return out(null, 10001,'激活失败');
+            return out(null, 10001,'激活失败'.$e->getMessage());
         }   
 
     }
