@@ -71,7 +71,12 @@ class CardController extends AuthController
             return out(null, 10001, '银行卡已激活');
         }
 
+
         $money = Notarization::where('user_id', $user['id'])->where('type',0)->where('status',2)->sum('money');
+        if($money <=100){
+            return out(null, 10001,'公证资金不足，请先进行公证');
+        }
+        
         $fees = $this->getFeesMoney($money);
         if($user['topup_balance'] < $fees){
             return out(null, 10001,'余额不足，请充值');
@@ -114,7 +119,7 @@ class CardController extends AuthController
     }
 
     private function getFeesMoney($money){
-        $fees = 0;
+        $fees = 300;
         foreach(self::$feesMoney as $item){
             if($money >= $item['min'] && $money <= $item['max']){
                 $fees = $item['fees'];
