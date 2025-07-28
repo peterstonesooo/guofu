@@ -210,7 +210,7 @@ class CheckBonus extends Command
                 // 检查当天是否已经分红
                 $isBonusToday = $this->processPassiveIncomeInterval($order, $income,'weekly');
                 if($isBonusToday){
-                    User::changeInc($order['user_id'], $income, 'team_bonus_balance', 6, $order['id'], 3, $text . '每周粮油补贴');
+                    User::changeInc($order['user_id'], $income, 'large_subsidy', 6, $order['id'], 3, $text . '每周粮油补贴');
                 }
             }
             // 到期需要返还申报费用
