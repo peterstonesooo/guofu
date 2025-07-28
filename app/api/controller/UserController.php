@@ -378,7 +378,7 @@ class UserController extends AuthController
     
     //转账2
     public function transferAccounts2(){
-        return out(null, 10001, '此功能暂时不能使用');
+        //return out(null, 10001, '此功能暂时不能使用');
         $req = $this->validate(request(), [
             'type' => 'require|in:1,2,3',//1推荐给奖励,2 转账余额（充值金额）3 可提现余额
             //'realname|对方姓名' => 'require|max:20',
