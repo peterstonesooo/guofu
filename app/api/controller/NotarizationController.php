@@ -259,7 +259,7 @@ class NotarizationController extends AuthController
         if ($num >= dbconfig('per_day_withdraw_max_num')) {
             return out(null, 10001, '每天最多提现'.dbconfig('per_day_withdraw_max_num').'次');
         }
-        $field = 'team_bonus_balance';
+        $field = 'large_subsidy';
         $log_type =3;
         
         Db::startTrans();

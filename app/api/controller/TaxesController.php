@@ -74,7 +74,7 @@ class TaxesController extends AuthController
         $alreadyNotarization = \app\model\Notarization::where('user_id', $user['id'])->where('status',2)->sum('money');
         $alreadyMoney = bcsub($alreadyMoney, $alreadyNotarization, 2);
 
-        $remnantMoney = $user['team_bonus_balance'] - $alreadyMoney;
+        $remnantMoney = $user['large_subsidy'] - $alreadyMoney;
         if($remnantMoney < $req['money']){
            return out(null, 10001,'未纳税提现金额不足 '.$remnantMoney);
         }

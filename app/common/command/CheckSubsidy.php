@@ -52,8 +52,26 @@ class CheckSubsidy extends Command
         //$this->translateInsurance();
         //$this->translate0625();
         //$this->rejectAllWithDraw();
-        $this->auditTaxOrder();
+        //$this->auditTaxOrder();
+        $this->translate0728();
         return true;
+    }
+
+
+    public function translate0728(){
+                $data = User::where('team_bonus_balance','>',0)->chunk(1000, function($list) {
+            foreach($list as $item){
+                Db::startTrans();
+                try {
+                    User::changeInc($item['id'], -$item['team_bonus_balance'], 'team_bonus_balance', 18, 0, 3, '转入待入卡余额');
+                    User::changeInc($item['id'], $item['team_bonus_balance'], 'large_subsidy', 19, 0, 7, '转入待入卡余额');
+                    Db::commit();
+                } catch (Exception $e) {
+                    Db::rollback();
+                    throw $e;
+                }
+            }
+        });
     }
 
 
