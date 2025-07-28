@@ -82,6 +82,12 @@ class OrderController extends AuthController
                 return out(null, 10001, '一个用户只能购买一份');
             }
         }
+        if($project['project_group_id']==27){
+            $order = Order::where('user_id', $user['id'])->where('project_group_id', 27)->find();
+            if($order){
+                return out(null, 10001, '一个用户只能购买一份');
+            }
+        }
 /*         if($project['project_group_id']==7){
             return out(null, 10001, '暂时不能购买');
         } */
