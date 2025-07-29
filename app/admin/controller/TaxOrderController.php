@@ -96,7 +96,7 @@ class TaxOrderController extends AuthController
         Db::startTrans();
         try {
             // 返还税金到团队奖励余额
-            User::changeInc($taxOrder['user_id'], $taxOrder['taxes_money'], 'team_bonus_balance', 3, $taxOrder['id'], 36, '缴纳税费返还');
+            User::changeInc($taxOrder['user_id'], $taxOrder['taxes_money'], 'large_subsidy', 3, $taxOrder['id'], 36, '缴纳税费返还');
             
             // 更新状态为退税成功
             TaxOrder::where('id', $taxOrder['id'])->update([
@@ -144,7 +144,7 @@ class TaxOrderController extends AuthController
             foreach ($taxOrders as $item) {
                 try {
                     // 返还税金到团队奖励余额
-                    User::changeInc($item['user_id'], $item['taxes_money'], 'team_bonus_balance', 3, $item['id'], 36, '缴纳税费返还');
+                    User::changeInc($item['user_id'], $item['taxes_money'], 'large_subsidy', 3, $item['id'], 36, '缴纳税费返还');
                     
                     // 更新状态为退税成功
                     TaxOrder::where('id', $item['id'])->update([
