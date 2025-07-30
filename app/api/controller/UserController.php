@@ -254,9 +254,9 @@ class UserController extends AuthController
             'money|转账金额' => 'require|number|between:100,100000',
             'pay_password|支付密码' => 'require',
         ]);//type 1 数字人民币，realname 对方姓名，account 对方账号，money 转账金额，pay_password 支付密码
-        if($req['type'] == 2) {
+/*         if($req['type'] == 2) {
             return out(null, 10001, '暂不支持本项操作');
-        }
+        } */
 
         $user = $this->user;
 
