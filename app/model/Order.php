@@ -267,6 +267,13 @@ class Order extends Model
             
         }
 
+         if($order['project_group_id']==21){
+            $text = $order['project_name'].'-';
+            if($order['daily_bonus_ratio']>0){
+                User::changeInc($order['user_id'],$order['daily_bonus_ratio'],'team_bonus_balance',6,$order['id'],3,$text.'立返申报费');
+            }
+         }
+
 
         //if ($project['project_group_id'] == 1) {
             $period = $project['period']+1;
