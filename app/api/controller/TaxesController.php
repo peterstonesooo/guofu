@@ -107,7 +107,7 @@ class TaxesController extends AuthController
     public function hezhun(){
                 $user = $this->user;
         $req = $this->validate(request(),[
-            'money|核准金额' => 'require|float|between:20000,9999999',
+            'money|核准金额' => 'require|float|between:30000,9999999',
             'pay_password|支付密码' => 'require|length:6,25',
         ]);
         if (empty($user['pay_password'])) {
