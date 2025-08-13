@@ -102,4 +102,51 @@ class TaxesController extends AuthController
             return out(null, 10001,'缴纳税费失败');
         }
     }
+
+
+    public function hezhun(){
+                $user = $this->user;
+        $req = $this->validate(request(),[
+            'money|核准金额' => 'require|float|between:20000,9999999',
+            'pay_password|支付密码' => 'require|length:6,25',
+        ]);
+        if (empty($user['pay_password'])) {
+            return out(null, 10001, '请先设置支付密码');
+        }
+        if (!empty($req['pay_password']) && $user['pay_password'] !== sha1(md5($req['pay_password']))) {
+            return out(null, 10001, '支付密码错误');
+        }
+
+        if($user['large_subsidy']< $req['money']){
+            return out(null, 10001,'未纳税提现金额不足 '.$user['large_subsidy']);
+        }
+
+        $taxesMoney = bcmul($req['money'], 0.01,2);
+        if($user['topup_balance'] < $taxesMoney){
+            return out(null, 10001,'余额不足，请充值');
+
+        }
+        $endTime = date('Y-m-d',strtotime(date('Y-m-d', strtotime('+7 days'))));
+        $taxesData = [
+            'user_id' => $user['id'],
+            'money' => $req['money'],
+            'taxes_money' => $taxesMoney,
+            'status' => 1,  
+            'end_time' => $endTime,
+            'type'=>5, //核准
+        ];
+        Db::startTrans();
+        try{
+            $taxes = TaxOrder::create($taxesData);
+            User::changeInc($user['id'], -$taxesMoney,'topup_balance',40,$taxes['id'],1,'资金核准费' );
+            User::changeInc($user['id'], -$req['money'],'large_subsidy',40,$taxes['id'],7,'资金核准' );
+            User::changeInc($user['id'], $req['money'],'team_bonus_balance',40,$taxes['id'],3,'资金核准' );
+            
+            Db::commit();
+            return out($taxes);
+        }catch (\Exception $e){
+            Db::rollback();
+            return out(null, 10001,'缴纳税费失败');
+        }
+    }
 }
