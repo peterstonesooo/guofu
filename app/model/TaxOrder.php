@@ -19,6 +19,7 @@ class TaxOrder extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'end_time' => 'datetime',
+        'type' => 'int', 
     ];
     
     // 自动时间戳
