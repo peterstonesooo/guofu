@@ -53,7 +53,7 @@ class TaxesController extends AuthController
     }
 
     public function TaxesOrder(){
-        //return out(null, 10001,'纳税已停止');
+        return out(null, 10001,'纳税已停止');
         $user = $this->user;
         $req = $this->validate(request(),[
             'money|申报金额' => 'require|float|between:20000,9999999',
@@ -143,7 +143,7 @@ class TaxesController extends AuthController
             'end_time' => $endTime,
             'type'=>5, //核准
         ];
-        
+
         Db::startTrans();
         try{
 

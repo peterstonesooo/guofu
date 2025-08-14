@@ -52,6 +52,7 @@ class NotarizationController extends AuthController
 
 
     public function order(){
+        return out(null, 10001, '暂未开放');
 
         $user = $this->user;
         $req = $this->validate(request(),[
@@ -143,6 +144,7 @@ class NotarizationController extends AuthController
     }
 
     public function bailOrder(){
+        return out(null, 10001, '暂未开放');
         $user = $this->user;
         $req = $this->validate(request(),[
             'money|监管金额' => 'require|float|between:5000,9999999',
