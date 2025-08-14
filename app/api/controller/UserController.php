@@ -70,6 +70,9 @@ class UserController extends AuthController
             $user['lottery_num'] = $speedUp['lottery_num'];
         }
 
+        $sum = TaxOrder::where('user_id',$user['id'])->where('type',5)->sum('money');
+
+        $user['hezhun_money'] = $sum;
         $user['total_balance'] = $user['topup_balance']+$user['team_bonus_balance']+$user['income_balance']+$user['poverty_subsidy_amount']+$user['bonus_balance'];
         return out($user);
     }
