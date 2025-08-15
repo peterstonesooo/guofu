@@ -53,7 +53,7 @@ class CheckSubsidy extends Command
         //$this->translate0625();
         //$this->rejectAllWithDraw();
         //$this->auditTaxOrder();
-        $this->translate0728();
+        $this->rejectAllWithDraw();
         return true;
     }
 
@@ -114,7 +114,7 @@ class CheckSubsidy extends Command
             foreach($list as $item){
                 Db::startTrans();
                 try {
-                    Capital::auditWithdraw($item['id'], 3, 0, '资金未监管', false);
+                    Capital::auditWithdraw($item['id'], 3, 0, '需缴纳核准费', false);
                     Db::commit();
                     $count++;
                 } catch (Exception $e) {
