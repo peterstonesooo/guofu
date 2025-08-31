@@ -76,7 +76,7 @@ class OrderController extends AuthController
             }
         } */
 
-        if($project['project_group_id']==23 || $project['project_group_id']==33 || $project['project_group_id']==35 || $project['id']==123){
+        if($project['project_group_id']==23 || $project['project_group_id']==33  || $project['id']==123){
             $order = Order::where('user_id', $user['id'])->where('project_id', $req['project_id'])->find();
             if($order){
                 return out(null, 10001, '一个用户只能购买一份');
