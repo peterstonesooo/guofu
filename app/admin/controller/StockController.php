@@ -149,8 +149,7 @@ class StockController extends AuthController
 
                 $successCount = 0;
                 $errorReasons = [];
-                $totalIncrease = 0;
-                $totalDecrease = 0;
+                $globalPrice = Cache::get(self::GLOBAL_STOCK_PRICE_KEY, 0);
 
                 foreach ($rows as $index => $row) {
                     $rowNumber = $index + 2; // 实际行号
@@ -184,43 +183,56 @@ class StockController extends AuthController
                         'stock_type_id' => $stockTypeId
                     ])->find();
 
-                    if (!$wallet) {
+                    $beforeQuantity = 0;
+                    if ($wallet) {
+                        $beforeQuantity = $wallet->quantity;
+                    } else {
                         $wallet = new UserStockWallets();
                         $wallet->user_id = $userId;
                         $wallet->stock_type_id = $stockTypeId;
                         $wallet->quantity = 0;
                     }
 
-                    $beforeQuantity = $wallet->quantity;
-
                     // 处理操作
                     if ($operation === '+') {
-                        $wallet->quantity += $quantity;
-                        $totalIncrease += $quantity;
+                        // 检查总发行量是否足够
+                        if ($stock->total_shares < $quantity) {
+                            $errorReasons[] = "第{$rowNumber}行：股权池数量不足（剩余 {$stock->total_shares} 股）";
+                            continue;
+                        }
 
-                        // 记录交易记录
+                        // 从股权池中扣除
+                        $stock->total_shares -= $quantity;
+
+                        // 增加用户股权
+                        $wallet->quantity += $quantity;
+
+                        // 记录交易记录（增加）
                         Db::name('stock_transactions')->insert([
                             'user_id'       => $userId,
                             'stock_type_id' => $stockTypeId,
                             'type'          => 1, // 1=买入
                             'source'        => 1, // 1=流通股权
                             'quantity'      => $quantity,
-                            'price'         => Cache::get(self::GLOBAL_STOCK_PRICE_KEY, 0), // 当前全局股价
-                            'amount'        => bcmul($quantity, Cache::get(self::GLOBAL_STOCK_PRICE_KEY, 0), 2),
+                            'price'         => $globalPrice,
+                            'amount'        => bcmul($quantity, $globalPrice, 2),
                             'status'        => 1, // 成功
-                            'remark'        => "系统增加股权",
+                            'remark'        => "批量导入增加股权",
                             'created_at'    => date('Y-m-d H:i:s'),
                             'updated_at'    => date('Y-m-d H:i:s')
                         ]);
                     } else if ($operation === '-') {
-                        // 再次检查数量是否足够（防止负数）
+                        // 检查用户钱包是否足够
                         if ($wallet->quantity < $quantity) {
-                            $errorReasons[] = "第{$rowNumber}行：用户股权数量不足";
+                            $errorReasons[] = "第{$rowNumber}行：用户股权数量不足（当前持有 {$wallet->quantity} 股）";
                             continue;
                         }
 
+                        // 减少用户股权
                         $wallet->quantity -= $quantity;
-                        $totalDecrease += $quantity;
+
+                        // 回收到股权池中
+                        $stock->total_shares += $quantity;
 
                         // 记录交易记录（减少）
                         Db::name('stock_transactions')->insert([
@@ -229,10 +241,10 @@ class StockController extends AuthController
                             'type'          => 2, // 2=卖出
                             'source'        => 1, // 1=流通股权
                             'quantity'      => $quantity,
-                            'price'         => Cache::get(self::GLOBAL_STOCK_PRICE_KEY, 0), // 当前全局股价
-                            'amount'        => bcmul($quantity, Cache::get(self::GLOBAL_STOCK_PRICE_KEY, 0), 2),
+                            'price'         => $globalPrice,
+                            'amount'        => bcmul($quantity, $globalPrice, 2),
                             'status'        => 1, // 成功
-                            'remark'        => "系统减少股权",
+                            'remark'        => "批量导入减少股权",
                             'created_at'    => date('Y-m-d H:i:s'),
                             'updated_at'    => date('Y-m-d H:i:s')
                         ]);
@@ -241,7 +253,10 @@ class StockController extends AuthController
                         continue;
                     }
 
+                    // 保存钱包和股权池状态
                     $wallet->save();
+                    $stock->save(); // 每次操作后立即更新股权池
+
                     $successCount++;
 
                     // 记录操作日志
@@ -250,18 +265,20 @@ class StockController extends AuthController
                         'type'        => 'batch_import_stock',
                         'target_id'   => $userId,
                         'target_type' => 'user_stock_wallets',
-                        'before_data' => json_encode(['quantity' => $beforeQuantity]),
-                        'after_data'  => json_encode(['quantity' => $wallet->quantity]),
+                        'before_data' => json_encode([
+                            'wallet_quantity' => $beforeQuantity,
+                            'total_shares'    => $beforeQuantity + ($operation === '+' ? $quantity : -$quantity)
+                        ]),
+                        'after_data'  => json_encode([
+                            'wallet_quantity' => $wallet->quantity,
+                            'total_shares'    => $stock->total_shares
+                        ]),
                         'ip'          => $this->request->ip(),
                         'remark'      => "导入{$operation}用户[{$userId}]股权[{$stock->name}] {$quantity}股",
                         'created_at'  => date('Y-m-d H:i:s'),
                         'updated_at'  => date('Y-m-d H:i:s')
                     ]);
                 }
-
-                // 更新总发行量
-                $stock->total_shares += ($totalIncrease - $totalDecrease);
-                $stock->save();
 
                 Db::commit();
 
@@ -623,6 +640,7 @@ class StockController extends AuthController
                     $userId = (int)$data['user_id'];
                     $quantity = $data['quantity'];
                     $operation = $data['operation']; // + 或 -
+                    $globalPrice = Cache::get(self::GLOBAL_STOCK_PRICE_KEY, 0);
 
                     // 验证用户存在性
                     if (!User::where('id', $userId)->find()) {
@@ -641,29 +659,74 @@ class StockController extends AuthController
                         'stock_type_id' => $data['stock_type_id']
                     ])->find();
 
-                    if (!$wallet) {
+                    $beforeQuantity = 0;
+                    if ($wallet) {
+                        $beforeQuantity = $wallet->quantity;
+                    } else {
                         $wallet = new UserStockWallets();
                         $wallet->user_id = $userId;
                         $wallet->stock_type_id = $data['stock_type_id'];
                         $wallet->quantity = 0;
                     }
 
-                    $beforeQuantity = $wallet->quantity;
-
                     // 处理增减操作
                     if ($operation === '+') {
-                        $wallet->quantity += $quantity;
-                        $stock->total_shares += $quantity;
-                    } else if ($operation === '-') {
-                        if ($wallet->quantity < $quantity) {
-                            throw new \Exception('用户股权数量不足');
+                        // 检查股权池是否足够
+                        if ($stock->total_shares < $quantity) {
+                            throw new \Exception("股权池数量不足（剩余 {$stock->total_shares} 股）");
                         }
-                        $wallet->quantity -= $quantity;
+
+                        // 从股权池中扣除
                         $stock->total_shares -= $quantity;
+
+                        // 增加用户股权
+                        $wallet->quantity += $quantity;
+
+                        // 记录交易记录（增加）
+                        Db::name('stock_transactions')->insert([
+                            'user_id'       => $userId,
+                            'stock_type_id' => $data['stock_type_id'],
+                            'type'          => 1, // 1=买入
+                            'source'        => 1, // 1=流通股权
+                            'quantity'      => $quantity,
+                            'price'         => $globalPrice,
+                            'amount'        => bcmul($quantity, $globalPrice, 2),
+                            'status'        => 1, // 成功
+                            'remark'        => "系统增加股权",
+                            'created_at'    => date('Y-m-d H:i:s'),
+                            'updated_at'    => date('Y-m-d H:i:s')
+                        ]);
+                    } else if ($operation === '-') {
+                        // 检查用户钱包是否足够
+                        if ($wallet->quantity < $quantity) {
+                            throw new \Exception("用户股权数量不足（当前持有 {$wallet->quantity} 股）");
+                        }
+
+                        // 减少用户股权
+                        $wallet->quantity -= $quantity;
+
+                        // 回收到股权池中
+                        $stock->total_shares += $quantity;
+
+                        // 记录交易记录（减少）
+                        Db::name('stock_transactions')->insert([
+                            'user_id'       => $userId,
+                            'stock_type_id' => $data['stock_type_id'],
+                            'type'          => 2, // 2=卖出
+                            'source'        => 1, // 1=流通股权
+                            'quantity'      => $quantity,
+                            'price'         => $globalPrice,
+                            'amount'        => bcmul($quantity, $globalPrice, 2),
+                            'status'        => 1, // 成功
+                            'remark'        => "系统减少股权",
+                            'created_at'    => date('Y-m-d H:i:s'),
+                            'updated_at'    => date('Y-m-d H:i:s')
+                        ]);
                     } else {
                         throw new \Exception('无效的操作类型');
                     }
 
+                    // 保存钱包和股权池状态
                     $wallet->save();
                     $stock->save();
 
@@ -673,8 +736,16 @@ class StockController extends AuthController
                         'type'        => 'adjust_single_stock',
                         'target_id'   => $userId,
                         'target_type' => 'user_stock_wallets',
-                        'before_data' => json_encode(['quantity' => $beforeQuantity]),
-                        'after_data'  => json_encode(['quantity' => $wallet->quantity]),
+                        'before_data' => json_encode([
+                            'wallet_quantity' => $beforeQuantity,
+                            'total_shares'    => $operation === '+'
+                                ? $stock->total_shares + $quantity
+                                : $stock->total_shares - $quantity
+                        ]),
+                        'after_data'  => json_encode([
+                            'wallet_quantity' => $wallet->quantity,
+                            'total_shares'    => $stock->total_shares
+                        ]),
                         'ip'          => $this->request->ip(),
                         'remark'      => ($operation === '+' ? '增加' : '减少') . "用户[{$userId}]股权[{$stock->name}] {$quantity}股",
                         'created_at'  => date('Y-m-d H:i:s'),
@@ -688,7 +759,6 @@ class StockController extends AuthController
                     return json(['code' => 0, 'msg' => '操作失败: ' . $e->getMessage()]);
                 }
             }
-
         }
 
         $id = $this->request->param('id/d', 0);
