@@ -26,10 +26,11 @@ class StockController extends AuthController
             $limit = $params['limit'] ?? 15;
             $keyword = $params['keyword'] ?? '';
 
-            $query = (new StockTypes());
 
             if (!empty($keyword)) {
-                $query->where('name|code', 'like', "%{$keyword}%");
+                $query = StockTypes::where('name|code', 'like', "%{$keyword}%");
+            } else {
+                $query = (new StockTypes());
             }
 
             $list = $query->paginate([
