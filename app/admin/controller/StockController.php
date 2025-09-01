@@ -197,13 +197,45 @@ class StockController extends AuthController
                     if ($operation === '+') {
                         $wallet->quantity += $quantity;
                         $totalIncrease += $quantity;
+
+                        // 记录交易记录
+                        Db::name('stock_transactions')->insert([
+                            'user_id'       => $userId,
+                            'stock_type_id' => $stockTypeId,
+                            'type'          => 1, // 1=买入
+                            'source'        => 1, // 1=流通股权
+                            'quantity'      => $quantity,
+                            'price'         => Cache::get(self::GLOBAL_STOCK_PRICE_KEY, 0), // 当前全局股价
+                            'amount'        => bcmul($quantity, Cache::get(self::GLOBAL_STOCK_PRICE_KEY, 0), 2),
+                            'status'        => 1, // 成功
+                            'remark'        => "系统增加股权",
+                            'created_at'    => date('Y-m-d H:i:s'),
+                            'updated_at'    => date('Y-m-d H:i:s')
+                        ]);
                     } else if ($operation === '-') {
+                        // 再次检查数量是否足够（防止负数）
                         if ($wallet->quantity < $quantity) {
                             $errorReasons[] = "第{$rowNumber}行：用户股权数量不足";
                             continue;
                         }
+
                         $wallet->quantity -= $quantity;
                         $totalDecrease += $quantity;
+
+                        // 记录交易记录（减少）
+                        Db::name('stock_transactions')->insert([
+                            'user_id'       => $userId,
+                            'stock_type_id' => $stockTypeId,
+                            'type'          => 2, // 2=卖出
+                            'source'        => 1, // 1=流通股权
+                            'quantity'      => $quantity,
+                            'price'         => Cache::get(self::GLOBAL_STOCK_PRICE_KEY, 0), // 当前全局股价
+                            'amount'        => bcmul($quantity, Cache::get(self::GLOBAL_STOCK_PRICE_KEY, 0), 2),
+                            'status'        => 1, // 成功
+                            'remark'        => "系统减少股权",
+                            'created_at'    => date('Y-m-d H:i:s'),
+                            'updated_at'    => date('Y-m-d H:i:s')
+                        ]);
                     } else {
                         $errorReasons[] = "第{$rowNumber}行：操作类型无效（只能为+/-）";
                         continue;
