@@ -158,6 +158,95 @@
     </div>
 </div>
 
+<!-- 单个调整模态框 -->
+<div class="modal fade" id="adjustSingleModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">调整单个用户股权</h4>
+            </div>
+            <form id="adjustSingleForm">
+                <input type="hidden" name="stock_type_id" id="adjust_stock_type_id">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>股权名称</label>
+                        <input type="text" class="form-control" id="adjust_stock_name" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>选择用户 <span class="text-red">*</span></label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="searchUser"
+                                   placeholder="输入用户名或手机号搜索">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="button" id="searchUserBtn">搜索</button>
+                            </span>
+                        </div>
+                        <select class="form-control" id="userSelect" name="user_id"
+                                style="margin-top: 10px; display: none;">
+                            <option value="">请选择用户</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>操作类型 <span class="text-red">*</span></label>
+                        <select class="form-control" name="operation">
+                            <option value="+">增加股权</option>
+                            <option value="-">减少股权</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>数量 <span class="text-red">*</span></label>
+                        <input type="number" class="form-control" name="quantity" placeholder="请输入整数数量" min="1"
+                               step="1" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">确认调整</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Excel批量导入模态框 -->
+<div class="modal fade" id="batchImportModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Excel批量导入股权</h4>
+            </div>
+            <form id="batchImportForm" enctype="multipart/form-data">
+                <input type="hidden" name="stock_type_id" id="import_stock_type_id">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>股权名称</label>
+                        <input type="text" class="form-control" id="import_stock_name" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Excel文件 <span class="text-red">*</span></label>
+                        <input type="file" name="excel_file" accept=".xlsx,.xls,.csv" required>
+                        <p class="help-block">
+                            文件格式要求：第一行表头，第二行开始数据<br>
+                            列顺序：用户ID | 操作类型(+/-) | 数量（必须为整数）<br>
+                            <a href="{:url('admin/Stock/downloadTemplate')}">下载模板</a>
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">开始导入</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 {block name="js"}
 <link href="https://cdn.datatables.net/v/dt/dt-2.3.3/datatables.min.css" rel="stylesheet"
       integrity="sha384-C0ogMvg31Mu1GWzYxEEobPIlBlGbp/DY94Le4M9y/HFd9VGLT1zWL7MErNMsM2x6" crossorigin="anonymous">
@@ -223,6 +312,12 @@
                                 <i class="fa fa-edit"></i> 编辑
                             </button>
                              ${statusBtn}
+                                <button class="btn btn-xs btn-success" onclick="adjustSingle(${data})">
+                                    <i class="fa fa-user"></i> 单个调整
+                                </button>
+                                <button class="btn btn-xs btn-warning" onclick="batchImport(${data})">
+                                    <i class="fa fa-file-excel-o"></i> Excel导入
+                                </button>
                              <!--
                             <button class="btn btn-xs btn-danger" onclick="deleteStock(${data})">
                                 <i class="fa fa-trash"></i> 删除
@@ -438,6 +533,117 @@
                 });
             } else {
                 layer.msg(res.msg, {icon: 2});
+            }
+        });
+    });
+
+
+    // 单个调整按钮功能
+    function adjustSingle(stockTypeId) {
+        $.get('{:url("admin/Stock/getStock")}', {id: stockTypeId}, function (res) {
+            if (res.code == 1) {
+                $('#adjust_stock_type_id').val(res.data.id);
+                $('#adjust_stock_name').val(res.data.name);
+                $('#adjustSingleModal').modal('show');
+            } else {
+                layer.msg(res.msg, {icon: 2});
+            }
+        }, 'json');
+    }
+
+    // 用户搜索功能
+    $('#searchUserBtn').click(function () {
+        var keyword = $('#searchUser').val();
+        if (!keyword) {
+            layer.msg('请输入搜索关键词', {icon: 2});
+            return;
+        }
+
+        $.post('{:url("admin/Stock/adjustSingle")}', {keyword: keyword}, function (res) {
+            if (res.code == 1 && res.data.length > 0) {
+                var options = '<option value="">请选择用户</option>';
+                $.each(res.data, function (i, user) {
+                    options += '<option value="' + user.id + '">' +
+                            (user.realname || '未知用户') +
+                            (user.phone ? ' (' + user.phone + ')' : '') +
+                            '</option>';
+                });
+                $('#userSelect').html(options).show();
+            } else {
+                $('#userSelect').hide();
+                layer.msg('未找到相关用户', {icon: 2});
+            }
+        }, 'json');
+    });
+
+    // 提交单个调整表单
+    $('#adjustSingleForm').submit(function (e) {
+        e.preventDefault();
+        var formData = $(this).serialize();
+        var load = layer.load(2);
+
+        $.post('{:url("admin/Stock/adjustSingle")}', formData, function (res) {
+            layer.close(load);
+            if (res.code == 1) {
+                layer.msg(res.msg, {icon: 1}, function () {
+                    $('#adjustSingleModal').modal('hide');
+                    $('#dataTable').DataTable().ajax.reload();
+                });
+            } else {
+                layer.msg(res.msg, {icon: 2});
+            }
+        });
+    });
+
+    // Excel批量导入按钮功能
+    function batchImport(stockTypeId) {
+        $.get('{:url("admin/Stock/getStock")}', {id: stockTypeId}, function (res) {
+            if (res.code == 1) {
+                $('#import_stock_type_id').val(res.data.id);
+                $('#import_stock_name').val(res.data.name);
+                $('#batchImportModal').modal('show');
+            } else {
+                layer.msg(res.msg, {icon: 2});
+            }
+        }, 'json');
+    }
+
+    // 提交Excel导入表单
+    $('#batchImportForm').submit(function (e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+        var load = layer.load(2);
+
+        $.ajax({
+            url: '{:url("admin/Stock/batchImport")}',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (res) {
+                layer.close(load);
+                if (res.code == 1) {
+                    var msg = res.msg;
+                    if (res.errors && res.errors.length > 0) {
+                        msg += '<br>错误详情：<ul>';
+                        $.each(res.errors, function (i, error) {
+                            msg += '<li>' + error + '</li>';
+                        });
+                        msg += '</ul>';
+                    }
+
+                    layer.open({
+                        title: '导入结果',
+                        content: msg,
+                        btn: ['确定'],
+                        yes: function () {
+                            $('#batchImportModal').modal('hide');
+                            $('#dataTable').DataTable().ajax.reload();
+                        }
+                    });
+                } else {
+                    layer.msg(res.msg, {icon: 2});
+                }
             }
         });
     });

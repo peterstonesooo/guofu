@@ -5,6 +5,7 @@ namespace app\admin\controller;
 
 use app\model\AdminOperations;
 use app\model\StockTypes;
+use app\model\User;
 use app\model\UserStockWallets;
 use think\facade\Cache;
 use think\facade\Db;
@@ -109,76 +110,143 @@ class StockController extends AuthController
     }
 
     // 批量增加原始股权
-    public function batchAdd()
+    // 新增Excel批量导入功能
+    public function batchImport()
     {
         if ($this->request->isPost()) {
-            $data = $this->request->only(['stock_type_id', 'user_ids', 'quantity']);
+            $file = $this->request->file('excel_file');
+            $stockTypeId = $this->request->param('stock_type_id/d', 0);
+
+            if (!$file) {
+                return json(['code' => 0, 'msg' => '请上传文件']);
+            }
+
+            $stock = StockTypes::find($stockTypeId);
+            if (!$stock) {
+                return json(['code' => 0, 'msg' => '股权不存在']);
+            }
 
             try {
-                Db::startTrans();
-
-                $stock = StockTypes::find($data['stock_type_id']);
-                if (!$stock) {
-                    throw new \Exception('股权不存在');
+                $extension = $file->getOriginalExtension();
+                if (!in_array($extension, ['xlsx', 'xls', 'csv'])) {
+                    throw new \Exception('文件格式不支持');
                 }
 
-                $userIds = explode(',', $data['user_ids']);
+                $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($file->getPathname());
+                $spreadsheet = $reader->load($file->getPathname());
+                $sheet = $spreadsheet->getActiveSheet();
+                $rows = $sheet->toArray();
+
+                // 移除标题行
+                array_shift($rows);
+
+                // 限制1000条
+                if (count($rows) > 1000) {
+                    throw new \Exception('单次导入不能超过1000条记录');
+                }
+
+                Db::startTrans();
+
                 $successCount = 0;
+                $errorReasons = [];
+                $totalIncrease = 0;
+                $totalDecrease = 0;
 
-                foreach ($userIds as $userId) {
-                    $userId = trim($userId);
-                    if (empty($userId))
+                foreach ($rows as $index => $row) {
+                    $rowNumber = $index + 2; // 实际行号
+
+                    if (empty($row[0])) {
+                        $errorReasons[] = "第{$rowNumber}行：用户ID不能为空";
                         continue;
+                    }
 
-                    // 查找或创建用户股权钱包
+                    $userId = (int)trim($row[0]);
+                    $operation = trim($row[1] ?? '+');
+                    $quantity = $row[2] ?? 0;
+
+                    // 验证用户存在性
+                    if (!User::where('id', $userId)->find()) {
+                        $errorReasons[] = "第{$rowNumber}行：用户ID {$userId} 不存在";
+                        continue;
+                    }
+
+                    // 验证数量必须是整数
+                    if (!is_numeric($quantity) || $quantity != (int)$quantity || $quantity <= 0) {
+                        $errorReasons[] = "第{$rowNumber}行：数量必须是大于0的整数";
+                        continue;
+                    }
+
+                    $quantity = (int)$quantity; // 强制转换为整数
+
+                    // 查找或创建钱包
                     $wallet = UserStockWallets::where([
                         'user_id'       => $userId,
-                        'stock_type_id' => $data['stock_type_id']
+                        'stock_type_id' => $stockTypeId
                     ])->find();
 
-                    if ($wallet) {
-                        $beforeQuantity = $wallet->original_quantity;
-                        $wallet->original_quantity += $data['quantity'];
-                        $wallet->save();
-                    } else {
-                        $beforeQuantity = 0;
-                        $wallet = UserStockWallets::create([
-                            'user_id'              => $userId,
-                            'stock_type_id'        => $data['stock_type_id'],
-                            'original_quantity'    => $data['quantity'],
-                            'circulating_quantity' => 0,
-                            'purchased_quantity'   => 0,
-                            'created_at'           => date('Y-m-d H:i:s'),
-                            'updated_at'           => date('Y-m-d H:i:s')
-                        ]);
+                    if (!$wallet) {
+                        $wallet = new UserStockWallets();
+                        $wallet->user_id = $userId;
+                        $wallet->stock_type_id = $stockTypeId;
+                        $wallet->quantity = 0;
                     }
+
+                    $beforeQuantity = $wallet->quantity;
+
+                    // 处理操作
+                    if ($operation === '+') {
+                        $wallet->quantity += $quantity;
+                        $totalIncrease += $quantity;
+                    } else if ($operation === '-') {
+                        if ($wallet->quantity < $quantity) {
+                            $errorReasons[] = "第{$rowNumber}行：用户股权数量不足";
+                            continue;
+                        }
+                        $wallet->quantity -= $quantity;
+                        $totalDecrease += $quantity;
+                    } else {
+                        $errorReasons[] = "第{$rowNumber}行：操作类型无效（只能为+/-）";
+                        continue;
+                    }
+
+                    $wallet->save();
+                    $successCount++;
 
                     // 记录操作日志
                     AdminOperations::create([
                         'admin_id'    => $this->adminUser->id,
-                        'type'        => 'add_original_stock',
+                        'type'        => 'batch_import_stock',
                         'target_id'   => $userId,
                         'target_type' => 'user_stock_wallets',
-                        'before_data' => json_encode(['original_quantity' => $beforeQuantity]),
-                        'after_data'  => json_encode(['original_quantity' => $wallet->original_quantity]),
+                        'before_data' => json_encode(['quantity' => $beforeQuantity]),
+                        'after_data'  => json_encode(['quantity' => $wallet->quantity]),
                         'ip'          => $this->request->ip(),
-                        'remark'      => "为用户[{$userId}]增加股权[{$stock->name}] {$data['quantity']}股",
+                        'remark'      => "导入{$operation}用户[{$userId}]股权[{$stock->name}] {$quantity}股",
                         'created_at'  => date('Y-m-d H:i:s'),
                         'updated_at'  => date('Y-m-d H:i:s')
                     ]);
-
-                    $successCount++;
                 }
 
-                // 更新总发行数量
-                $stock->total_shares += ($data['quantity'] * count($userIds));
+                // 更新总发行量
+                $stock->total_shares += ($totalIncrease - $totalDecrease);
                 $stock->save();
 
                 Db::commit();
-                return json(['code' => 1, 'msg' => "成功为{$successCount}个用户增加原始股权"]);
+
+                $msg = "导入完成：成功{$successCount}条";
+                if (!empty($errorReasons)) {
+                    $msg .= "，失败" . count($errorReasons) . "条";
+                }
+
+                return json([
+                    'code'   => 1,
+                    'msg'    => $msg,
+                    'errors' => $errorReasons
+                ]);
+
             } catch (\Exception $e) {
                 Db::rollback();
-                return json(['code' => 0, 'msg' => '操作失败: ' . $e->getMessage()]);
+                return json(['code' => 0, 'msg' => '导入失败: ' . $e->getMessage()]);
             }
         }
 
@@ -189,7 +257,7 @@ class StockController extends AuthController
         }
 
         View::assign('stock', $stock);
-        return View::fetch();
+        return View::fetch('batch_import');
     }
 
     // 调整流通股权数量
@@ -495,5 +563,132 @@ class StockController extends AuthController
 
         View::assign('stock', $stock);
         return View::fetch();
+    }
+
+    // 新增单个用户股权调整功能（带搜索）
+    public function adjustSingle()
+    {
+        if ($this->request->isAjax()) {
+            $keyword = $this->request->param('keyword/s', '');
+
+            if ($keyword) {
+                $users = User::where('realname|phone', 'like', "%{$keyword}%")
+                    ->field('id,realname,phone')
+                    ->limit(10)
+                    ->select();
+                return json(['code' => 1, 'data' => $users]);
+            } else {
+                $data = $this->request->only(['user_id', 'stock_type_id', 'quantity', 'operation']);
+
+                try {
+                    Db::startTrans();
+
+                    $stock = StockTypes::find($data['stock_type_id']);
+                    if (!$stock) {
+                        throw new \Exception('股权不存在');
+                    }
+
+                    $userId = (int)$data['user_id'];
+                    $quantity = $data['quantity'];
+                    $operation = $data['operation']; // + 或 -
+
+                    // 验证用户存在性
+                    if (!User::where('id', $userId)->find()) {
+                        throw new \Exception('用户不存在');
+                    }
+
+                    // 验证数量必须是整数
+                    if (!is_numeric($quantity) || $quantity != (int)$quantity || $quantity <= 0) {
+                        throw new \Exception('数量必须是大于0的整数');
+                    }
+                    $quantity = (int)$quantity; // 强制转换为整数
+
+                    // 查找或创建钱包
+                    $wallet = UserStockWallets::where([
+                        'user_id'       => $userId,
+                        'stock_type_id' => $data['stock_type_id']
+                    ])->find();
+
+                    if (!$wallet) {
+                        $wallet = new UserStockWallets();
+                        $wallet->user_id = $userId;
+                        $wallet->stock_type_id = $data['stock_type_id'];
+                        $wallet->quantity = 0;
+                    }
+
+                    $beforeQuantity = $wallet->quantity;
+
+                    // 处理增减操作
+                    if ($operation === '+') {
+                        $wallet->quantity += $quantity;
+                        $stock->total_shares += $quantity;
+                    } else if ($operation === '-') {
+                        if ($wallet->quantity < $quantity) {
+                            throw new \Exception('用户股权数量不足');
+                        }
+                        $wallet->quantity -= $quantity;
+                        $stock->total_shares -= $quantity;
+                    } else {
+                        throw new \Exception('无效的操作类型');
+                    }
+
+                    $wallet->save();
+                    $stock->save();
+
+                    // 记录操作日志
+                    AdminOperations::create([
+                        'admin_id'    => $this->adminUser->id,
+                        'type'        => 'adjust_single_stock',
+                        'target_id'   => $userId,
+                        'target_type' => 'user_stock_wallets',
+                        'before_data' => json_encode(['quantity' => $beforeQuantity]),
+                        'after_data'  => json_encode(['quantity' => $wallet->quantity]),
+                        'ip'          => $this->request->ip(),
+                        'remark'      => ($operation === '+' ? '增加' : '减少') . "用户[{$userId}]股权[{$stock->name}] {$quantity}股",
+                        'created_at'  => date('Y-m-d H:i:s'),
+                        'updated_at'  => date('Y-m-d H:i:s')
+                    ]);
+
+                    Db::commit();
+                    return json(['code' => 1, 'msg' => '股权调整成功']);
+                } catch (\Exception $e) {
+                    Db::rollback();
+                    return json(['code' => 0, 'msg' => '操作失败: ' . $e->getMessage()]);
+                }
+            }
+
+        }
+
+        $id = $this->request->param('id/d', 0);
+        $stock = StockTypes::find($id);
+        if (!$stock) {
+            $this->error('股权不存在');
+        }
+
+        View::assign('stock', $stock);
+        return View::fetch('adjust_single');
+    }
+
+    public function downloadTemplate()
+    {
+        // 创建示例数据
+        $data = [
+            ['用户ID', '操作类型(+/-)', '数量'],
+            [1, '+', 100],
+            [2, '-', 50]
+        ];
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->fromArray($data);
+
+        // 设置响应头
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="股权批量导入模板.xlsx"');
+        header('Cache-Control: max-age=0');
+
+        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer->save('php://output');
+        exit;
     }
 }
