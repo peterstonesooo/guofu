@@ -216,22 +216,22 @@ return [
                 'icon' => 'fa-cog',  // 使用齿轮图标表示配置
                 'url'  => 'admin/Stock/index',
             ],
-            '调整股价' => [
-                'icon' => 'fa-line-chart',  // 使用折线图图标表示价格调整
-                'url'  => 'admin/Stock/adjustPrice',
-            ],
-            '股权分配' => [
-                'icon' => 'fa-share-alt',  // 使用分享图标表示分配
-                'url'  => 'admin/Stock/distribute',
-            ],
-            '交易记录' => [
-                'icon' => 'fa-exchange',  // 使用交换图标表示交易
-                'url'  => 'admin/Stock/transactions',
-            ],
-            '股东管理' => [
-                'icon' => 'fa-users',  // 使用用户组图标表示股东
-                'url'  => 'admin/Stock/shareholders',
-            ],
+//            '调整股价' => [
+//                'icon' => 'fa-line-chart',  // 使用折线图图标表示价格调整
+//                'url'  => 'admin/Stock/adjustPrice',
+//            ],
+//            '股权分配' => [
+//                'icon' => 'fa-share-alt',  // 使用分享图标表示分配
+//                'url'  => 'admin/Stock/distribute',
+//            ],
+//            '交易记录' => [
+//                'icon' => 'fa-exchange',  // 使用交换图标表示交易
+//                'url'  => 'admin/Stock/transactions',
+//            ],
+//            '股东管理' => [
+//                'icon' => 'fa-users',  // 使用用户组图标表示股东
+//                'url'  => 'admin/Stock/shareholders',
+//            ],
         ],
     ],
     '后台账号管理' =>
