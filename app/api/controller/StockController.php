@@ -2,6 +2,7 @@
 
 namespace app\api\controller;
 
+use app\api\service\StockService;
 use app\model\StockTypes;
 use app\model\UserStockWallets;
 use think\facade\Cache;
@@ -69,5 +70,99 @@ class StockController extends AuthController
             'global_price' => $globalPrice,
             'stocks'       => $stocks
         ]);
+    }
+
+
+    /**
+     * 买入股权
+     * @param string stock_code 股权代码 (如LTG001, MRG001)
+     * @param integer quantity 购买数量
+     */
+    public function buyStock()
+    {
+        $user_id = $this->user['id'];
+        $stock_code = $this->request->param('stock_code', ''); // 改为字符串参数
+        $quantity = $this->request->param('quantity/d', 0);
+
+        // 参数验证
+        if (empty($stock_code) || $quantity <= 0) {
+            return out(null, 10001, '参数错误');
+        }
+
+        try {
+            $result = StockService::buyStock($user_id, $stock_code, $quantity);
+            if ($result) {
+                return out(null, 200, '买入成功');
+            } else {
+                return out(null, 10002, '买入失败');
+            }
+        } catch (\Exception $e) {
+            return out(null, 10003, $e->getMessage());
+        }
+    }
+
+    /**
+     * 卖出股权
+     * @param string stock_code 股权代码
+     * @param integer quantity 卖出数量
+     */
+    public function sellStock()
+    {
+        $user_id = $this->user['id'];
+        $stock_code = $this->request->param('stock_code', ''); // 改为字符串参数
+        $quantity = $this->request->param('quantity/d', 0);
+
+        // 参数验证
+        if (empty($stock_code) || $quantity <= 0) {
+            return out(null, 10001, '参数错误');
+        }
+
+        try {
+            $result = StockService::sellStock($user_id, $stock_code, $quantity);
+            if ($result) {
+                return out(null, 200, '卖出成功');
+            } else {
+                return out(null, 10004, '卖出失败');
+            }
+        } catch (\Exception $e) {
+            return out(null, 10005, $e->getMessage());
+        }
+    }
+
+
+    /**
+     * 获取股权交易记录
+     * @param integer page 页码 (可选)
+     * @param integer limit 每页条数 (可选)
+     * @param integer type 交易类型 (可选，1买入 2卖出)
+     */
+    public function transactionList()
+    {
+        $user_id = $this->user['id'];
+        $page = $this->request->param('page/d', 1);
+        $limit = $this->request->param('limit/d', 10);
+        $type = $this->request->param('type/d', 0);
+
+        $where = [['user_id', '=', $user_id]];
+        if (in_array($type, [1, 2])) {
+            $where[] = ['type', '=', $type];
+        }
+
+        try {
+            $list = Db::name('stock_transactions')
+                ->where($where)
+                ->page($page, $limit)
+                ->order('id', 'desc')
+                ->select();
+            $total = Db::name('stock_transactions')->where($where)->count();
+
+            return out([
+                'list'         => $list,
+                'total'        => $total,
+                'current_page' => $page
+            ], 200, 'success');
+        } catch (\Exception $e) {
+            return out(null, 10007, $e->getMessage());
+        }
     }
 }
