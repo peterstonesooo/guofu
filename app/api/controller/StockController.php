@@ -132,37 +132,105 @@ class StockController extends AuthController
 
     /**
      * 获取股权交易记录
+     * @param string stock_code 股权代码 (可选，如 LTG001, MRG001)
+     * @param integer type 交易类型 (可选，1=买入 2=卖出)
      * @param integer page 页码 (可选)
      * @param integer limit 每页条数 (可选)
-     * @param integer type 交易类型 (可选，1买入 2卖出)
      */
     public function transactionList()
     {
         $user_id = $this->user['id'];
+        $stock_code = $this->request->param('stock_code', '');
+        $type = $this->request->param('type/d', 0);
         $page = $this->request->param('page/d', 1);
         $limit = $this->request->param('limit/d', 10);
-        $type = $this->request->param('type/d', 0);
 
+        // 构建基础查询条件
         $where = [['user_id', '=', $user_id]];
+
+        // 添加交易类型条件
         if (in_array($type, [1, 2])) {
             $where[] = ['type', '=', $type];
         }
 
+        // 添加股权代码条件
+        if (!empty($stock_code)) {
+            // 根据股权代码查询对应的股权类型ID
+            $stockType = Db::name('stock_types')
+                ->where('code', $stock_code)
+                ->find();
+
+            if (!$stockType) {
+                return out(null, 10008, '股权代码不存在');
+            }
+
+            $where[] = ['stock_type_id', '=', $stockType['id']];
+        }
+
         try {
-            $list = Db::name('stock_transactions')
+            // 查询交易记录
+            $query = Db::name('stock_transactions')
                 ->where($where)
-                ->page($page, $limit)
-                ->order('id', 'desc')
-                ->select();
-            $total = Db::name('stock_transactions')->where($where)->count();
+                ->order('id', 'desc');
+
+            // 获取总数
+            $total = $query->count();
+
+            // 获取分页数据 - 确保转换为数组
+            $list = $query->page($page, $limit)->select()->toArray();
+
+            // 如果查询结果不为空，补充股权代码信息
+            if (!empty($list)) {
+                // 获取所有涉及的股权类型ID
+                $stockTypeIds = [];
+                foreach ($list as $item) {
+                    if (isset($item['stock_type_id'])) {
+                        $stockTypeIds[] = $item['stock_type_id'];
+                    }
+                }
+                $stockTypeIds = array_unique($stockTypeIds);
+
+                if (!empty($stockTypeIds)) {
+                    // 查询股权类型信息
+                    $stockTypes = Db::name('stock_types')
+                        ->whereIn('id', $stockTypeIds)
+                        ->select()
+                        ->toArray();
+
+                    // 转换为以ID为键的数组
+                    $stockTypeMap = [];
+                    foreach ($stockTypes as $type) {
+                        $stockTypeMap[$type['id']] = [
+                            'code' => $type['code'],
+                            'name' => $type['name']
+                        ];
+                    }
+
+                    // 为每条记录添加股权代码和名称
+                    foreach ($list as &$item) {
+                        if (isset($item['stock_type_id']) && isset($stockTypeMap[$item['stock_type_id']])) {
+                            $item['stock_code'] = $stockTypeMap[$item['stock_type_id']]['code'];
+                            $item['stock_name'] = $stockTypeMap[$item['stock_type_id']]['name'];
+                        } else {
+                            $item['stock_code'] = '';
+                            $item['stock_name'] = '未知股权';
+                        }
+
+                        // 添加交易类型文本
+                        $item['type_text'] = $item['type'] == 1 ? '买入' : '卖出';
+                    }
+                }
+            }
 
             return out([
                 'list'         => $list,
                 'total'        => $total,
-                'current_page' => $page
+                'current_page' => $page,
+                'total_page'   => ceil($total / $limit)
             ], 200, 'success');
+
         } catch (\Exception $e) {
-            return out(null, 10007, $e->getMessage());
+            return out(null, 10007, '查询失败: ' . $e->getMessage());
         }
     }
 }
