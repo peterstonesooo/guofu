@@ -121,7 +121,7 @@ class StockController extends AuthController
         $stock_code = $this->request->param('stock_code', '');
         $quantity = $this->request->param('quantity/d', 0);
         $pay_password = $this->request->param('pay_password', '');
-        $pay_type = $this->request->param('pay_type/d', 0); // 新增支付类型参数，默认1
+        $pay_type = $this->request->param('pay_type/d', 0);
 
         // 参数验证
         if (empty($stock_code) || $quantity <= 0 || !in_array($pay_type, [1, 2])) {
