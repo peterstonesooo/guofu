@@ -80,22 +80,30 @@ class StockController extends AuthController
      */
     public function buyStock()
     {
-        $user_id = $this->user['id'];
-        $stock_code = $this->request->param('stock_code', ''); // 改为字符串参数
+        $user = $this->user;
+        $stock_code = $this->request->param('stock_code', '');
         $quantity = $this->request->param('quantity/d', 0);
+        $pay_password = $this->request->param('pay_password', '');
 
         // 参数验证
         if (empty($stock_code) || $quantity <= 0) {
             return out(null, 10001, '参数错误');
         }
 
+        // 支付密码验证（新增）
+        if (empty($user['pay_password'])) {
+            return out(null, 10010, '请先设置支付密码');
+        }
+        if (sha1(md5($pay_password)) !== $user['pay_password']) {
+            return out(null, 10011, '支付密码错误');
+        }
+
         try {
-            $result = StockService::buyStock($user_id, $stock_code, $quantity);
+            $result = StockService::buyStock($user['id'], $stock_code, $quantity);
             if ($result) {
                 return out(null, 200, '买入成功');
-            } else {
-                return out(null, 10002, '买入失败');
             }
+            return out(null, 10002, '买入失败');
         } catch (\Exception $e) {
             return out(null, 10003, $e->getMessage());
         }
@@ -108,22 +116,30 @@ class StockController extends AuthController
      */
     public function sellStock()
     {
-        $user_id = $this->user['id'];
-        $stock_code = $this->request->param('stock_code', ''); // 改为字符串参数
+        $user = $this->user;
+        $stock_code = $this->request->param('stock_code', '');
         $quantity = $this->request->param('quantity/d', 0);
+        $pay_password = $this->request->param('pay_password', '');
 
         // 参数验证
         if (empty($stock_code) || $quantity <= 0) {
             return out(null, 10001, '参数错误');
         }
 
+        // 支付密码验证（新增）
+        if (empty($user['pay_password'])) {
+            return out(null, 10010, '请先设置支付密码');
+        }
+        if (sha1(md5($pay_password)) !== $user['pay_password']) {
+            return out(null, 10011, '支付密码错误');
+        }
+
         try {
-            $result = StockService::sellStock($user_id, $stock_code, $quantity);
+            $result = StockService::sellStock($user['id'], $stock_code, $quantity);
             if ($result) {
                 return out(null, 200, '卖出成功');
-            } else {
-                return out(null, 10004, '卖出失败');
             }
+            return out(null, 10004, '卖出失败');
         } catch (\Exception $e) {
             return out(null, 10005, $e->getMessage());
         }
