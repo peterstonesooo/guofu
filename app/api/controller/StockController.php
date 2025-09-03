@@ -84,9 +84,10 @@ class StockController extends AuthController
         $stock_code = $this->request->param('stock_code', '');
         $quantity = $this->request->param('quantity/d', 0);
         $pay_password = $this->request->param('pay_password', '');
+        $pay_type = $this->request->param('pay_type/d', 0);
 
         // 参数验证
-        if (empty($stock_code) || $quantity <= 0) {
+        if (empty($stock_code) || $quantity <= 0 || !in_array($pay_type, [1, 2])) {
             return out(null, 10001, '参数错误');
         }
 
@@ -99,7 +100,7 @@ class StockController extends AuthController
         }
 
         try {
-            $result = StockService::buyStock($user['id'], $stock_code, $quantity);
+            $result = StockService::buyStock($user['id'], $stock_code, $quantity, $pay_type);
             if ($result) {
                 return out(null, 200, '买入成功');
             }
@@ -120,9 +121,10 @@ class StockController extends AuthController
         $stock_code = $this->request->param('stock_code', '');
         $quantity = $this->request->param('quantity/d', 0);
         $pay_password = $this->request->param('pay_password', '');
+        $pay_type = $this->request->param('pay_type/d', 0); // 新增支付类型参数，默认1
 
         // 参数验证
-        if (empty($stock_code) || $quantity <= 0) {
+        if (empty($stock_code) || $quantity <= 0 || !in_array($pay_type, [1, 2])) {
             return out(null, 10001, '参数错误');
         }
 
@@ -135,7 +137,7 @@ class StockController extends AuthController
         }
 
         try {
-            $result = StockService::sellStock($user['id'], $stock_code, $quantity);
+            $result = StockService::sellStock($user['id'], $stock_code, $quantity, $pay_type);
             if ($result) {
                 return out(null, 200, '卖出成功');
             }

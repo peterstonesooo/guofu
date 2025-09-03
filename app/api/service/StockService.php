@@ -18,10 +18,12 @@ class StockService
     }
 
     // 买入股权
-    public static function buyStock($user_id, $stock_code, $quantity)
+    public static function buyStock($user_id, $stock_code, $quantity, $pay_type = 1)
     {
         $price = self::getCurrentPrice();
         $amount = bcmul($quantity, $price, 2);
+        // 根据支付类型选择余额字段
+        $balanceField = ($pay_type == 1) ? 'topup_balance' : 'team_bonus_balance';
 
         Db::startTrans();
         try {
@@ -36,7 +38,7 @@ class StockService
             $stock_type_id = $stockType['id'];
 
             // 1. 扣减用户余额
-            User::changeInc($user_id, -$amount, 'balance', 91, 0, 1, "股权买入:{$quantity}股");
+            User::changeInc($user_id, -$amount, $balanceField, 91, 0, 1, "股权买入:{$quantity}股");
 
             // 2. 更新股权钱包
             $wallet = UserStockWallets::where('user_id', $user_id)
@@ -79,10 +81,13 @@ class StockService
     }
 
     // 卖出股权
-    public static function sellStock($user_id, $stock_code, $quantity)
+    public static function sellStock($user_id, $stock_code, $quantity, $pay_type = 1)
     {
         $price = self::getCurrentPrice();
         $amount = bcmul($quantity, $price, 2);
+
+        // 根据支付类型选择余额字段
+        $balanceField = ($pay_type == 1) ? 'topup_balance' : 'team_bonus_balance';
 
         Db::startTrans();
         try {
@@ -140,7 +145,7 @@ class StockService
             User::changeInc(
                 $user_id,
                 $amount,
-                'balance',
+                $balanceField,
                 92, // 新日志类型:股权卖出
                 0,
                 1,
