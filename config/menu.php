@@ -216,10 +216,10 @@ return [
                 'icon' => 'fa-cog',  // 使用齿轮图标表示配置
                 'url'  => 'admin/Stock/index',
             ],
-//            '调整股价' => [
-//                'icon' => 'fa-line-chart',  // 使用折线图图标表示价格调整
-//                'url'  => 'admin/Stock/adjustPrice',
-//            ],
+            '股权方案' => [
+                'icon' => 'fa-line-chart',
+                'url'  => 'admin/StockPackage/index',
+            ],
 //            '股权分配' => [
 //                'icon' => 'fa-share-alt',  // 使用分享图标表示分配
 //                'url'  => 'admin/Stock/distribute',

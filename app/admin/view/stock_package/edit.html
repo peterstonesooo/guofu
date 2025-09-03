@@ -1,0 +1,239 @@
+<!-- 自定义样式 -->
+<style>
+    .stock-item-panel {
+        margin-bottom: 15px;
+        border: 1px solid #f4f4f4;
+        border-radius: 4px;
+        padding: 10px;
+        background-color: #f9f9f9;
+    }
+
+    .stock-item-panel .panel-body {
+        padding: 10px;
+    }
+
+    .stock-item-panel .remove-btn {
+        margin-top: 25px;
+    }
+
+    .required:after {
+        content: " *";
+        color: red;
+    }
+
+    .help-block {
+        color: #737373;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+</style>
+<div class="container-fluid" style="padding: 20px;">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">编辑股权股权方案</h3>
+                </div>
+                <form class="form-horizontal" id="package-form">
+                    <div class="box-body">
+                        <input type="hidden" name="id" value="{$package.id}">
+
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label required">股权方案名称</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" name="name" value="{$package.name}"
+                                       placeholder="请输入股权方案名称" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label required">锁定期(天)</label>
+                            <div class="col-sm-10">
+                                <input type="number" class="form-control" name="lock_period"
+                                       value="{$package.lock_period}" min="0" required>
+                                <span class="help-block">股权购买后锁定的天数，0表示无锁定期</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label required">每日可出售(股)</label>
+                            <div class="col-sm-10">
+                                <input type="number" class="form-control" name="daily_sell_limit"
+                                       value="{$package.daily_sell_limit}" min="0" required>
+                                <span class="help-block">用户每日最多可出售的股权数量，0表示无限制</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">状态</label>
+                            <div class="col-sm-10">
+                                <label class="radio-inline">
+                                    <input type="radio" name="status" value="1" {if $package.status == 1}checked{/if}>
+                                    启用
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" name="status" value="0" {if $package.status == 0}checked{/if}>
+                                    禁用
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label required">股权配置</label>
+                            <div class="col-sm-10">
+                                <button type="button" class="btn btn-success btn-sm" id="add-stock-item">
+                                    <i class="fa fa-plus"></i> 添加股权类型
+                                </button>
+                                <span class="help-block">每个股权方案至少包含一种股权类型</span>
+
+                                <div id="stock-items-container" style="margin-top: 15px;">
+                                    <!-- 动态添加的股权配置项 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="box-footer">
+                        <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> 提交</button>
+                        <button type="button" class="btn btn-default" onclick="window.parent.layer.closeAll();"><i
+                                class="fa fa-times"></i> 取消
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    // 股权类型数据
+    var stockTypes = {$stockTypes|json_encode|raw};
+    // 当前股权方案的股权配置项数据
+    var packageItems = {$packageItems|json_encode|raw};
+    var itemCount = 0;
+
+    // 添加股权配置项
+    function addStockItem(stockTypeId = 0, quantity = 0) {
+        var html = `
+  <div class="panel panel-default stock-item-panel" data-index="${itemCount}">
+    <div class="panel-body">
+      <div class="row">
+        <div class="col-md-5">
+          <div class="form-group">
+            <label class="required">股权类型</label>
+            <select class="form-control" name="stock_items[${itemCount}][stock_type_id]" required>
+              <option value="">请选择股权类型</option>
+              ${generateStockTypeOptions(stockTypeId)}
+            </select>
+          </div>
+        </div>
+        <div class="col-md-5">
+          <div class="form-group">
+            <label class="required">数量(股)</label>
+            <input type="number" class="form-control" name="stock_items[${itemCount}][quantity]" value="${quantity || 0}" min="1" required>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="form-group">
+            <button type="button" class="btn btn-danger remove-btn" onclick="removeStockItem(${itemCount})">
+              <i class="fa fa-trash"></i> 删除
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  `;
+
+        $('#stock-items-container').append(html);
+        itemCount++;
+    }
+
+    // 生成股权类型选项
+    function generateStockTypeOptions(selectedId = 0) {
+        var options = '';
+        if (stockTypes && stockTypes.length > 0) {
+            stockTypes.forEach(function (type) {
+                var selected = type.id == selectedId ? 'selected' : '';
+                options += `<option value="${type.id}" ${selected}>${type.name} (${type.code})</option>`;
+            });
+        } else {
+            options = '<option value="">暂无股权类型数据</option>';
+        }
+        return options;
+    }
+
+    // 移除股权配置项
+    function removeStockItem(index) {
+        $(`.stock-item-panel[data-index="${index}"]`).remove();
+    }
+
+    // 表单提交
+    $('#package-form').submit(function (e) {
+        e.preventDefault();
+
+        // 验证至少有一个股权配置项
+        if ($('.stock-item-panel').length === 0) {
+            layer.msg('请至少添加一个股权配置项', {icon: 2});
+            return false;
+        }
+
+        // 表单验证
+        var formValid = true;
+        $('input[required], select[required]').each(function () {
+            if (!$(this).val()) {
+                formValid = false;
+                $(this).closest('.form-group').addClass('has-error');
+            } else {
+                $(this).closest('.form-group').removeClass('has-error');
+            }
+        });
+
+        if (!formValid) {
+            layer.msg('请填写所有必填项', {icon: 2});
+            return false;
+        }
+
+        // 序列化表单数据
+        var formData = $(this).serialize();
+
+        // 显示加载中
+        var loadingIndex = layer.load(1, {shade: [0.5, '#000']});
+
+        // 提交数据
+        $.post('{:url("admin/StockPackage/edit")}', formData, function (res) {
+            layer.close(loadingIndex);
+
+            if (res.code == 1) {
+                layer.msg(res.msg, {icon: 1}, function () {
+                    window.parent.layer.closeAll();
+                    window.parent.location.reload();
+                });
+            } else {
+                layer.msg(res.msg || '更新失败', {icon: 2});
+            }
+        }).fail(function () {
+            layer.close(loadingIndex);
+            layer.msg('请求失败，请检查网络', {icon: 2});
+        });
+    });
+
+    // 初始化
+    $(function () {
+        // 添加初始股权配置项按钮事件
+        $('#add-stock-item').click(function () {
+            addStockItem();
+        });
+
+        // 加载已有股权配置项
+        if (packageItems && packageItems.length > 0) {
+            packageItems.forEach(function (item) {
+                addStockItem(item.stock_type_id, item.quantity);
+            });
+        } else {
+            // 如果没有配置项，添加一个空项
+            addStockItem();
+        }
+    });
+</script>
