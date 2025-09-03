@@ -47,6 +47,9 @@ class StockPackageController extends AuthController
             if (empty($data['name'])) {
                 return json(['code' => 0, 'msg' => '股权方案名称不能为空']);
             }
+            if (!isset($data['price']) || $data['price'] < 0) {
+                return json(['code' => 0, 'msg' => '股权方案价格不能为负数']);
+            }
             if (empty($data['stock_items']) || !is_array($data['stock_items'])) {
                 return json(['code' => 0, 'msg' => '请至少添加一个股权类型']);
             }
@@ -56,6 +59,7 @@ class StockPackageController extends AuthController
 
                 $package = new StockPackages();
                 $package->name = $data['name'];
+                $package->price = $data['price'] ?? 0;
                 $package->lock_period = $data['lock_period'] ?? 0;
                 $package->daily_sell_limit = $data['daily_sell_limit'] ?? 0;
                 $package->status = $data['status'] ?? 1;
@@ -128,6 +132,9 @@ class StockPackageController extends AuthController
             if (empty($data['name'])) {
                 return json(['code' => 0, 'msg' => '股权方案名称不能为空']);
             }
+            if (!isset($data['price']) || $data['price'] < 0) {
+                return json(['code' => 0, 'msg' => '股权方案价格不能为负数']);
+            }
             if (empty($data['stock_items']) || !is_array($data['stock_items'])) {
                 return json(['code' => 0, 'msg' => '请至少添加一个股权类型']);
             }
@@ -138,6 +145,7 @@ class StockPackageController extends AuthController
                 $beforeData = $package->toArray();
 
                 $package->name = $data['name'];
+                $package->price = $data['price'] ?? 0;
                 $package->lock_period = $data['lock_period'] ?? 0;
                 $package->daily_sell_limit = $data['daily_sell_limit'] ?? 0;
                 $package->status = $data['status'] ?? 1;

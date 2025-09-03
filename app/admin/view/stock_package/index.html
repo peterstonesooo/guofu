@@ -28,6 +28,7 @@
             <tr>
                 <th>ID</th>
                 <th>股权方案名称</th>
+                <th>价格(元)</th>
                 <th>锁定期(天)</th>
                 <th>每日可出售(股)</th>
                 <th>状态</th>
@@ -41,9 +42,9 @@
             <tr>
                 <td>{$vo.id}</td>
                 <td>{$vo.name}</td>
+                <td>{$vo.price}</td>
                 <td>{$vo.lock_period}</td>
                 <td>{$vo.daily_sell_limit}</td>
-            <td>
             <td>
             {if $vo.status == 1}
                 <button class="btn btn-success btn-xs" onclick="changeStatus({$vo.id}, 0)">启用</button>
