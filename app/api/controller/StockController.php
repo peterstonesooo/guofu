@@ -31,38 +31,65 @@ class StockController extends AuthController
 
         $stocks = [];
         foreach ($stockTypes as $type) {
-            // 直接从用户股权钱包表获取持有数量
-            $wallet = UserStockWallets::where('user_id', $userId)
+            // 1. 普通购买的股权信息
+            $normalHold = UserStockWallets::where('user_id', $userId)
                 ->where('stock_type_id', $type->id)
-                ->find();
+                ->where('source', 0) // 普通购买
+                ->sum('quantity');
 
-            $holdQuantity = $wallet ? $wallet->quantity : 0;
-
-            // 计算当前价值
-            $currentValue = $holdQuantity * $globalPrice;
-
-            // 获取用户购买该股权的总成本（从交易记录）
-            $totalCost = Db::name('stock_transactions')
+            // 普通购买的成本
+            $normalCost = Db::name('stock_transactions')
                 ->where('user_id', $userId)
                 ->where('stock_type_id', $type->id)
-                ->where('type', 1) // 假设1为买入类型
+                ->where('source', 0) // 普通购买
+                ->where('type', 1) // 买入
                 ->where('status', 1)
                 ->sum('amount');
 
-            // 计算收益和收益率
-            $profit = $currentValue - $totalCost;
-            $profitRate = $totalCost > 0 ? ($profit / $totalCost) * 100 : 0;
+            // 2. 套餐获得的股权信息
+            $packageHold = UserStockWallets::where('user_id', $userId)
+                ->where('stock_type_id', $type->id)
+                ->where('source', '>', 0) // 套餐购买
+                ->sum('quantity');
 
-            // 使用 stock_code 作为键
+            // 套餐购买的成本（按比例分摊）
+            $packageCost = Db::name('package_purchases')
+                ->alias('pp')
+                ->join('stock_package_items spi', 'spi.package_id = pp.package_id')
+                ->where('pp.user_id', $userId)
+                ->where('spi.stock_type_id', $type->id)
+                ->sum('pp.amount');
+
+            // 分别计算收益
+            $normalValue = $normalHold * $globalPrice;
+            $normalProfit = $normalValue - $normalCost;
+            $normalProfitRate = $normalCost > 0 ? ($normalProfit / $normalCost) * 100 : 0;
+
+            $packageValue = $packageHold * $globalPrice;
+            $packageProfit = $packageValue - $packageCost;
+            $packageProfitRate = $packageCost > 0 ? ($packageProfit / $packageCost) * 100 : 0;
+
             $stocks[$type->code] = [
-                'stock_name'    => $type->name,
-                'stock_code'    => $type->code,
-                'hold_quantity' => $holdQuantity,
-                'current_value' => round($currentValue, 2),
-                'global_price'  => $globalPrice,
-                'total_cost'    => round($totalCost, 2),
-                'profit'        => round($profit, 2),
-                'profit_rate'   => round($profitRate, 2)
+                'stock_name' => $type->name,
+                'stock_code' => $type->code,
+                'normal'     => [ // 普通购买
+                    'hold_quantity' => $normalHold,
+                    'total_cost'    => round($normalCost, 2),
+                    'current_value' => round($normalValue, 2),
+                    'profit'        => round($normalProfit, 2),
+                    'profit_rate'   => round($normalProfitRate, 2)
+                ],
+                'package'    => [ // 套餐获得
+                    'hold_quantity' => $packageHold,
+                    'total_cost'    => round($packageCost, 2),
+                    'current_value' => round($packageValue, 2),
+                    'profit'        => round($packageProfit, 2),
+                    'profit_rate'   => round($packageProfitRate, 2)
+                ],
+                'total'      => [ // 汇总信息（可选）
+                    'hold_quantity' => $normalHold + $packageHold,
+                    'current_value' => round($normalValue + $packageValue, 2)
+                ]
             ];
         }
 
