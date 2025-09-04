@@ -122,10 +122,14 @@ class StockController extends AuthController
         $quantity = $this->request->param('quantity/d', 0);
         $pay_password = $this->request->param('pay_password', '');
         $pay_type = $this->request->param('pay_type/d', 0);
+        $source = $this->request->param('source/d', 0);
 
         // 参数验证
         if (empty($stock_code) || $quantity <= 0 || !in_array($pay_type, [1, 2])) {
             return out(null, 10001, '参数错误');
+        }
+        if ($source < 0) { // source应为非负整数
+            return out(null, 10001, '来源参数错误');
         }
 
         // 支付密码验证（新增）
@@ -137,7 +141,7 @@ class StockController extends AuthController
         }
 
         try {
-            $result = StockService::sellStock($user['id'], $stock_code, $quantity, $pay_type);
+            $result = StockService::sellStock($user['id'], $stock_code, $quantity, $pay_type, $source);
             if ($result) {
                 return out(null, 200, '卖出成功');
             }
