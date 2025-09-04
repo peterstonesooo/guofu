@@ -213,7 +213,7 @@ class StockController extends AuthController
                             'user_id'       => $userId,
                             'stock_type_id' => $stockTypeId,
                             'type'          => 1, // 1=买入
-                            'source'        => 1, // 1=流通股权
+                            'source'        => 0,
                             'quantity'      => $quantity,
                             'price'         => $globalPrice,
                             'amount'        => bcmul($quantity, $globalPrice, 2),
@@ -240,7 +240,7 @@ class StockController extends AuthController
                             'user_id'       => $userId,
                             'stock_type_id' => $stockTypeId,
                             'type'          => 2, // 2=卖出
-                            'source'        => 1, // 1=流通股权
+                            'source'        => 0,
                             'quantity'      => $quantity,
                             'price'         => $globalPrice,
                             'amount'        => bcmul($quantity, $globalPrice, 2),
@@ -688,7 +688,7 @@ class StockController extends AuthController
                             'user_id'       => $userId,
                             'stock_type_id' => $data['stock_type_id'],
                             'type'          => 1, // 1=买入
-                            'source'        => 1, // 1=流通股权
+                            'source'        => 0,
                             'quantity'      => $quantity,
                             'price'         => $globalPrice,
                             'amount'        => bcmul($quantity, $globalPrice, 2),
@@ -714,7 +714,7 @@ class StockController extends AuthController
                             'user_id'       => $userId,
                             'stock_type_id' => $data['stock_type_id'],
                             'type'          => 2, // 2=卖出
-                            'source'        => 1, // 1=流通股权
+                            'source'        => 0,
                             'quantity'      => $quantity,
                             'price'         => $globalPrice,
                             'amount'        => bcmul($quantity, $globalPrice, 2),
