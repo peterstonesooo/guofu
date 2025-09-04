@@ -3,6 +3,7 @@
 namespace app\api\controller;
 
 use app\api\service\PackageService;
+use app\model\PackagePurchases;
 use app\model\StockPackages;
 
 class PackageController extends AuthController
@@ -119,6 +120,77 @@ class PackageController extends AuthController
             return out(null, 10002, '购买失败');
         } catch (\Exception $e) {
             return out(null, 10003, $e->getMessage());
+        }
+    }
+
+
+    /**
+     * 获取用户已购买的股权方案记录（分页+日期搜索）
+     * @param integer page 当前页码（默认1）
+     * @param integer limit 每页数量（默认10）
+     * @param string start_date 开始日期（格式Y-m-d）
+     * @param string end_date 结束日期（格式Y-m-d）
+     */
+    public function purchasedRecords()
+    {
+        $user = $this->user;
+        $page = $this->request->param('page/d', 1);
+        $limit = $this->request->param('limit/d', 10);
+        $startDate = $this->request->param('start_date/s', '');
+        $endDate = $this->request->param('end_date/s', '');
+
+        try {
+            // 构建基础查询
+            $query = PackagePurchases::where('user_id', $user['id'])
+                ->with(['package' => function ($q) {
+                    $q->field('id,name,price');
+                }])
+                ->append(['pay_type_text'])
+                ->order('created_at', 'desc');
+
+            // 添加日期筛选
+            if (!empty($startDate)) {
+                $query->where('created_at', '>=', $startDate . ' 00:00:00');
+            }
+            if (!empty($endDate)) {
+                $query->where('created_at', '<=', $endDate . ' 23:59:59');
+            }
+
+            // 执行分页查询
+            $list = $query->paginate([
+                'page'      => $page,
+                'list_rows' => $limit,
+                'path'      => 'javascript:;' // 防止生成URL
+            ]);
+
+            if ($list->isEmpty()) {
+                return out([], 200, '暂无购买记录');
+            }
+
+            // 格式化数据
+            $data = [];
+            foreach ($list as $record) {
+                $data[] = [
+                    'id'            => $record->id,
+                    'package_id'    => $record->package_id,
+                    'package_name'  => $record->package->name ?? '已删除方案',
+                    'amount'        => $record->amount,
+                    'pay_type'      => $record->pay_type,
+                    'pay_type_text' => $record->pay_type_text,
+                    'status'        => $record->status,
+                    'created_at'    => $record->created_at
+                ];
+            }
+
+            return out([
+                'list'         => $data,
+                'total'        => $list->total(),
+                'current_page' => $list->currentPage(),
+                'last_page'    => $list->lastPage()
+            ], 200, 'success');
+
+        } catch (\Exception $e) {
+            return out([], 10001, '查询失败: ' . $e->getMessage());
         }
     }
 }

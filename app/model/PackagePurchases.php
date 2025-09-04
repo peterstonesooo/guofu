@@ -16,8 +16,8 @@ class PackagePurchases extends Model
     protected $updateTime = 'updated_at';
 
     // 支付方式常量定义
-    const PAY_TYPE_CASH = 1; // 现金支付
-    const PAY_TYPE_STOCK = 2; // 股权支付
+    const PAY_TYPE_TOPUP_BALANCE = 1; // 可用余额支付
+    const PAY_TYPE_TEAM_BALANCE = 2; // 可提余额支付
 
     // 状态常量定义
     const STATUS_SUCCESS = 1; // 支付成功
@@ -31,10 +31,15 @@ class PackagePurchases extends Model
     public static function getPayTypeText($payType)
     {
         $map = [
-            self::PAY_TYPE_CASH  => '现金支付',
-            self::PAY_TYPE_STOCK => '股权支付'
+            self::PAY_TYPE_TOPUP_BALANCE => '可用余额支付',
+            self::PAY_TYPE_TEAM_BALANCE  => '可提余额支付'
         ];
         return isset($map[$payType]) ? $map[$payType] : '未知';
+    }
+
+    public function getPayTypeTextAttr()
+    {
+        return self::getPayTypeText($this->pay_type);
     }
 
     /**
