@@ -270,11 +270,12 @@
                 type: 'POST',
                 data: function (d) {
                     return {
+                        start: d.start,      // 起始记录索引
+                        length: d.length,    // 每页数量
+                        draw: d.draw,        // DataTables绘次数
+                        // 搜索条件
                         keyword: $('#keyword').val(),
-                        stock_type_id: $('#stockTypeFilter').val(), // 新增类型过滤
-                        draw: d.draw,      // 添加DataTables必要参数
-                        page: (d.start / d.length) + 1, // 计算页码
-                        limit: d.length    // 每页数量
+                        stock_type_id: $('#stockTypeFilter').val()
                     };
                 }
             },

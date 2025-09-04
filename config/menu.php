@@ -212,11 +212,11 @@ return [
     '股权管理'     => [
         'icon' => 'fa-pie-chart',  // 使用图表图标表示股权数据
         'url'  => [
-            '股权配置' => [
+            '股权配置'         => [
                 'icon' => 'fa-cog',  // 使用齿轮图标表示配置
                 'url'  => 'admin/Stock/index',
             ],
-            '股权方案' => [
+            '股权方案'         => [
                 'icon' => 'fa-line-chart',
                 'url'  => 'admin/StockPackage/index',
             ],
@@ -224,10 +224,14 @@ return [
 //                'icon' => 'fa-share-alt',  // 使用分享图标表示分配
 //                'url'  => 'admin/Stock/distribute',
 //            ],
-//            '交易记录' => [
-//                'icon' => 'fa-exchange',  // 使用交换图标表示交易
-//                'url'  => 'admin/Stock/transactions',
-//            ],
+            '股权购买记录'     => [
+                'icon' => 'fa-exchange',  // 使用交换图标表示交易
+                'url'  => 'admin/StockTransaction/index',
+            ],
+            '股权方案购买记录' => [
+                'icon' => 'fa-exchange',  // 使用交换图标表示交易
+                'url'  => 'admin/PackagePurchase/index',
+            ],
 //            '股东管理' => [
 //                'icon' => 'fa-users',  // 使用用户组图标表示股东
 //                'url'  => 'admin/Stock/shareholders',

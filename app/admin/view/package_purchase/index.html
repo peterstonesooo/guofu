@@ -1,0 +1,132 @@
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box box-success">
+                <div class="box-header">
+                    <div class="box-tools">
+                        <form class="form-inline">
+                            <div class="form-group">
+                                <input type="text" class="form-control input-sm" name="user_id" placeholder="用户ID">
+                            </div>
+                            <div class="form-group">
+                                <select class="form-control input-sm" name="package_id">
+                                    <option value="">所有方案</option>
+                                    {volist name="packages" id="vo"}
+                                        <option value="{$vo.id}">{$vo.name}</option>
+                                    {/volist}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <select class="form-control input-sm" name="pay_type">
+                                    <option value="">支付方式</option>
+                                    <option value="1">可用余额</option>
+                                    <option value="2">可提余额</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <select class="form-control input-sm" name="status">
+                                    <option value="">所有状态</option>
+                                    <option value="1">成功</option>
+                                    <option value="0">失败</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <input type="text" class="form-control input-sm" name="date_range" id="date-range"
+                                       placeholder="购买日期">
+                            </div>
+                            <button type="button" class="btn btn-sm btn-success" id="search-btn">
+                                <i class="fa fa-search"></i> 搜索
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <div class="box-body">
+                    <table id="dataTable" class="table table-bordered table-hover">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>用户</th>
+                            <th>手机号</th>
+                            <th>方案名称</th>
+                            <th>支付金额</th>
+                            <th>支付方式</th>
+                            <th>状态</th>
+                            <th>购买时间</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<link href="__ADMIN__/plugins/datatable/datatables.min.css" rel="stylesheet">
+<script src="__ADMIN__/plugins/datatable/datatables.min.js"></script>
+<script>
+    $(function () {
+        // 初始化日期范围选择
+        laydate.render({
+            elem: '#date-range',
+            range: true,
+            max: 0
+        });
+
+        // 初始化表格
+        var table = $('#dataTable').DataTable({
+            'paging': true,
+            'lengthChange': true,
+            'searching': false,
+            'ordering': true,
+            'info': true,
+            'autoWidth': false,
+            'serverSide': true,
+            ajax: {
+                url: "{:url('admin/package_purchase/index')}",
+                data: function (d) {
+                    d.user_id = $('[name="user_id"]').val();
+                    d.package_id = $('[name="package_id"]').val();
+                    d.pay_type = $('[name="pay_type"]').val();
+                    d.status = $('[name="status"]').val();
+                    d.date_range = $('[name="date_range"]').val();
+                }
+            },
+            columns: [
+                {data: 'id'},
+                {data: 'username'},
+                {data: 'mobile'},
+                {data: 'package_name'},
+                {data: 'amount', className: 'text-right', render: $.fn.dataTable.render.number(',', '.', 2)},
+                {data: 'pay_type_text'},
+                {data: 'status_text'},
+                {data: 'created_at'}
+            ],
+            order: [[0, 'desc']],
+            language: {
+                // 修复中文显示
+                "sProcessing": "处理中...",
+                "sLengthMenu": "显示 _MENU_ 项结果",
+                "sZeroRecords": "没有匹配结果",
+                "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
+                "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
+                "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
+                "sInfoPostFix": "",
+                "sSearch": "搜索:",
+                "sUrl": "",
+                "sEmptyTable": "表中数据为空",
+                "sLoadingRecords": "载入中...",
+                "sInfoThousands": ",",
+                "oPaginate": {
+                    "sFirst": "首页",
+                    "sPrevious": "上页",
+                    "sNext": "下页",
+                    "sLast": "末页"
+                }
+            }
+        });
+
+        // 搜索按钮
+        $('#search-btn').click(function () {
+            table.ajax.reload();
+        });
+    });
+</script>
