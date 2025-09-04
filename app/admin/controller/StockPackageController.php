@@ -41,7 +41,7 @@ class StockPackageController extends AuthController
     public function add()
     {
         if ($this->request->isPost()) {
-            $data = $this->request->only(['name', 'lock_period', 'daily_sell_limit', 'status', 'stock_items']);
+            $data = $this->request->only(['name', 'lock_period', 'daily_sell_limit', 'status', 'stock_items', 'price']);
 
             // 验证数据
             if (empty($data['name'])) {
@@ -126,7 +126,7 @@ class StockPackageController extends AuthController
         }
 
         if ($this->request->isPost()) {
-            $data = $this->request->only(['name', 'lock_period', 'daily_sell_limit', 'status', 'stock_items']);
+            $data = $this->request->only(['name', 'lock_period', 'daily_sell_limit', 'status', 'stock_items', 'price']);
 
             // 验证数据
             if (empty($data['name'])) {
