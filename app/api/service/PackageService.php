@@ -5,16 +5,20 @@ namespace app\api\service;
 use app\model\PackagePurchases;
 use app\model\StockPackageItems;
 use app\model\StockPackages;
+use app\model\User;
 use app\model\UserStockWallets;
 use think\facade\Db;
 
 class PackageService
 {
+    // 日志类型常量
+    const LOG_STOCK_PACKAGE_BUY = 93; // 购买股权方案
+
     /**
-     * 购买套餐
+     * 购买股权方案
      * @param int $userId 用户ID
-     * @param int $packageId 套餐ID
-     * @param int $payType 支付方式 (1=现金, 2=股权)
+     * @param int $packageId 股权方案ID
+     * @param int $payType 支付方式 (1=充值余额, 2=团队奖金余额)
      * @return bool
      * @throws \Exception
      */
@@ -22,89 +26,107 @@ class PackageService
     {
         Db::startTrans();
         try {
-            // 获取套餐信息
+            // 获取股权方案信息
             $package = StockPackages::find($packageId);
             if (!$package || $package->status != 1) {
-                throw new \Exception('套餐不存在或已下架');
+                throw new \Exception('股权方案不存在或已下架');
             }
 
-            // 获取套餐的股权配置项
+            // 获取股权方案的股权配置项
             $items = StockPackageItems::where('package_id', $packageId)->select();
             if ($items->isEmpty()) {
-                throw new \Exception('套餐内容为空');
+                throw new \Exception('股权方案内容为空');
             }
 
-            // 计算套餐总价
+            // 计算股权方案总价
             $totalAmount = $package->price;
+            $remark = "购买股权方案:{$package->name}";
 
             // 根据支付方式扣款
             if ($payType == 1) {
-                // 现金支付：扣除用户现金
-                $user = Db::name('user')->where('id', $userId)->lock(true)->find();
-                if ($user['balance'] < $totalAmount) {
-                    throw new \Exception('现金余额不足');
-                }
-                Db::name('user')->where('id', $userId)->dec('balance', $totalAmount)->update();
+                // 充值余额支付
+                User::changeInc(
+                    $userId,
+                    -$totalAmount,
+                    'topup_balance',
+                    self::LOG_STOCK_PACKAGE_BUY,
+                    0,
+                    1,
+                    $remark
+                );
             } else if ($payType == 2) {
-                // 股权支付：扣除用户股权
-                // 这里需要根据业务逻辑实现股权扣款
-                // 例如：扣除用户持有的特定股权类型
-                // 由于没有具体股权类型，这里使用伪代码表示
-                $deducted = self::deductStock($userId, $totalAmount);
-                if (!$deducted) {
-                    throw new \Exception('股权数量不足');
-                }
+                // 团队奖金余额支付
+                User::changeInc(
+                    $userId,
+                    -$totalAmount,
+                    'team_bonus_balance',
+                    self::LOG_STOCK_PACKAGE_BUY,
+                    0,
+                    1,
+                    $remark
+                );
+            } else {
+                throw new \Exception('不支持的支付方式');
             }
 
-            // 记录套餐购买
-            $purchase = new PackagePurchases();
-            $purchase->user_id = $userId;
-            $purchase->package_id = $packageId;
-            $purchase->amount = $totalAmount;
-            $purchase->pay_type = $payType;
-            $purchase->status = 1;
-            $purchase->created_at = date('Y-m-d H:i:s');
-            $purchase->updated_at = date('Y-m-d H:i:s');
-            $purchase->save();
+            // 记录股权方案购买
+            $purchase = PackagePurchases::create([
+                'user_id'    => $userId,
+                'package_id' => $packageId,
+                'amount'     => $totalAmount,
+                'pay_type'   => $payType,
+                'status'     => 1,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ]);
 
-            // 分配套餐中的股权到用户钱包
+            // 分配股权到用户钱包
             $purchaseDate = date('Y-m-d H:i:s');
-            $unlockDate = $package->lock_period > 0 ?
-                date('Y-m-d H:i:s', strtotime("+{$package->lock_period} days")) :
-                null;
+            $unlockDate = $package->lock_period > 0
+                ? date('Y-m-d H:i:s', strtotime("+{$package->lock_period} days"))
+                : null;
 
             foreach ($items as $item) {
                 // 查找用户是否已有该类型的股权钱包
                 $wallet = UserStockWallets::where('user_id', $userId)
                     ->where('stock_type_id', $item->stock_type_id)
+                    ->where('source', $packageId)  // 关键修改：匹配相同来源
                     ->find();
 
+                // 计算每股实际价格
+                $stockPrice = StockService::getCurrentPrice();
+                $itemAmount = $stockPrice * $item->quantity;
+
+                // 不存在则创建新钱包
                 if (!$wallet) {
                     $wallet = new UserStockWallets();
                     $wallet->user_id = $userId;
                     $wallet->stock_type_id = $item->stock_type_id;
-                    $wallet->quantity = 0;
-                    $wallet->source = 2; // 来源为购买套餐
+                    $wallet->quantity = $item->quantity;
+                    $wallet->source = $packageId; // 记录来源方案ID
                     $wallet->purchase_date = $purchaseDate;
                     $wallet->lock_period = $package->lock_period;
                     $wallet->unlock_date = $unlockDate;
                     $wallet->created_at = $purchaseDate;
+                    $wallet->save();
+                } else {
+                    // 存在则累加数量并更新解锁时间
+                    $wallet->quantity += $item->quantity;
+                    $wallet->unlock_date = $unlockDate;
+                    $wallet->save();
                 }
 
-                $wallet->quantity += $item->quantity;
-                $wallet->save();
-
-                // 记录股权交易 (来源为购买产品所得)
+                // 记录股权交易（关键修改：记录实际价格和金额）
                 Db::name('stock_transactions')->insert([
                     'user_id'       => $userId,
                     'stock_type_id' => $item->stock_type_id,
                     'type'          => 1, // 买入
                     'source'        => 2, // 购买产品所得
                     'quantity'      => $item->quantity,
-                    'price'         => 0, // 套餐内的股权没有单独价格
-                    'amount'        => 0,
+                    'price'         => round($stockPrice, 2), // 保留2位小数
+                    'amount'        => round($itemAmount, 2), // 保留2位小数
                     'status'        => 1,
-                    'remark'        => "购买套餐: {$package->name}",
+                    'remark'        => $remark,
                     'created_at'    => $purchaseDate,
                     'updated_at'    => $purchaseDate
                 ]);
@@ -116,18 +138,5 @@ class PackageService
             Db::rollback();
             throw $e;
         }
-    }
-
-    /**
-     * 扣除用户股权 (示例方法)
-     * @param int $userId 用户ID
-     * @param float $amount 扣除金额
-     * @return bool
-     */
-    private static function deductStock($userId, $amount)
-    {
-        // 实际实现需要根据业务逻辑扣除用户持有的股权
-        // 这里只是一个示例
-        return true;
     }
 }
