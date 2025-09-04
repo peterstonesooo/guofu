@@ -26,10 +26,10 @@ class StockPackageItems extends Model
         return $this->belongsTo(StockPackages::class, 'package_id');
     }
 
-    // 关联股权类型
     public function stockType()
     {
-        return $this->belongsTo(StockTypes::class, 'stock_type_id');
+        // 确保正确关联到股权类型表的主键
+        return $this->belongsTo(StockTypes::class, 'stock_type_id', 'id');
     }
 
     // 获取类型文本
