@@ -123,7 +123,7 @@ class StockService
                 }
                 // 检查解锁状态
                 $currentTime = time();
-                $isUnlocked = empty($wallet->unlock_date) || $currentTime < strtotime($wallet->unlock_date);
+                $isUnlocked = empty($wallet->available_at) || $currentTime < strtotime($wallet->available_at);
                 if (!$isUnlocked) {
                     throw new \Exception('股权仍在锁定期，无法卖出');
                 }

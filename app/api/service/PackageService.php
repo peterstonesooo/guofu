@@ -82,7 +82,7 @@ class PackageService
 
             // 分配股权到用户钱包
             $purchaseDate = date('Y-m-d H:i:s');
-            $unlockDate = $package->lock_period > 0
+            $availableAt = $package->lock_period > 0
                 ? date('Y-m-d H:i:s', strtotime("+{$package->lock_period} days"))
                 : null;
 
@@ -106,13 +106,13 @@ class PackageService
                     $wallet->source = $packageId; // 记录来源方案ID
                     $wallet->purchase_date = $purchaseDate;
                     $wallet->lock_period = $package->lock_period;
-                    $wallet->unlock_date = $unlockDate;
+                    $wallet->available_at = $availableAt;
                     $wallet->created_at = $purchaseDate;
                     $wallet->save();
                 } else {
                     // 存在则累加数量并更新解锁时间
                     $wallet->quantity += $item->quantity;
-                    $wallet->unlock_date = $unlockDate;
+                    $wallet->available_at = $availableAt;
                     $wallet->save();
                 }
 
