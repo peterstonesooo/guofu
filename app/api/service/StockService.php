@@ -2,15 +2,21 @@
 
 namespace app\api\service;
 
+use app\model\StockPackages;
 use app\model\StockTransactions;
+use app\model\StockTypes;
 use app\model\User;
+use app\model\UserStockDetails;
 use app\model\UserStockWallets;
-use Exception;
+use think\Exception;
 use think\facade\Cache;
 use think\facade\Db;
 
 class StockService
 {
+
+    const DAILY_SELL_LIMIT = 10; // 全局每日卖出限额
+
     // 获取实时股价（从缓存获取）
     public static function getCurrentPrice()
     {
@@ -28,8 +34,7 @@ class StockService
         Db::startTrans();
         try {
             // 根据code获取股权类型ID
-            $stockType = Db::name('stock_types')
-                ->where('code', $stock_code)
+            $stockType = StockTypes::where('code', $stock_code)
                 ->find();
 
             if (!$stockType) {
@@ -37,26 +42,29 @@ class StockService
             }
             $stock_type_id = $stockType['id'];
 
-            // 1. 扣减用户余额
+            // 扣减余额
             User::changeInc($user_id, -$amount, $balanceField, 91, 0, 1, "股权买入:{$quantity}股");
 
-            // 2. 更新股权钱包
+            // 更新钱包
             $wallet = UserStockWallets::where('user_id', $user_id)
                 ->where('stock_type_id', $stock_type_id)
+                ->where('source', 0)
                 ->findOrEmpty();
 
             if ($wallet->isEmpty()) {
                 $wallet = UserStockWallets::create([
-                    'user_id'       => $user_id,
-                    'stock_type_id' => $stock_type_id,
-                    'quantity'      => $quantity
+                    'user_id'         => $user_id,
+                    'stock_type_id'   => $stock_type_id,
+                    'quantity'        => $quantity,
+                    'frozen_quantity' => 0,
+                    'source'          => 0
                 ]);
             } else {
                 $wallet->quantity += $quantity;
                 $wallet->save();
             }
 
-            // 3. 创建交易记录
+            // 记录交易
             $sn = build_order_sn($user_id, 'ST');
             StockTransactions::create([
                 'user_id'       => $user_id,
@@ -90,7 +98,7 @@ class StockService
      * @return bool
      * @throws \Exception
      */
-    public static function sellStock($user_id, $stock_code, $quantity, $pay_type = 1, $source = 0)
+    public static function sellStock($user_id, $stock_code, $quantity, $pay_type = 1, $source = -1)
     {
         $price = self::getCurrentPrice();
         $amount = bcmul($quantity, $price, 2);
@@ -98,113 +106,298 @@ class StockService
 
         Db::startTrans();
         try {
-            // 根据code获取股权类型
-            $stockType = Db::name('stock_types')->where('code', $stock_code)->find();
+            // 1. 获取股权类型信息
+            $stockType = StockTypes::where('code', $stock_code)->find();
             if (!$stockType) {
                 throw new \Exception('股权类型不存在');
             }
             $stock_type_id = $stockType['id'];
 
-            // 1. 获取指定来源的钱包记录（唯一记录）
+            // 2. 执行卖出操作
+            $soldQuantity = 0;
+
+            if ($source == 0) {
+                // 卖出普通股权
+                $soldQuantity = self::sellNormalStock($user_id, $stock_type_id, $quantity, $price);
+            } elseif ($source > 0) {
+                // 卖出特定套餐股权
+                $soldQuantity = self::sellSpecificPackageStock($user_id, $stock_type_id, $quantity, $price, $source);
+            } else {
+                // 自动顺序卖出（先普通后套餐，按FIFO）
+                $soldQuantity = self::sellAutoSequence($user_id, $stock_type_id, $quantity, $price);
+            }
+
+            // 3. 检查是否完全卖出
+            if ($soldQuantity < $quantity) {
+                throw new \Exception('部分股权无法卖出 请改天再卖出 ，实际卖出: ' . $soldQuantity . '股');
+            }
+
+            // 4. 增加用户余额
+            User::changeInc(
+                $user_id,
+                $amount,
+                $balanceField,
+                92, // 日志类型：卖出股权
+                0,
+                1,
+                "股权卖出:{$soldQuantity}股 @ {$price}元"
+            );
+
+            Db::commit();
+            return true;
+
+        } catch (\Exception $e) {
+            Db::rollback();
+            throw $e;
+        }
+    }
+
+    /**
+     * 自动顺序卖出（先普通后股权方案，按FIFO原则）
+     */
+    private static function sellAutoSequence($user_id, $stock_type_id, $quantity, $price)
+    {
+        $remaining = $quantity;
+        $soldTotal = 0;
+        $currentTime = date('Y-m-d H:i:s');
+
+        // 1. 先卖出普通股权（source=0）
+        $normalWallet = UserStockWallets::where('user_id', $user_id)
+            ->where('stock_type_id', $stock_type_id)
+            ->where('source', 0)
+            ->lock(true)
+            ->find();
+
+        if ($normalWallet && $normalWallet->quantity > 0) {
+            // 检查普通股权的每日额度
+            $normalQuota = self::getDailyRemainingQuota($user_id, $stock_type_id, 0);
+            $sellNormal = min($normalWallet->quantity, $remaining, $normalQuota);
+
+            if ($sellNormal > 0) {
+                $normalWallet->quantity -= $sellNormal;
+                $normalWallet->save();
+
+                self::recordSellTransaction($user_id, $stock_type_id, $sellNormal, $price, 0);
+
+                $soldTotal += $sellNormal;
+                $remaining -= $sellNormal;
+            }
+        }
+
+        // 2. 再卖出股权方案股权（按购买时间顺序，FIFO）
+        if ($remaining > 0) {
+            // 获取所有有效股权方案明细，按购买时间排序（FIFO）
+            $details = UserStockDetails::where('user_id', $user_id)
+                ->where('stock_type_id', $stock_type_id)
+                ->where('remaining_quantity', '>', 0)
+                ->where('available_at', '<=', $currentTime)
+                ->where('status', 1) // 有效状态
+                ->order('id', 'asc') // 按购买时间先进先出
+                ->select();
+
+            foreach ($details as $detail) {
+                if ($remaining <= 0)
+                    break;
+
+                // 获取对应source的钱包
+                $wallet = UserStockWallets::where('user_id', $user_id)
+                    ->where('stock_type_id', $stock_type_id)
+                    ->where('source', $detail->packagePurchase->package_id)
+                    ->lock(true)
+                    ->find();
+
+                if (!$wallet || $wallet->quantity <= 0)
+                    continue;
+
+                // 检查该股权方案的每日额度
+                $packageQuota = self::getDailyRemainingQuota($user_id, $stock_type_id, $wallet->source);
+                if ($packageQuota <= 0)
+                    continue;
+
+                // 计算可卖出数量（取最小值）
+                $sellQuantity = min(
+                    $detail['remaining_quantity'], // 明细剩余数量
+                    $wallet->quantity,             // 钱包可用数量
+                    $remaining,                    // 还需要卖出的数量
+                    $packageQuota                 // 每日剩余额度
+                );
+
+                if ($sellQuantity <= 0)
+                    continue;
+
+                // 更新明细
+                UserStockDetails::where('id', $detail['id'])
+                    ->dec('remaining_quantity', $sellQuantity)
+                    ->update();
+
+                // 更新钱包
+                $wallet->quantity -= $sellQuantity;
+                $wallet->save();
+
+                // 记录交易
+                self::recordSellTransaction($user_id, $stock_type_id, $sellQuantity, $price, $wallet->source);
+
+                $soldTotal += $sellQuantity;
+                $remaining -= $sellQuantity;
+            }
+        }
+
+        return $soldTotal;
+    }
+
+    /**
+     * 卖出普通股权（source=0）
+     */
+    private static function sellNormalStock($user_id, $stock_type_id, $quantity, $price)
+    {
+        // 1. 获取钱包并锁定
+        $wallet = UserStockWallets::where('user_id', $user_id)
+            ->where('stock_type_id', $stock_type_id)
+            ->where('source', 0)
+            ->lock(true)
+            ->find();
+
+        if (!$wallet || $wallet->quantity < $quantity) {
+            throw new \Exception('普通股权数量不足');
+        }
+
+        // 2. 检查每日额度
+        $remainingQuota = self::getDailyRemainingQuota($user_id, $stock_type_id, 0);
+        if ($quantity > $remainingQuota) {
+            throw new \Exception("普通股权今日可卖出额度不足，剩余: {$remainingQuota}股");
+        }
+
+        // 3. 执行卖出
+        $wallet->quantity -= $quantity;
+        $wallet->save();
+
+        // 4. 记录交易和更新额度
+        self::recordSellTransaction($user_id, $stock_type_id, $quantity, $price, 0);
+
+        return $quantity;
+    }
+
+    /**
+     * 卖出特定股权方案股权
+     */
+    private static function sellSpecificPackageStock($user_id, $stock_type_id, $quantity, $price, $source)
+    {
+        $currentTime = date('Y-m-d H:i:s');
+        $sold = 0;
+        $remaining = $quantity;
+
+        // 1. 获取该股权方案的有效股权明细（按购买时间排序，FIFO）
+        $details = UserStockDetails::where('user_id', $user_id)
+            ->where('stock_type_id', $stock_type_id)
+            ->where('package_id', $source)
+            ->where('remaining_quantity', '>', 0)
+            ->where('available_at', '<=', $currentTime)
+            ->where('status', 1) // 有效状态
+            ->order('id', 'asc') // 按购买时间先进先出
+            ->select();
+
+        foreach ($details as $detail) {
+            if ($remaining <= 0)
+                break;
+
+            // 2. 获取对应钱包并锁定
             $wallet = UserStockWallets::where('user_id', $user_id)
                 ->where('stock_type_id', $stock_type_id)
                 ->where('source', $source)
                 ->lock(true)
                 ->find();
 
-            if (!$wallet || $wallet->quantity < $quantity) {
-                throw new Exception('可用股权不足');
-            }
-            // 如果 source != 0，表示来自套餐购买，需要检查套餐的每日出售限制
-            if ($source != 0) {
-                $package = Db::name('stock_packages')->where('id', $source)->find();
-                if (!$package) {
-                    throw new \Exception('关联的股权套餐不存在');
-                }
-                // 检查解锁状态
-                $currentTime = time();
-                $isUnlocked = empty($wallet->available_at) || $currentTime < strtotime($wallet->available_at);
-                if (!$isUnlocked) {
-                    throw new \Exception('股权仍在锁定期，无法卖出');
-                }
+            if (!$wallet || $wallet->quantity <= 0)
+                continue;
 
-                $today = date('Y-m-d');
-                // 查询该用户今日卖出该套餐的股权总数
-                $todaySold = StockTransactions::where('user_id', $user_id)
-                    ->where('stock_type_id', $stock_type_id)
-                    ->where('source', $source)
-                    ->where('type', 2) // 卖出类型
-                    ->where('DATE(created_at)', $today)
-                    ->sum('quantity') ?: 0;
+            // 3. 检查每日额度
+            $packageQuota = self::getDailyRemainingQuota($user_id, $stock_type_id, $source);
+            if ($packageQuota <= 0)
+                continue;
 
-                $remainingQuotaToday = $package['daily_sell_limit'] - $todaySold;
-                if ($quantity > $remainingQuotaToday) {
-                    throw new \Exception("今日该套餐股权可卖出额度不足，还可卖出 {$remainingQuotaToday} 股");
-                }
-            } else {
-                // 流通股检查每日额度
-                if ($stockType['code'] === 'LTG001') {
-                    $today = date('Y-m-d');
-
-                    // 固定每日额度为10股
-                    $dailyQuota = 10;
-
-                    // 查询今日已卖出数量
-                    $todaySold = StockTransactions::where('user_id', $user_id)
-                        ->where('stock_type_id', $stock_type_id)
-                        ->where('source', $source)
-                        ->where('type', 2) // 卖出类型
-                        ->where('DATE(created_at)', $today) // 今日的交易
-                        ->sum('quantity') ?: 0;
-
-                    $todaySold = $todaySold ?: 0; // 如果为空则设为0
-
-                    // 计算今日剩余可卖额度
-                    $remainingQuotaToday = $dailyQuota - $todaySold;
-
-                    // 检查今日是否还可卖
-                    if ($quantity > $remainingQuotaToday) {
-                        throw new Exception("今日流通股可卖出额度不足，还可卖出 {$remainingQuotaToday} 股");
-                    }
-                }
-            }
-
-            // 5. 更新钱包数量
-            $wallet->quantity -= $quantity;
-            $wallet->save();
-
-            // 6. 记录股权交易
-            $sn = build_order_sn($user_id, 'ST');
-            StockTransactions::create([
-                'user_id'       => $user_id,
-                'stock_type_id' => $stock_type_id,
-                'type'          => StockTransactions::TYPE_SELL,
-                'source'        => $source,
-                'quantity'      => $quantity,
-                'price'         => $price,
-                'amount'        => $amount,
-                'status'        => 1,
-                'remark'        => "卖出{$quantity}股 @ {$price}元",
-                'created_at'    => date('Y-m-d H:i:s'),
-                'updated_at'    => date('Y-m-d H:i:s')
-            ]);
-
-            // 7. 增加用户余额
-            User::changeInc(
-                $user_id,
-                $amount,
-                $balanceField,
-                92,
-                0,
-                1,
-                "股权卖出:{$quantity}股"
+            // 4. 计算可卖出数量（取最小值）
+            $sellQuantity = min(
+                $detail['remaining_quantity'], // 明细剩余数量
+                $wallet->quantity,             // 钱包可用数量
+                $remaining,                    // 还需要卖出的数量
+                $packageQuota                  // 每日剩余额度
             );
 
-            Db::commit();
-            return true;
-        } catch (\Exception $e) {
-            Db::rollback();
-            throw $e;
+            if ($sellQuantity <= 0)
+                continue;
+
+            // 5. 更新明细
+            UserStockDetails::where('id', $detail['id'])
+                ->dec('remaining_quantity', $sellQuantity)
+                ->update();
+
+            // 6. 更新钱包
+            $wallet->quantity -= $sellQuantity;
+            $wallet->save();
+
+            // 7. 记录交易
+            self::recordSellTransaction($user_id, $stock_type_id, $sellQuantity, $price, $source);
+
+            $sold += $sellQuantity;
+            $remaining -= $sellQuantity;
         }
+
+        if ($sold < $quantity) {
+            throw new \Exception('股权方案股权数量或额度不足，仅能卖出: ' . $sold . '股');
+        }
+
+        return $sold;
+    }
+
+    /**
+     * 获取今日剩余可卖出额度
+     */
+    private static function getDailyRemainingQuota($user_id, $stock_type_id, $source)
+    {
+        $today = date('Y-m-d');
+
+        // 获取该来源今日已卖出量
+        $soldToday = StockTransactions::where('user_id', $user_id)
+            ->where('stock_type_id', $stock_type_id)
+            ->where('source', $source)
+            ->where('type', 2) // 卖出
+            ->where('DATE(created_at)', $today)
+            ->sum('quantity') ?: 0;
+
+        // 确定每日限额
+        $dailyLimit = self::DAILY_SELL_LIMIT;
+        if ($source > 0) {
+            // 如果是股权方案，检查是否有独立限额
+            $package = StockPackages::find($source);
+            if ($package && isset($package['daily_sell_limit'])) {
+                $dailyLimit = $package['daily_sell_limit'];
+            }
+        }
+
+        // 计算剩余额度
+        $remaining = $dailyLimit - $soldToday;
+        return max(0, $remaining);
+    }
+
+    /**
+     * 记录卖出交易
+     */
+    private static function recordSellTransaction($user_id, $stock_type_id, $quantity, $price, $source)
+    {
+        $amount = bcmul($quantity, $price, 2);
+
+        StockTransactions::create([
+            'user_id'       => $user_id,
+            'stock_type_id' => $stock_type_id,
+            'type'          => 2, // 卖出
+            'source'        => $source,
+            'quantity'      => $quantity,
+            'price'         => $price,
+            'amount'        => $amount,
+            'status'        => 1,
+            'remark'        => "卖出{$quantity}股" . ($source > 0 ? "(股权方案来源)" : ""),
+            'created_at'    => date('Y-m-d H:i:s'),
+            'updated_at'    => date('Y-m-d H:i:s')
+        ]);
     }
 }

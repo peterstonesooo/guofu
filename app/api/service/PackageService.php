@@ -5,7 +5,9 @@ namespace app\api\service;
 use app\model\PackagePurchases;
 use app\model\StockPackageItems;
 use app\model\StockPackages;
+use app\model\StockTransactions;
 use app\model\User;
+use app\model\UserStockDetails;
 use app\model\UserStockWallets;
 use think\facade\Db;
 
@@ -69,7 +71,7 @@ class PackageService
                 throw new \Exception('不支持的支付方式');
             }
 
-            // 记录股权方案购买
+            // 记录购买
             $purchase = PackagePurchases::create([
                 'user_id'    => $userId,
                 'package_id' => $packageId,
@@ -82,7 +84,7 @@ class PackageService
 
             // 分配股权到用户钱包
             $purchaseDate = date('Y-m-d H:i:s');
-            $availableAt = $package->lock_period > 0
+            $expireAt = $package->lock_period > 0
                 ? date('Y-m-d H:i:s', strtotime("+{$package->lock_period} days"))
                 : null;
 
@@ -103,25 +105,41 @@ class PackageService
                     $wallet->user_id = $userId;
                     $wallet->stock_type_id = $item->stock_type_id;
                     $wallet->quantity = $item->quantity;
-                    $wallet->source = $packageId; // 记录来源方案ID
-                    $wallet->purchase_date = $purchaseDate;
-                    $wallet->lock_period = $package->lock_period;
-                    $wallet->available_at = $availableAt;
-                    $wallet->created_at = $purchaseDate;
+                    $wallet->frozen_quantity = 0;
+                    $wallet->source = $packageId;
                     $wallet->save();
                 } else {
                     // 存在则累加数量并更新解锁时间
                     $wallet->quantity += $item->quantity;
-                    $wallet->available_at = $availableAt;
                     $wallet->save();
                 }
 
+                // 记录明细
+                UserStockDetails::insert([
+                    'user_id'             => $userId,
+                    'stock_type_id'       => $item->stock_type_id,
+                    'package_purchase_id' => $purchase->id,
+                    'quantity'            => $item->quantity,
+                    'remaining_quantity'  => $item->quantity,
+                    'lock_period'         => $package->lock_period,
+                    'available_at'        => $purchaseDate,
+                    'expired_at'          => $expireAt,
+                    'status'              => 1, // 1=有效
+                    'created_at'          => $purchaseDate,
+                    'updated_at'          => $purchaseDate
+                ]);
+
+                // 记录交易
+                $stockPrice = StockService::getCurrentPrice();
+                $itemAmount = $stockPrice * $item->quantity;
+
+
                 // 记录股权交易（关键修改：记录实际价格和金额）
-                Db::name('stock_transactions')->insert([
+                StockTransactions::insert([
                     'user_id'       => $userId,
                     'stock_type_id' => $item->stock_type_id,
-                    'type'          => 1, // 买入
-                    'source'        => 2, // 购买产品所得
+                    'type'          => 1,
+                    'source'        => $packageId,
                     'quantity'      => $item->quantity,
                     'price'         => round($stockPrice, 2), // 保留2位小数
                     'amount'        => round($itemAmount, 2), // 保留2位小数

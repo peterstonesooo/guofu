@@ -3,6 +3,7 @@
 namespace app\api\controller;
 
 use app\api\service\StockService;
+use app\model\StockTransactions;
 use app\model\StockTypes;
 use app\model\UserStockWallets;
 use think\facade\Cache;
@@ -19,6 +20,7 @@ class StockController extends AuthController
     {
         $user = $this->user;
         $userId = $user['id'];
+        $today = date('Y-m-d'); // 获取当前日期
 
         // 从缓存获取全局股价
         $globalPrice = Cache::get('global_stock_price', 0);
@@ -31,36 +33,44 @@ class StockController extends AuthController
 
         $stocks = [];
         foreach ($stockTypes as $type) {
-            // 1. 普通购买的股权信息
-            $normalHold = UserStockWallets::where('user_id', $userId)
-                ->where('stock_type_id', $type->id)
-                ->where('source', 0) // 普通购买
-                ->sum('quantity');
-
-            // 普通购买的成本
-            $normalCost = Db::name('stock_transactions')
+            $stockTypeId = $type['id'];
+            //  获取该股权今日已卖出总量（type=2）
+            $soldToday = Db::name('stock_transactions')
                 ->where('user_id', $userId)
-                ->where('stock_type_id', $type->id)
-                ->where('source', 0) // 普通购买
+                ->where('stock_type_id', $stockTypeId)
+                ->where('type', 2) // 卖出交易
+                ->where('DATE(created_at)', $today) // 今日的交易
+                ->sum('quantity') ?: 0;
+
+            // 计算当日剩余可卖出数量
+            $remainingToday = max(0, StockService::DAILY_SELL_LIMIT - $soldToday);
+
+            // 获取普通购买（source=0）的股权信息
+            $normalHold = UserStockWallets::where('user_id', $userId)
+                ->where('stock_type_id', $stockTypeId)
+                ->where('source', 0)
+                ->sum('quantity') ?: 0;
+
+            $normalCost = StockTransactions::where('user_id', $userId)
+                ->where('stock_type_id', $stockTypeId)
+                ->where('source', 0)
                 ->where('type', 1) // 买入
-                ->where('status', 1)
-                ->sum('amount');
+                ->sum('amount') ?: 0;
 
-            // 2. 套餐获得的股权信息
+            // 获取套餐购买（source>0）的股权信息
             $packageHold = UserStockWallets::where('user_id', $userId)
-                ->where('stock_type_id', $type->id)
-                ->where('source', '>', 0) // 套餐购买
-                ->sum('quantity');
+                ->where('stock_type_id', $stockTypeId)
+                ->where('source', '>', 0)
+                ->sum('quantity') ?: 0;
 
-            // 套餐购买的成本（按比例分摊）
             $packageCost = Db::name('package_purchases')
                 ->alias('pp')
                 ->join('stock_package_items spi', 'spi.package_id = pp.package_id')
                 ->where('pp.user_id', $userId)
-                ->where('spi.stock_type_id', $type->id)
-                ->sum('pp.amount');
+                ->where('spi.stock_type_id', $stockTypeId)
+                ->sum('pp.amount') ?: 0;
 
-            // 分别计算收益
+            // 计算收益
             $normalValue = $normalHold * $globalPrice;
             $normalProfit = $normalValue - $normalCost;
             $normalProfitRate = $normalCost > 0 ? ($normalProfit / $normalCost) * 100 : 0;
@@ -69,27 +79,29 @@ class StockController extends AuthController
             $packageProfit = $packageValue - $packageCost;
             $packageProfitRate = $packageCost > 0 ? ($packageProfit / $packageCost) * 100 : 0;
 
-            $stocks[$type->code] = [
-                'stock_name' => $type->name,
-                'stock_code' => $type->code,
-                'normal'     => [ // 普通购买
+            //  组装数据
+            $stocks[$type['code']] = [
+                'stock_name'               => $type['name'],
+                'stock_code'               => $type['code'],
+                'normal'                   => [
                     'hold_quantity' => $normalHold,
                     'total_cost'    => round($normalCost, 2),
                     'current_value' => round($normalValue, 2),
                     'profit'        => round($normalProfit, 2),
                     'profit_rate'   => round($normalProfitRate, 2)
                 ],
-                'package'    => [ // 套餐获得
+                'package'                  => [ // 套餐获得
                     'hold_quantity' => $packageHold,
                     'total_cost'    => round($packageCost, 2),
                     'current_value' => round($packageValue, 2),
                     'profit'        => round($packageProfit, 2),
                     'profit_rate'   => round($packageProfitRate, 2)
                 ],
-                'total'      => [ // 汇总信息（可选）
+                'total'                    => [ // 汇总信息（可选）
                     'hold_quantity' => $normalHold + $packageHold,
                     'current_value' => round($normalValue + $packageValue, 2)
-                ]
+                ],
+                'daily_remaining_quantity' => $remainingToday // 当日剩余可卖出数量
             ];
         }
 
@@ -149,15 +161,16 @@ class StockController extends AuthController
         $quantity = $this->request->param('quantity/d', 0);
         $pay_password = $this->request->param('pay_password', '');
         $pay_type = $this->request->param('pay_type/d', 0);
-        $source = $this->request->param('source/d', 0);
+//        $source = $this->request->param('source/d', 0);
+        $source = -1; // -1表示自动顺序
 
         // 参数验证
         if (empty($stock_code) || $quantity <= 0 || !in_array($pay_type, [1, 2])) {
             return out(null, 10001, '参数错误');
         }
-        if ($source < 0) { // source应为非负整数
-            return out(null, 10001, '来源参数错误');
-        }
+//        if ($source < 0) { // source应为非负整数
+//            return out(null, 10001, '来源参数错误');
+//        }
 
         // 支付密码验证（新增）
         if (empty($user['pay_password'])) {
