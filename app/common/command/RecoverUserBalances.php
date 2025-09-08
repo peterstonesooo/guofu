@@ -85,10 +85,16 @@ class RecoverUserBalances extends Command
 
             $countInBatch = $this->processUserBatch($users, $output);
             $processedCount += $countInBatch;
-            $totalProcessed += count($users);
+            $batchSize = count($users);
+            $totalProcessed += $batchSize;
 
-            // 更新最后处理的ID
-            $lastId = $users->max('id');
+            // 更新最后处理的ID - 计算最大ID
+            $lastId = 0;
+            foreach ($users as $user) {
+                if ($user->id > $lastId) {
+                    $lastId = $user->id;
+                }
+            }
 
             $output->writeln("处理进度: {$totalProcessed}/{$totalUsers} 用户 (最后ID: {$lastId})");
         } while (true);
