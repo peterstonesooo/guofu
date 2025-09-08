@@ -15,7 +15,6 @@ class RecoverUserBalances extends Command
 {
     // 性能配置
     const BATCH_SIZE = 500; // 每批处理用户数
-    const PROGRESS_INTERVAL = 10; // 进度报告间隔（秒）
     const LOG_TYPE = 1; // 余额日志类型
     const TRANSACTION_TYPE = 94; // 回收操作类型
 
@@ -60,22 +59,40 @@ class RecoverUserBalances extends Command
     protected function processAllUsers(Output $output): int
     {
         $processedCount = 0;
-        $page = 1;
+        $lastId = 0;
+        $totalProcessed = 0;
+
+        // 获取符合条件的用户总数
+        $totalUsers = User::where('team_bonus_balance', '>', 0)
+            ->whereOr('large_subsidy', '>', 0)
+            ->count();
+
+        $output->writeln("需要处理的用户总数: {$totalUsers}");
 
         do {
-            $users = User::where('team_bonus_balance', '>', 0)
-                ->whereOr('large_subsidy', '>', 0)
-                ->page($page, self::BATCH_SIZE)
+            // 使用游标方式确保所有用户都被处理
+            $users = User::where(function ($query) {
+                $query->where('team_bonus_balance', '>', 0)
+                    ->orWhere('large_subsidy', '>', 0);
+            })
+                ->where('id', '>', $lastId)
                 ->field('id, phone, team_bonus_balance, large_subsidy')
-                ->order('id')
+                ->order('id', 'asc')
+                ->limit(self::BATCH_SIZE)
                 ->select();
 
             if ($users->isEmpty()) {
                 break;
             }
 
-            $processedCount += $this->processUserBatch($users, $output);
-            $page++;
+            $countInBatch = $this->processUserBatch($users, $output);
+            $processedCount += $countInBatch;
+            $totalProcessed += count($users);
+
+            // 更新最后处理的ID
+            $lastId = $users->max('id');
+
+            $output->writeln("处理进度: {$totalProcessed}/{$totalUsers} 用户 (最后ID: {$lastId})");
         } while (true);
 
         return $processedCount;
@@ -166,22 +183,27 @@ class RecoverUserBalances extends Command
                 }
 
                 // 更新用户数据
-                $updateData = [
-                    'updated_at' => $currentTime
-                ];
+                $updateData = ['updated_at' => $currentTime];
 
                 if ($teamAmount > 0) {
                     $updateData['team_bonus_balance'] = 0;
-                    $output->writeln("用户 {$user->phone} 团队奖励余额回收成功: {$teamAmount}");
                 }
 
                 if ($largeAmount > 0) {
                     $updateData['large_subsidy'] = 0;
-                    $output->writeln("用户 {$user->phone} 大额补助回收成功: {$largeAmount}");
                 }
 
                 User::where('id', $user->id)->update($updateData);
                 Db::commit();
+
+                // 记录处理成功信息
+                $messages = [];
+                if ($teamAmount > 0)
+                    $messages[] = "可提现余额: {$teamAmount}";
+                if ($largeAmount > 0)
+                    $messages[] = "待核准余额: {$largeAmount}";
+                $output->writeln("用户 {$user->phone} 处理成功: " . implode(', ', $messages));
+
                 $processedCount++;
             } catch (Exception $e) {
                 Db::rollback();
