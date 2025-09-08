@@ -71,10 +71,8 @@ class RecoverUserBalances extends Command
 
         do {
             // 使用游标方式确保所有用户都被处理
-            $users = User::where(function ($query) {
-                $query->where('team_bonus_balance', '>', 0)
-                    ->orWhere('large_subsidy', '>', 0);
-            })
+            $users = User::where('team_bonus_balance', '>', 0)
+                ->whereOr('large_subsidy', '>', 0)
                 ->where('id', '>', $lastId)
                 ->field('id, phone, team_bonus_balance, large_subsidy')
                 ->order('id', 'asc')
