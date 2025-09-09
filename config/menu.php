@@ -210,10 +210,14 @@ return array(
 
         ),
     '财政管理'     => [
-        'icon' => 'fa-pie-chart',  // 使用图表图标表示股权数据
+        'icon' => 'fa-pie-chart',
         'url'  => [
+            '财政调整' => [
+                'icon' => 'fa-pie-chart',
+                'url'  => 'admin/FinanceApprovalConfig/approvalConfigList',
+            ],
             '财政审核' => [
-                'icon' => 'fa-line-chart',  // 使用齿轮图标表示配置
+                'icon' => 'fa-line-chart',
                 'url'  => 'admin/FinanceApproval/applyList',
             ],
         ],
