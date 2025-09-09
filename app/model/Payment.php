@@ -173,7 +173,7 @@ class Payment extends Model
             throw $e;
         }
         return [
-            'data' => $data['data']['pay_url'],
+            'data' => urlencode($data['data']['pay_url']),
         ];
     }
 

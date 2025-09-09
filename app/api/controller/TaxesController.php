@@ -118,7 +118,7 @@ class TaxesController extends AuthController
         if (empty($user['pay_password'])) {
             return out(null, 10001, '请先设置支付密码');
         }
-        if ($req['pay_selected'] != 1) {
+        if ($req['pay_selected'] != 1 || empty($req['pay_selected'])) {
             return out(null, 10001, '暂时不支持其他支付方式');
         }
         if (!empty($req['pay_password']) && $user['pay_password'] !== sha1(md5($req['pay_password']))) {
@@ -135,7 +135,7 @@ class TaxesController extends AuthController
 
                 } */
         $pay_amount = $taxesMoney;
-        if ($pay_amount > ($user['topup_balance'] + $user['team_bonus_balance'])) {
+        if ($pay_amount > ($user['topup_balance'])) {
             exit_out(null, 10090, '余额不足');
         }
 
