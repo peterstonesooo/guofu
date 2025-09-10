@@ -1,0 +1,229 @@
+<div class="search">
+    <form class="form-inline">
+        <input type="text" value="{$req.user??''}" name="user" placeholder="搜索用户手机号/姓名" class="form-control">
+        <select name="config_id" class="form-control">
+            <option value="">全部档次</option>
+            {volist name="configOptions" id="config"}
+            <option value="{$config.id}" {if isset($req.config_id) && $req.config_id==$config.id}selected{/if}>
+                {$config.name}
+            </option>
+            {/volist}
+        </select>
+        <select name="status" class="form-control">
+            <option value="">全部状态</option>
+            <option value="1" {if isset($req.status) && $req.status==1}selected{/if}>审批中</option>
+            <option value="2" {if isset($req.status) && $req.status==2}selected{/if}>审批完成</option>
+            <option value="3" {if isset($req.status) && $req.status==3}selected{/if}>已拨款</option>
+        </select>
+        <input placeholder="开始时间" value="{$req.start_date??''}" name="start_date" class="form-control layer-date"
+            id="start">
+        ～
+        <input placeholder="结束时间" value="{$req.end_date??''}" name="end_date" class="form-control layer-date" id="end">
+        <input class="btn btn-flat btn-primary m_10" type="submit" value="搜索">
+    </form>
+    <div class="batch-operations" style="margin-top: 15px;">
+        <button class="btn btn-flat btn-success" onclick="batchCompleteApply()">批量审批完成</button>
+        <button class="btn btn-flat btn-primary" onclick="batchFundApply()">批量拨款</button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="box">
+            <div class="box-body table-responsive no-padding">
+                <table class="table table-bordered table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAll"></th>
+                            <th>用户</th>
+                            <th>审批档次</th>
+                            <th>提现金额</th>
+                            <th>审批费</th>
+                            <th>状态</th>
+                            <th>备注</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {volist name="data" id="v"}
+                        <tr>
+                            <td><input type="checkbox" class="apply-checkbox" value="{$v.id}"></td>
+                            <td>{$v.realname}（{$v.phone}）</td>
+                            <td>{$v.config_name}</td>
+                            <td>{$v.withdraw_amount}</td>
+                            <td>{$v.approval_fee}</td>
+                            <td>{$statusMap[$v.status]}</td>
+                            <td>{$v.remark}</td>
+                            <td>{$v.created_at}</td>
+                            <td>
+                                {if $v.status == 1}
+                                <button class="btn btn-flat btn-success btn-xs" onclick="completeApply({$v.id})">审批完成</button>
+                                {elseif $v.status == 2}
+                                <button class="btn btn-flat btn-primary btn-xs"
+                                    onclick="fundApply({$v.id})">拨款</button>
+                                {/if}
+                            </td>
+                        </tr>
+                        {/volist}
+                    </tbody>
+                </table>
+            </div>
+            <div class="box-footer clearfix">
+                <div style="text-align:center;font-size: 14px;">
+                    <?php echo $data->render(); ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 日期选择器初始化
+    $(function () {
+        laydate.render({ elem: '#start', type: 'datetime' });
+        laydate.render({ elem: '#end', type: 'datetime' });
+    });
+
+    // 审批完成操作函数
+    function completeApply(id) {
+        layer.prompt({
+            title: '审批完成备注（可选）',
+            formType: 2
+        }, function (text, index) {
+            layer.close(index);
+
+            layer.confirm('确定要完成审批操作吗？', { icon: 3 }, function (index2) {
+                layer.close(index2);
+                layer.load();
+
+                $.post('{:url("admin/FinanceApproval/completeApply")}', {
+                    id: id,
+                    remark: text
+                }, function (res) {
+                    layer.closeAll('loading');
+                    if (res.code == 200) {
+                        layer.msg('审批完成成功', { icon: 1 });
+                        setTimeout(function () {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        layer.msg(res.msg || '操作失败', { icon: 2 });
+                    }
+                });
+            });
+        });
+    }
+
+    // 拨款操作函数
+    function fundApply(id) {
+        layer.prompt({
+            title: '拨款备注（可选）',
+            formType: 2
+        }, function (text, index) {
+            layer.close(index);
+
+            layer.confirm('确定要执行拨款操作吗？', { icon: 3 }, function (index2) {
+                layer.close(index2);
+                layer.load();
+
+                $.post('{:url("admin/FinanceApproval/fundApply")}', {
+                    id: id,
+                    remark: text
+                }, function (res) {
+                    layer.closeAll('loading');
+                    if (res.code == 200) {
+                        layer.msg('拨款成功', { icon: 1 });
+                        setTimeout(function () {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        layer.msg(res.msg || '拨款失败', { icon: 2 });
+                    }
+                });
+            });
+        });
+    }
+
+    // 全选/反选功能
+    $('#selectAll').click(function () {
+        $('.apply-checkbox').prop('checked', this.checked);
+    });
+
+    // 获取选中的申请ID
+    function getSelectedIds() {
+        const ids = [];
+        $('.apply-checkbox:checked').each(function () {
+            ids.push($(this).val());
+        });
+        return ids;
+    }
+
+    // 批量审批完成
+    function batchCompleteApply() {
+        const ids = getSelectedIds();
+        if (ids.length === 0) {
+            layer.msg('请选择要审批完成的申请', { icon: 2 });
+            return;
+        }
+
+        layer.prompt({
+            title: '批量审批完成备注（可选）',
+            formType: 2
+        }, function (text, index) {
+            layer.close(index);
+
+            layer.confirm(`确定要对选中的 ${ids.length} 条申请完成审批操作吗？`, { icon: 3 }, function (index2) {
+                layer.close(index2);
+                layer.load();
+
+                $.post('{:url("admin/FinanceApproval/batchCompleteApply")}', {
+                    ids: ids,
+                    remark: text
+                }, function (res) {
+                    layer.closeAll('loading');
+                    if (res.code == 200) {
+                        layer.msg(`成功处理 ${res.data.success_count} 条申请`, { icon: 1 });
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        layer.msg(res.msg || '操作失败', { icon: 2 });
+                    }
+                });
+            });
+        });
+    }
+
+    // 批量拨款
+    function batchFundApply() {
+        const ids = getSelectedIds();
+        if (ids.length === 0) {
+            layer.msg('请选择要拨款的申请', { icon: 2 });
+            return;
+        }
+
+        layer.prompt({
+            title: '批量拨款备注（可选）',
+            formType: 2
+        }, function (text, index) {
+            layer.close(index);
+
+            layer.confirm(`确定要对选中的 ${ids.length} 条申请执行拨款操作吗？`, { icon: 3 }, function (index2) {
+                layer.close(index2);
+                layer.load();
+
+                $.post('{:url("admin/FinanceApproval/batchFundApply")}', {
+                    ids: ids,
+                    remark: text
+                }, function (res) {
+                    layer.closeAll('loading');
+                    if (res.code == 200) {
+                        layer.msg(`成功处理 ${res.data.success_count} 条申请`, { icon: 1 });
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        layer.msg(res.msg || '操作失败', { icon: 2 });
+                    }
+                });
+            });
+        });
+    }
+</script>
