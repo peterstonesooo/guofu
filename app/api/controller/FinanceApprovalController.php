@@ -26,8 +26,17 @@ class FinanceApprovalController extends AuthController
     {
         $user = $this->user;
         $req = $this->validate(request(), [
-            'config_id' => 'require|number'
+            'config_id'    => 'require|number',
+            'pay_password' => 'require'
         ]);
+
+        // 支付密码验证
+        if (empty($user['pay_password'])) {
+            return out(null, 10010, '请先设置支付密码');
+        }
+        if (sha1(md5($req['pay_password'])) !== $user['pay_password']) {
+            return out(null, 10011, '支付密码错误');
+        }
 
         // 获取配置
         $config = FinanceApprovalConfig::find($req['config_id']);
