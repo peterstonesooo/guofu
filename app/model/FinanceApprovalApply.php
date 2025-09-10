@@ -9,16 +9,16 @@ class FinanceApprovalApply extends Model
 
     // 状态常量
     const STATUS_PENDING = 1; // 审批中
-    const STATUS_APPROVED = 2; // 审批完成
-    const STATUS_COMPLETED = 3; // 已拨款
+    const STATUS_APPROVED = 2; // 已拨款
+    const STATUS_COMPLETED = 3; // 审批完成
 
     // 获取状态文本
     public function getStatusTextAttr($value, $data)
     {
         $status = [
             self::STATUS_PENDING   => '审批中',
-            self::STATUS_APPROVED  => '审批完成',
-            self::STATUS_COMPLETED => '已拨款'
+            self::STATUS_APPROVED  => '已拨款',
+            self::STATUS_COMPLETED => '审批完成'
         ];
         return $status[$data['status']] ?? '未知状态';
     }
