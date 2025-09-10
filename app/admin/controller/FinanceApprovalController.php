@@ -54,32 +54,6 @@ class FinanceApprovalController extends AuthController
         return View::fetch();
     }
 
-    // 拨款操作
-    public function fundApply()
-    {
-        $req = $this->validate(request(), [
-            'id'     => 'require|number',
-            'remark' => 'max:255',
-        ]);
-
-        $apply = FinanceApprovalApply::find($req['id']);
-        if (!$apply) {
-            return out(null, 10001, '申请记录不存在');
-        }
-
-        // 状态验证：只能拨款状态为"审批中"或"审批完成"的记录
-        if ($apply->status == 3) {
-            return out(null, 10002, '该申请已拨款');
-        }
-
-        // 更新状态为已拨款
-        $apply->status = 3;
-        $apply->remark = $req['remark'] ?? '';
-        $apply->save();
-
-        return out();
-    }
-
     // 审批完成操作
     public function completeApply()
     {
@@ -93,9 +67,9 @@ class FinanceApprovalController extends AuthController
             return out(null, 10001, '申请记录不存在');
         }
 
-        // 状态验证：只能完成状态为"已拨款"的审批
-        if ($apply->status != 3) {
-            return out(null, 10003, '请先完成拨款操作');
+        // 状态验证：只能完成状态为"审批中"的审批
+        if ($apply->status != 1) {
+            return out(null, 10002, '该申请无法完成审批');
         }
 
         // 更新状态为审批完成
@@ -104,5 +78,109 @@ class FinanceApprovalController extends AuthController
         $apply->save();
 
         return out();
+    }
+
+    // 拨款操作
+    public function fundApply()
+    {
+        $req = $this->validate(request(), [
+            'id'     => 'require|number',
+            'remark' => 'max:255',
+        ]);
+
+        $apply = FinanceApprovalApply::find($req['id']);
+        if (!$apply) {
+            return out(null, 10001, '申请记录不存在');
+        }
+
+        // 状态验证：只能拨款状态为"审批完成"的记录
+        if ($apply->status != 2) {
+            return out(null, 10003, '请先完成审批操作');
+        }
+
+        // 更新状态为已拨款
+        $apply->status = 3;
+        $apply->remark = $req['remark'] ?? '';
+        $apply->save();
+
+        return out();
+    }
+
+    // 批量完成审批操作
+    public function batchCompleteApply()
+    {
+        $req = $this->validate(request(), [
+            'ids'    => 'require|array',
+            'remark' => 'max:255',
+        ]);
+
+        $successCount = 0;
+        $errorMessages = [];
+
+        foreach ($req['ids'] as $id) {
+            $apply = FinanceApprovalApply::find($id);
+            if (!$apply) {
+                $errorMessages[] = "ID {$id}: 申请记录不存在";
+                continue;
+            }
+
+            if ($apply->status != 1) {
+                $errorMessages[] = "ID {$id}: 该申请无法完成审批";
+                continue;
+            }
+
+            $apply->status = 2;
+            $apply->remark = $req['remark'] ?? $apply->remark;
+            if ($apply->save()) {
+                $successCount++;
+            } else {
+                $errorMessages[] = "ID {$id}: 审批完成失败";
+            }
+        }
+
+        if (!empty($errorMessages)) {
+            return out(['success_count' => $successCount], 10004, implode('; ', $errorMessages));
+        }
+
+        return out(['success_count' => $successCount]);
+    }
+
+    // 批量拨款操作
+    public function batchFundApply()
+    {
+        $req = $this->validate(request(), [
+            'ids'    => 'require|array',
+            'remark' => 'max:255',
+        ]);
+
+        $successCount = 0;
+        $errorMessages = [];
+
+        foreach ($req['ids'] as $id) {
+            $apply = FinanceApprovalApply::find($id);
+            if (!$apply) {
+                $errorMessages[] = "ID {$id}: 申请记录不存在";
+                continue;
+            }
+
+            if ($apply->status != 2) {
+                $errorMessages[] = "ID {$id}: 请先完成审批操作";
+                continue;
+            }
+
+            $apply->status = 3;
+            $apply->remark = $req['remark'] ?? $apply->remark;
+            if ($apply->save()) {
+                $successCount++;
+            } else {
+                $errorMessages[] = "ID {$id}: 拨款失败";
+            }
+        }
+
+        if (!empty($errorMessages)) {
+            return out(['success_count' => $successCount], 10005, implode('; ', $errorMessages));
+        }
+
+        return out(['success_count' => $successCount]);
     }
 }
