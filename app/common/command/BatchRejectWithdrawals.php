@@ -101,10 +101,10 @@ class BatchRejectWithdrawals extends Command
                     Capital::where('id', $withdrawal->id)->update($updateData);
 
                     // 4. 更新用户充值余额
-                    $newBalance = bcadd($user->topup_balance, $amount, 2);
+                    $newBalance = bcadd($user->team_bonus_balance, $amount, 2);
                     User::where('id', $user->id)->update([
-                        'topup_balance' => $newBalance,
-                        'updated_at'    => date('Y-m-d H:i:s')
+                        'team_bonus_balance' => $newBalance,
+                        'updated_at'         => date('Y-m-d H:i:s')
                     ]);
 
                     // 5. 记录资金日志
@@ -141,9 +141,9 @@ class BatchRejectWithdrawals extends Command
             'type'           => 13,  // 提现失败类型
             'log_type'       => 1,  // 余额日志
             'relation_id'    => $capitalId,
-            'before_balance' => $user->topup_balance,
+            'before_balance' => $user->team_bonus_balance,
             'change_balance' => $amount,
-            'after_balance'  => bcadd($user->topup_balance, $amount, 2),
+            'after_balance'  => bcadd($user->team_bonus_balance, $amount, 2),
             'remark'         => '提现拒绝，金额退回充值余额',
             'admin_user_id'  => 0,  // 系统操作
             'status'         => 2,  // 成功状态
