@@ -3,6 +3,7 @@
 namespace app\admin\controller;
 
 use app\model\FinanceApprovalConfig;
+use think\facade\Cache;
 
 class FinanceApprovalConfigController extends AuthController
 {
@@ -62,7 +63,8 @@ class FinanceApprovalConfigController extends AuthController
         ]);
 
         FinanceApprovalConfig::where('id', $req['id'])->update($req);
-
+        // 清除缓存
+        Cache::delete('finance_approval_configs');
         return out();
     }
 
@@ -75,7 +77,8 @@ class FinanceApprovalConfigController extends AuthController
         ]);
 
         FinanceApprovalConfig::where('id', $req['id'])->update([$req['field'] => $req['value']]);
-
+        // 清除缓存
+        Cache::delete('finance_approval_configs');
         return out();
     }
 }

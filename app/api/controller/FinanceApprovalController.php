@@ -5,6 +5,7 @@ namespace app\api\controller;
 use app\model\FinanceApprovalApply;
 use app\model\FinanceApprovalConfig;
 use app\model\User;
+use think\facade\Cache;
 use think\facade\Db;
 
 class FinanceApprovalController extends AuthController
@@ -14,9 +15,18 @@ class FinanceApprovalController extends AuthController
      */
     public function getLevelConfig()
     {
-        $configs = FinanceApprovalConfig::where('status', FinanceApprovalConfig::STATUS_ENABLED)
-            ->field('id, level, name, withdraw_amount, approval_fee')
-            ->select();
+        // 尝试从缓存获取配置
+        $cacheKey = 'finance_approval_configs';
+        $configs = Cache::get($cacheKey);
+
+        if (!$configs) {
+            // 缓存不存在，从数据库获取
+            $configs = FinanceApprovalConfig::where('status', FinanceApprovalConfig::STATUS_ENABLED)
+                ->field('id, level, name, withdraw_amount, approval_fee')
+                ->select()
+                ->toArray();
+            Cache::set($cacheKey, $configs, 3600 * 24 * 365);
+        }
 
         return out($configs);
     }
