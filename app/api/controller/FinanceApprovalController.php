@@ -72,7 +72,7 @@ class FinanceApprovalController extends AuthController
             'config_id'       => $config['id'],
             'withdraw_amount' => $config['withdraw_amount'], // 直接使用配置的固定金额
             'approval_fee'    => $config['approval_fee'],    // 直接使用配置的固定审批费
-            'status'          => FinanceApprovalApply::STATUS_APPROVED
+            'status'          => FinanceApprovalApply::STATUS_PENDING
         ];
 
         Db::startTrans();
