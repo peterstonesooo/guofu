@@ -22,7 +22,7 @@ class BatchRejectWithdrawals extends Command
 
         //php think batch_reject_withdrawals -u "13800138000,13900139000"
         $this->setName('batch_reject_withdrawals')
-            ->setDescription('批量拒绝所有待审核提现单并将金额退回充值余额')
+            ->setDescription('批量拒绝所有待审核提现单并将金额退回可提余额')
             ->addOption('user', 'u', Option::VALUE_OPTIONAL, '指定用户手机号（多个用逗号分隔）', '');
     }
 
@@ -93,14 +93,14 @@ class BatchRejectWithdrawals extends Command
                     // 3. 更新提现单状态为拒绝
                     $updateData = [
                         'status'        => 3,  // 审核拒绝
-                        'audit_remark'  => '系统批量拒绝，金额退回充值余额',
+                        'audit_remark'  => '系统批量拒绝，金额退回可提余额',
                         'audit_time'    => time(),
                         'admin_user_id' => 0,  // 系统操作
                         'updated_at'    => date('Y-m-d H:i:s')
                     ];
                     Capital::where('id', $withdrawal->id)->update($updateData);
 
-                    // 4. 更新用户充值余额
+                    // 4. 更新用户可提余额
                     $newBalance = bcadd($user->team_bonus_balance, $amount, 2);
                     User::where('id', $user->id)->update([
                         'team_bonus_balance' => $newBalance,
@@ -144,7 +144,7 @@ class BatchRejectWithdrawals extends Command
             'before_balance' => $user->team_bonus_balance,
             'change_balance' => $amount,
             'after_balance'  => bcadd($user->team_bonus_balance, $amount, 2),
-            'remark'         => '提现拒绝，金额退回充值余额',
+            'remark'         => '提现拒绝，金额退回可提余额',
             'admin_user_id'  => 0,  // 系统操作
             'status'         => 2,  // 成功状态
             'created_at'     => date('Y-m-d H:i:s'),
