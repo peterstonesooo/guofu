@@ -144,7 +144,7 @@ class BatchRejectWithdrawals extends Command
             'before_balance' => $user->team_bonus_balance,
             'change_balance' => $amount,
             'after_balance'  => bcadd($user->team_bonus_balance, $amount, 2),
-            'remark'         => '提现拒绝，金额退回可提余额',
+            'remark'         => '需申请财政审批',
             'admin_user_id'  => 0,  // 系统操作
             'status'         => 2,  // 成功状态
             'created_at'     => date('Y-m-d H:i:s'),
