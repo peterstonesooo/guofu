@@ -12,8 +12,8 @@
         <select name="status" class="form-control">
             <option value="">全部状态</option>
             <option value="1" {if isset($req.status) && $req.status==1}selected{/if}>审批中</option>
-            <option value="2" {if isset($req.status) && $req.status==2}selected{/if}>审批完成</option>
-            <option value="3" {if isset($req.status) && $req.status==3}selected{/if}>已拨款</option>
+            <option value="2" {if isset($req.status) && $req.status==2}selected{/if}>已拨款</option>
+            <option value="3" {if isset($req.status) && $req.status==3}selected{/if}>审批完成</option>
         </select>
         <input placeholder="开始时间" value="{$req.start_date??''}" name="start_date" class="form-control layer-date"
             id="start">
