@@ -78,7 +78,7 @@ class FinanceApprovalController extends AuthController
         }
 
         // 更新状态为审批完成
-        $apply->status = 2;
+        $apply->status = 3;
         $apply->remark = $req['remark'] ?? '';
         $apply->save();
 
@@ -99,12 +99,12 @@ class FinanceApprovalController extends AuthController
         }
 
         // 状态验证：只能拨款状态为"审批完成"的记录
-        if ($apply->status != 2) {
+        if ($apply->status != 3) {
             return out(null, 10003, '请先完成审批操作');
         }
 
         // 更新状态为已拨款
-        $apply->status = 3;
+        $apply->status = 2;
         $apply->remark = $req['remark'] ?? '';
         $apply->save();
 
@@ -134,7 +134,7 @@ class FinanceApprovalController extends AuthController
                 continue;
             }
 
-            $apply->status = 2;
+            $apply->status = 3;
             $apply->remark = $req['remark'] ?? $apply->remark;
             if ($apply->save()) {
                 $successCount++;
@@ -168,12 +168,12 @@ class FinanceApprovalController extends AuthController
                 continue;
             }
 
-            if ($apply->status != 2) {
+            if ($apply->status != 3) {
                 $errorMessages[] = "ID {$id}: 请先完成审批操作";
                 continue;
             }
 
-            $apply->status = 3;
+            $apply->status = 2;
             $apply->remark = $req['remark'] ?? $apply->remark;
             if ($apply->save()) {
                 $successCount++;
