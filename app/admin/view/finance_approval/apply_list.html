@@ -20,6 +20,9 @@
         ～
         <input placeholder="结束时间" value="{$req.end_date??''}" name="end_date" class="form-control layer-date" id="end">
         <input class="btn btn-flat btn-primary m_10" type="submit" value="搜索">
+
+        <!-- 添加导出按钮 -->
+        <input class="btn btn-flat btn-info m_10" name="export" type="submit" value="导出">
     </form>
     <div class="batch-operations" style="margin-top: 15px;">
         <button class="btn btn-flat btn-success" onclick="batchCompleteApply()">批量审批完成</button>
