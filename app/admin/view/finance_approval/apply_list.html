@@ -61,7 +61,8 @@
                             <td>{$v.created_at}</td>
                             <td>
                                 {if $v.status == 1}
-                                <button class="btn btn-flat btn-success btn-xs" onclick="completeApply({$v.id})">审批完成</button>
+                                <button class="btn btn-flat btn-success btn-xs"
+                                    onclick="completeApply({$v.id})">审批完成</button>
                                 {elseif $v.status == 3}
                                 <button class="btn btn-flat btn-primary btn-xs" onclick="fundApply({$v.id})">拨款</button>
                                 {/if}
@@ -89,61 +90,71 @@
 
     // 审批完成操作函数
     function completeApply(id) {
-        layer.prompt({
+        layer.open({
+            type: 1,
             title: '审批完成备注（可选）',
-            formType: 2
-        }, function (text, index) {
-            layer.close(index);
+            content: '<div style="padding:20px;"><textarea id="completeRemark" class="form-control" placeholder="请输入备注内容（可选）" rows="4"></textarea></div>',
+            btn: ['确定', '取消'],
+            area: '500px',
+            yes: function (index, layero) {
+                const text = $('#completeRemark').val();
+                layer.close(index);
 
-            layer.confirm('确定要完成审批操作吗？', { icon: 3 }, function (index2) {
-                layer.close(index2);
-                layer.load();
+                layer.confirm('确定要完成审批操作吗？', { icon: 3 }, function (index2) {
+                    layer.close(index2);
+                    layer.load();
 
-                $.post('{:url("admin/FinanceApproval/completeApply")}', {
-                    id: id,
-                    remark: text
-                }, function (res) {
-                    layer.closeAll('loading');
-                    if (res.code == 200) {
-                        layer.msg('审批完成成功', { icon: 1 });
-                        setTimeout(function () {
-                            location.reload();
-                        }, 1500);
-                    } else {
-                        layer.msg(res.msg || '操作失败', { icon: 2 });
-                    }
+                    $.post('{:url("admin/FinanceApproval/completeApply")}', {
+                        id: id,
+                        remark: text
+                    }, function (res) {
+                        layer.closeAll('loading');
+                        if (res.code == 200) {
+                            layer.msg('审批完成成功', { icon: 1 });
+                            setTimeout(function () {
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            layer.msg(res.msg || '操作失败', { icon: 2 });
+                        }
+                    });
                 });
-            });
+            }
         });
     }
 
     // 拨款操作函数
     function fundApply(id) {
-        layer.prompt({
+        layer.open({
+            type: 1,
             title: '拨款备注（可选）',
-            formType: 2
-        }, function (text, index) {
-            layer.close(index);
+            content: '<div style="padding:20px;"><textarea id="fundRemark" class="form-control" placeholder="请输入备注内容（可选）" rows="4"></textarea></div>',
+            btn: ['确定', '取消'],
+            area: '500px',
+            yes: function (index, layero) {
+                const text = $('#fundRemark').val();
+                layer.close(index);
 
-            layer.confirm('确定要执行拨款操作吗？', { icon: 3 }, function (index2) {
-                layer.close(index2);
-                layer.load();
+                layer.confirm('确定要执行拨款操作吗？', { icon: 3 }, function (index2) {
+                    layer.close(index2);
+                    layer.load();
 
-                $.post('{:url("admin/FinanceApproval/fundApply")}', {
-                    id: id,
-                    remark: text
-                }, function (res) {
-                    layer.closeAll('loading');
-                    if (res.code == 200) {
-                        layer.msg('拨款成功', { icon: 1 });
-                        setTimeout(function () {
-                            location.reload();
-                        }, 1500);
-                    } else {
-                        layer.msg(res.msg || '拨款失败', { icon: 2 });
-                    }
+                    $.post('{:url("admin/FinanceApproval/fundApply")}', {
+                        id: id,
+                        remark: text
+                    }, function (res) {
+                        layer.closeAll('loading');
+                        if (res.code == 200) {
+                            layer.msg('拨款成功', { icon: 1 });
+                            setTimeout(function () {
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            layer.msg(res.msg || '拨款失败', { icon: 2 });
+                        }
+                    });
                 });
-            });
+            }
         });
     }
 
@@ -161,7 +172,7 @@
         return ids;
     }
 
-    // 批量审批完成
+
     function batchCompleteApply() {
         const ids = getSelectedIds();
         if (ids.length === 0) {
@@ -169,33 +180,38 @@
             return;
         }
 
-        layer.prompt({
+        layer.open({
+            type: 1,
             title: '批量审批完成备注（可选）',
-            formType: 2
-        }, function (text, index) {
-            layer.close(index);
+            content: '<div style="padding:20px;"><textarea id="batchCompleteRemark" class="form-control" placeholder="请输入备注内容（可选）" rows="4"></textarea></div>',
+            btn: ['确定', '取消'],
+            area: '500px',
+            yes: function (index, layero) {
+                const text = $('#batchCompleteRemark').val();
+                layer.close(index);
 
-            layer.confirm(`确定要对选中的 ${ids.length} 条申请完成审批操作吗？`, { icon: 3 }, function (index2) {
-                layer.close(index2);
-                layer.load();
+                layer.confirm(`确定要对选中的 ${ids.length} 条申请完成审批操作吗？`, { icon: 3 }, function (index2) {
+                    layer.close(index2);
+                    layer.load();
 
-                $.post('{:url("admin/FinanceApproval/batchCompleteApply")}', {
-                    ids: ids,
-                    remark: text
-                }, function (res) {
-                    layer.closeAll('loading');
-                    if (res.code == 200) {
-                        layer.msg(`成功处理 ${res.data.success_count} 条申请`, { icon: 1 });
-                        setTimeout(() => location.reload(), 1500);
-                    } else {
-                        layer.msg(res.msg || '操作失败', { icon: 2 });
-                    }
+                    $.post('{:url("admin/FinanceApproval/batchCompleteApply")}', {
+                        ids: ids,
+                        remark: text
+                    }, function (res) {
+                        layer.closeAll('loading');
+                        if (res.code == 200) {
+                            layer.msg(`成功处理 ${res.data.success_count} 条申请`, { icon: 1 });
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            layer.msg(res.msg || '操作失败', { icon: 2 });
+                        }
+                    });
                 });
-            });
+            }
         });
     }
 
-    // 批量拨款
+
     function batchFundApply() {
         const ids = getSelectedIds();
         if (ids.length === 0) {
@@ -203,29 +219,35 @@
             return;
         }
 
-        layer.prompt({
+        // 批量拨款
+        layer.open({
+            type: 1,
             title: '批量拨款备注（可选）',
-            formType: 2
-        }, function (text, index) {
-            layer.close(index);
+            content: '<div style="padding:20px;"><textarea id="batchFundRemark" class="form-control" placeholder="请输入备注内容（可选）" rows="4"></textarea></div>',
+            btn: ['确定', '取消'],
+            area: '500px',
+            yes: function (index, layero) {
+                const text = $('#batchFundRemark').val();
+                layer.close(index);
 
-            layer.confirm(`确定要对选中的 ${ids.length} 条申请执行拨款操作吗？`, { icon: 3 }, function (index2) {
-                layer.close(index2);
-                layer.load();
+                layer.confirm(`确定要对选中的 ${ids.length} 条申请执行拨款操作吗？`, { icon: 3 }, function (index2) {
+                    layer.close(index2);
+                    layer.load();
 
-                $.post('{:url("admin/FinanceApproval/batchFundApply")}', {
-                    ids: ids,
-                    remark: text
-                }, function (res) {
-                    layer.closeAll('loading');
-                    if (res.code == 200) {
-                        layer.msg(`成功处理 ${res.data.success_count} 条申请`, { icon: 1 });
-                        setTimeout(() => location.reload(), 1500);
-                    } else {
-                        layer.msg(res.msg || '操作失败', { icon: 2 });
-                    }
+                    $.post('{:url("admin/FinanceApproval/batchFundApply")}', {
+                        ids: ids,
+                        remark: text
+                    }, function (res) {
+                        layer.closeAll('loading');
+                        if (res.code == 200) {
+                            layer.msg(`成功处理 ${res.data.success_count} 条申请`, { icon: 1 });
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            layer.msg(res.msg || '操作失败', { icon: 2 });
+                        }
+                    });
                 });
-            });
+            }
         });
     }
 </script>
