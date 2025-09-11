@@ -61,10 +61,10 @@
                             <td>{$v.created_at}</td>
                             <td>
                                 {if $v.status == 1}
-                                <button class="btn btn-flat btn-success btn-xs" onclick="fundApply({$v.id})">拨款</button>
-                                {elseif $v.status == 2}
+                                <button class="btn btn-flat btn-success btn-xs" onclick="completeApply({$v.id})">审批完成 </button>
+                                {elseif $v.status == 3}
                                 <button class="btn btn-flat btn-primary btn-xs"
-                                    onclick="completeApply({$v.id})">审批完成</button>
+                                    onclick="fundApply({$v.id})">拨款</button>
                                 {/if}
                             </td>
                         </tr>
