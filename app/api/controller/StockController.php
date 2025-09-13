@@ -31,35 +31,6 @@ class StockController extends AuthController
             return out(null, 10001, '股权类型未配置');
         }
 
-        // 获取用户所有套餐购买记录（成功支付的）
-        $purchases = Db::name('package_purchases')
-            ->where('user_id', $userId)
-            ->where('status', 1) // 成功支付的
-            ->select()
-            ->toArray(); // 转换为数组
-
-        // 提取套餐ID数组
-        $packageIds = array_column($purchases, 'package_id');
-
-        // 查询这些套餐的股权明细
-        $packageItems = [];
-        $packageTotalQuantities = [];
-        if (!empty($packageIds)) {
-            $packageItems = Db::name('stock_package_items')
-                ->whereIn('package_id', $packageIds)
-                ->select()
-                ->toArray();
-
-            // 计算每个套餐的总股权数量
-            foreach ($packageItems as $item) {
-                $packageId = $item['package_id'];
-                if (!isset($packageTotalQuantities[$packageId])) {
-                    $packageTotalQuantities[$packageId] = 0;
-                }
-                $packageTotalQuantities[$packageId] += $item['quantity'];
-            }
-        }
-
         $stocks = [];
         foreach ($stockTypes as $type) {
             $stockTypeId = $type['id'];
@@ -93,33 +64,13 @@ class StockController extends AuthController
                 ->where('source', '>', 0)
                 ->sum('quantity') ?: 0;
 
-            // 重新计算套餐成本（按股权数量比例分摊）
-            $packageCost = 0;
-            if (!empty($purchases) && !empty($packageItems)) {
-                foreach ($purchases as $purchase) {
-                    $packageId = $purchase['package_id'];
-
-                    // 跳过总数为0的套餐
-                    if (!isset($packageTotalQuantities[$packageId]) || $packageTotalQuantities[$packageId] <= 0) {
-                        continue;
-                    }
-
-                    // 查找该套餐中当前股权类型的数量
-                    $quantityInPackage = 0;
-                    foreach ($packageItems as $item) {
-                        if ($item['package_id'] == $packageId && $item['stock_type_id'] == $stockTypeId) {
-                            $quantityInPackage = $item['quantity'];
-                            break;
-                        }
-                    }
-
-                    if ($quantityInPackage > 0) {
-                        // 分摊成本：该股权类型在该套餐中的数量 / 该套餐总股权数量 * 套餐购买金额
-                        $cost = ($quantityInPackage / $packageTotalQuantities[$packageId]) * $purchase['amount'];
-                        $packageCost += $cost;
-                    }
-                }
-            }
+            // 直接从交易记录获取套餐股权的总成本（包括所有source>0的交易）
+            $packageCost = Db::name('stock_transactions')
+                ->where('user_id', $userId)
+                ->where('stock_type_id', $stockTypeId)
+                ->where('source', '>', 0)
+                ->where('type', 1) // 买入
+                ->sum('amount') ?: 0;
 
             // 计算收益
             $normalValue = $normalHold * $globalPrice;
