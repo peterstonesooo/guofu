@@ -35,7 +35,8 @@ class StockController extends AuthController
         $purchases = Db::name('package_purchases')
             ->where('user_id', $userId)
             ->where('status', 1) // 成功支付的
-            ->select();
+            ->select()
+            ->toArray(); // 转换为数组
 
         // 提取套餐ID数组
         $packageIds = array_column($purchases, 'package_id');
