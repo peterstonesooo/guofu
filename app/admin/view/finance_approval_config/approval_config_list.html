@@ -1,0 +1,120 @@
+<div class="search">
+    <form class="form-inline">
+        <select name="level" class="form-control">
+            <option value="">搜索审批档次</option>
+            <option value="1"
+                    {if isset($req['level']) && $req['level'] == 1}selected{/if}>一档
+            </option>
+            <option value="2"
+                    {if isset($req['level']) && $req['level'] == 2}selected{/if}>二档
+            </option>
+            <option value="3"
+                    {if isset($req['level']) && $req['level'] == 3}selected{/if}>三档
+            </option>
+            <option value="4"
+                    {if isset($req['level']) && $req['level'] == 4}selected{/if}>四档
+            </option>
+        </select>
+        <select name="status" class="form-control">
+            <option value="">搜索状态</option>
+            <option value="1"
+                    {if isset($req['status']) && $req['status'] == 1}selected{/if}>启用
+            </option>
+            <option value="0"
+                    {if isset($req['status']) && $req['status'] == 0}selected{/if}>禁用
+            </option>
+        </select>
+        <input class="btn btn-flat btn-primary m_10" type="submit" value="搜索">
+        <a class="btn btn-flat btn-success m_10 f_r"
+           href="{:url('admin/FinanceApprovalConfig/showApprovalConfig')}">
+            <i class="fa fa-plus m-r-10"></i>添 加
+        </a>
+    </form>
+</div>
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="box">
+            <div class="box-body table-responsive no-padding">
+                <table class="table table-bordered table-hover table-striped">
+                    <tbody>
+                    <tr>
+                        <th>ID</th>
+                        <th>审批档次</th>
+                        <th>档次名称</th>
+                        <th>提款金额</th>
+                        <th>审批费</th>
+                        <th>启用状态</th>
+                        <th>操作</th>
+                    </tr>
+                    {foreach $data as $v}
+                    <tr>
+                        <td>{$v.id}</td>
+                        <td>
+                            {switch $v.level}
+                            {case 1}一档{/case}
+                            {case 2}二档{/case}
+                            {case 3}三档{/case}
+                            {case 4}四档{/case}
+                            {default /}未知
+                            {/switch}
+                        </td>
+                        <td>{$v.name}</td>
+                        <td>{$v.withdraw_amount}</td>
+                        <td>{$v.approval_fee}</td>
+                        <td>
+                            <div class="switch">
+                                <div class="onoffswitch">
+                                    <input type="checkbox" {if $v.status == 1}checked{/if}
+                                           class="onoffswitch-checkbox" id="status{$v.id}">
+                                    <label class="onoffswitch-label" for="status{$v.id}"
+                                           onclick="changeApprovalConfig({$v.id}, 'status')">
+                                        <span class="onoffswitch-inner"></span>
+                                        <span class="onoffswitch-switch"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <a class="btn btn-flat btn-info btn-xs"
+                               href="{:url('admin/FinanceApprovalConfig/showApprovalConfig', ['id' => $v.id])}">
+                                <i class="fa fa-edit"></i> 编辑
+                            </a>
+                        </td>
+                    </tr>
+                    {/foreach}
+                    </tbody>
+                </table>
+            </div>
+            <div style="text-align:center;font-size: 14px;">{$data|raw}</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function changeApprovalConfig(id, field) {
+        var value = $('#' + field + id).is(':checked') ? 0 : 1;
+
+        layer.confirm('确定' + (value ? '启用' : '禁用') + '该配置吗？', {icon: 3, title: '提示'}, function (index) {
+            layer.close(index);
+            $.post('{:url("admin/FinanceApprovalConfig/changeApprovalConfig")}', {
+                "id": id,
+                "field": field,
+                "value": value
+            }, function (res) {
+                if (res.code != 200) {
+                    layer.msg(res.msg, {icon: 5, time: 2500});
+                    $('#' + field + id).prop('checked', !value);
+                } else {
+                    // 更新状态文字
+                    var $label = $('#' + field + id).closest('td').find('.label');
+                    $label.removeClass('label-success label-danger')
+                            .addClass(value ? 'label-success' : 'label-danger')
+                            .text(value ? '启用' : '禁用');
+                }
+            });
+        }, function () {
+            $('#' + field + id).prop('checked', !value);
+        });
+    }
+</script>

@@ -238,6 +238,19 @@ return [
 //            ],
         ],
     ],
+    '财政管理'     => [
+        'icon' => 'fa-pie-chart',
+        'url'  => [
+            '财政调整' => [
+                'icon' => 'fa-pie-chart',
+                'url'  => 'admin/FinanceApprovalConfig/approvalConfigList',
+            ],
+            '财政审核' => [
+                'icon' => 'fa-line-chart',
+                'url'  => 'admin/FinanceApproval/applyList',
+            ],
+        ],
+    ],
     '后台账号管理' =>
         [
             'icon' => 'fa-users',
