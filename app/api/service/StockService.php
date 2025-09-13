@@ -354,6 +354,13 @@ class StockService
      */
     private static function getDailyRemainingQuota($user_id, $stock_type_id, $source)
     {
+        // 检查是否为MRG001股权类型
+        $stockType = StockTypes::find($stock_type_id);
+        if ($stockType && $stockType->code == 'MRG001') {
+            // 如果是MRG001，返回一个很大的数，表示无限制
+            return 999999;
+        }
+
         $today = date('Y-m-d');
 
         // 获取该来源今日已卖出量
