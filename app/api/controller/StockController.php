@@ -31,10 +31,39 @@ class StockController extends AuthController
             return out(null, 10001, '股权类型未配置');
         }
 
+        // 获取用户所有套餐购买记录（成功支付的）
+        $purchases = Db::name('package_purchases')
+            ->where('user_id', $userId)
+            ->where('status', 1) // 成功支付的
+            ->select();
+
+        // 提取套餐ID数组
+        $packageIds = array_column($purchases, 'package_id');
+
+        // 查询这些套餐的股权明细
+        $packageItems = [];
+        $packageTotalQuantities = [];
+        if (!empty($packageIds)) {
+            $packageItems = Db::name('stock_package_items')
+                ->whereIn('package_id', $packageIds)
+                ->select()
+                ->toArray();
+
+            // 计算每个套餐的总股权数量
+            foreach ($packageItems as $item) {
+                $packageId = $item['package_id'];
+                if (!isset($packageTotalQuantities[$packageId])) {
+                    $packageTotalQuantities[$packageId] = 0;
+                }
+                $packageTotalQuantities[$packageId] += $item['quantity'];
+            }
+        }
+
         $stocks = [];
         foreach ($stockTypes as $type) {
             $stockTypeId = $type['id'];
-            //  获取该股权今日已卖出总量（type=2）
+
+            // 获取该股权今日已卖出总量（type=2）
             $soldToday = Db::name('stock_transactions')
                 ->where('user_id', $userId)
                 ->where('stock_type_id', $stockTypeId)
@@ -63,12 +92,33 @@ class StockController extends AuthController
                 ->where('source', '>', 0)
                 ->sum('quantity') ?: 0;
 
-            $packageCost = Db::name('package_purchases')
-                ->alias('pp')
-                ->join('stock_package_items spi', 'spi.package_id = pp.package_id')
-                ->where('pp.user_id', $userId)
-                ->where('spi.stock_type_id', $stockTypeId)
-                ->sum('pp.amount') ?: 0;
+            // 重新计算套餐成本（按股权数量比例分摊）
+            $packageCost = 0;
+            if (!empty($purchases) && !empty($packageItems)) {
+                foreach ($purchases as $purchase) {
+                    $packageId = $purchase['package_id'];
+
+                    // 跳过总数为0的套餐
+                    if (!isset($packageTotalQuantities[$packageId]) || $packageTotalQuantities[$packageId] <= 0) {
+                        continue;
+                    }
+
+                    // 查找该套餐中当前股权类型的数量
+                    $quantityInPackage = 0;
+                    foreach ($packageItems as $item) {
+                        if ($item['package_id'] == $packageId && $item['stock_type_id'] == $stockTypeId) {
+                            $quantityInPackage = $item['quantity'];
+                            break;
+                        }
+                    }
+
+                    if ($quantityInPackage > 0) {
+                        // 分摊成本：该股权类型在该套餐中的数量 / 该套餐总股权数量 * 套餐购买金额
+                        $cost = ($quantityInPackage / $packageTotalQuantities[$packageId]) * $purchase['amount'];
+                        $packageCost += $cost;
+                    }
+                }
+            }
 
             // 计算收益
             $normalValue = $normalHold * $globalPrice;
@@ -79,7 +129,7 @@ class StockController extends AuthController
             $packageProfit = $packageValue - $packageCost;
             $packageProfitRate = $packageCost > 0 ? ($packageProfit / $packageCost) * 100 : 0;
 
-            //  组装数据
+            // 组装数据
             $stocks[$type['code']] = [
                 'stock_name'               => $type['name'],
                 'stock_code'               => $type['code'],
@@ -97,7 +147,7 @@ class StockController extends AuthController
                     'profit'        => round($packageProfit, 2),
                     'profit_rate'   => round($packageProfitRate, 2)
                 ],
-                'total'                    => [ // 汇总信息（可选）
+                'total'                    => [ // 汇总信息
                     'hold_quantity' => $normalHold + $packageHold,
                     'current_value' => round($normalValue + $packageValue, 2)
                 ],
