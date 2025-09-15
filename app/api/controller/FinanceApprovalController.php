@@ -4,12 +4,15 @@ namespace app\api\controller;
 
 use app\model\FinanceApprovalApply;
 use app\model\FinanceApprovalConfig;
+use app\model\FinanceApprovalCountDown;
 use app\model\User;
 use think\facade\Cache;
 use think\facade\Db;
 
 class FinanceApprovalController extends AuthController
 {
+    const GLOBAL_QUEUE_START = 60000;
+
     /**
      * 获取审批档次配置
      */
@@ -28,7 +31,21 @@ class FinanceApprovalController extends AuthController
             Cache::set($cacheKey, $configs, 3600 * 24 * 365);
         }
 
-        return out($configs);
+        // 获取倒计时编号
+        $countDownCacheKey = 'finance_approval_count_down';
+        $countDown = Cache::get($countDownCacheKey);
+
+        // 如果缓存不存在，从数据库获取
+        if (!$countDown) {
+            $countDownModel = FinanceApprovalCountDown::find(1);
+            $countDown = $countDownModel ? $countDownModel->current_queue_code : self::GLOBAL_QUEUE_START;
+            Cache::set($countDownCacheKey, $countDown, 3600 * 24 * 365);
+        }
+
+        return out([
+            'configs'    => $configs,
+            'count_down' => $countDown
+        ]);
     }
 
     /**

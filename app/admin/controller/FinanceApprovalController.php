@@ -6,6 +6,7 @@ use app\model\FinanceApprovalApply;
 use app\model\FinanceApprovalConfig;
 use app\model\FinanceApprovalCountDown;
 use app\model\User;
+use think\facade\Cache;
 use think\facade\Db;
 use think\facade\View;
 
@@ -195,6 +196,10 @@ class FinanceApprovalController extends AuthController
         }
 
         $countDown->save();
+
+        // 更新Redis缓存
+        $countDownCacheKey = 'finance_approval_count_down';
+        Cache::set($countDownCacheKey, $countDown->current_queue_code, 3600 * 24 * 365);
 
         return [
             'count_down'    => $countDown->current_queue_code,
