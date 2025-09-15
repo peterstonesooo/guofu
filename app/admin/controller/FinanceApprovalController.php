@@ -73,6 +73,23 @@ class FinanceApprovalController extends AuthController
     // 生成排队编号（严格递增）
     private function generateQueueCode()
     {
+        // 检查当前是否已有排队编号
+        $maxQueueCode = FinanceApprovalApply::where('queue_code', '>', 0)->max('queue_code');
+
+        // 如果还没有排队编号，则使用起始编号60000
+        if (!$maxQueueCode) {
+            // 初始化序列控制记录
+            Db::name('finance_approval_queue_seq')
+                ->where('id', 1)
+                ->update([
+                    'last_queue_code'     => self::GLOBAL_QUEUE_START,
+                    'current_range_start' => self::GLOBAL_QUEUE_START,
+                    'current_range_end'   => self::GLOBAL_QUEUE_START + 10
+                ]);
+
+            return self::GLOBAL_QUEUE_START;
+        }
+
         // 使用事务确保操作的原子性
         Db::startTrans();
         try {
@@ -183,16 +200,6 @@ class FinanceApprovalController extends AuthController
             'count_down'    => $countDown->current_queue_code,
             'change_amount' => $changeAmount
         ];
-    }
-
-    // 加权的随机增量（60%概率增加5-7，40%概率增加8-10）
-    private function getWeightedIncrement()
-    {
-        if (mt_rand(1, 100) <= 60) {
-            return mt_rand(5, 7); // 60%概率小幅度增加
-        } else {
-            return mt_rand(8, 10); // 40%概率大幅度增加
-        }
     }
 
     // 审批完成操作
