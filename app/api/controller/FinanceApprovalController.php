@@ -4,7 +4,6 @@ namespace app\api\controller;
 
 use app\model\FinanceApprovalApply;
 use app\model\FinanceApprovalConfig;
-use app\model\FinanceApprovalCountDown;
 use app\model\User;
 use think\facade\Cache;
 use think\facade\Db;
@@ -34,12 +33,8 @@ class FinanceApprovalController extends AuthController
         // 获取倒计时编号
         $countDownCacheKey = 'finance_approval_count_down';
         $countDown = Cache::get($countDownCacheKey);
-
-        // 如果缓存不存在，从数据库获取
         if (!$countDown) {
-            $countDownModel = FinanceApprovalCountDown::find(1);
-            $countDown = $countDownModel ? $countDownModel->current_queue_code : self::GLOBAL_QUEUE_START;
-            Cache::set($countDownCacheKey, $countDown, 3600 * 24 * 365);
+            $countDown = self::GLOBAL_QUEUE_START + 1;
         }
 
         // 处理倒计时编号展示格式：取后三位数字
@@ -53,11 +48,7 @@ class FinanceApprovalController extends AuthController
                 $lastThreeDigits = 240;
             }
         }
-
-        // 计算展示值
-        $displayValue = $lastThreeDigits % 10;
-        // 如果是10的倍数则展示10，否则展示个位数
-        $displayCountDown = ($displayValue === 0) ? 10 : $displayValue;
+        $displayCountDown = $lastThreeDigits;
 
         return out([
             'configs'    => $configs,
