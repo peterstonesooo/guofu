@@ -37,17 +37,8 @@ class FinanceApprovalController extends AuthController
             $countDown = self::GLOBAL_QUEUE_START + 1;
         }
 
-        // 处理倒计时编号展示格式：取后三位数字
-        $lastThreeDigits = $countDown % 1000;
-
-        // 如果超过240则取模240（重新开始）
-        if ($lastThreeDigits > 240) {
-            $lastThreeDigits = $lastThreeDigits % 240;
-            // 取模后为0表示正好是240的倍数，设置为240
-            if ($lastThreeDigits === 0) {
-                $lastThreeDigits = 240;
-            }
-        }
+        // 处理倒计时编号展示格式：
+        $lastThreeDigits = $countDown - 59999;
         $displayCountDown = $lastThreeDigits;
 
         return out([
