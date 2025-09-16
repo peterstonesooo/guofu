@@ -38,7 +38,7 @@ class FinanceApprovalController extends AuthController
         }
 
         // 处理倒计时编号展示格式：
-        $lastThreeDigits = $countDown - 59999;
+        $lastThreeDigits = $countDown - 65999;
         $displayCountDown = $lastThreeDigits;
 
         return out([
