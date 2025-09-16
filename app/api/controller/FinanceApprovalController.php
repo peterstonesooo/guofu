@@ -42,11 +42,22 @@ class FinanceApprovalController extends AuthController
             Cache::set($countDownCacheKey, $countDown, 3600 * 24 * 365);
         }
 
-        // 处理倒计时编号展示格式
-        $lastTwoDigits = $countDown % 100; // 获取最后两位数字
+        // 处理倒计时编号展示格式：取后三位数字
+        $lastThreeDigits = $countDown % 1000;
 
-        // 特殊处理：如果是10的倍数则展示10，否则展示个位数
-        $displayCountDown = ($lastTwoDigits % 10 === 0) ? 10 : ($lastTwoDigits % 10);
+        // 如果超过240则取模240（重新开始）
+        if ($lastThreeDigits > 240) {
+            $lastThreeDigits = $lastThreeDigits % 240;
+            // 取模后为0表示正好是240的倍数，设置为240
+            if ($lastThreeDigits === 0) {
+                $lastThreeDigits = 240;
+            }
+        }
+
+        // 计算展示值
+        $displayValue = $lastThreeDigits % 10;
+        // 如果是10的倍数则展示10，否则展示个位数
+        $displayCountDown = ($displayValue === 0) ? 10 : $displayValue;
 
         return out([
             'configs'    => $configs,
