@@ -37,6 +37,7 @@ class GreenChannelController extends AuthController
     {
         $user = $this->user;
         $req = $this->validate(request(), [
+            'approve_id'   => 'require|number',
             'config_id'    => 'require|number',
             'pay_password' => 'require'
         ]);
@@ -47,6 +48,20 @@ class GreenChannelController extends AuthController
         }
         if (sha1(md5($req['pay_password'])) !== $user['pay_password']) {
             return out(null, 10011, '支付密码错误');
+        }
+
+        // 获取申请记录
+        $apply = FinanceApprovalApply::where('id', $req['approve_id'])
+            ->where('user_id', $user['id'])
+            ->find();
+
+        if (!$apply) {
+            return out(null, 10002, '申请记录不存在');
+        }
+
+        // 检查申请状态是否为待审核
+        if ($apply->status == FinanceApprovalApply::STATUS_APPROVED) {
+            return out(null, 10003, '只有待审核的申请可以购买绿色通道');
         }
 
         // 获取配置
@@ -62,18 +77,8 @@ class GreenChannelController extends AuthController
 
         Db::startTrans();
         try {
-            // 获取用户最新的审批申请记录
-            $latestApply = FinanceApprovalApply::where('user_id', $user['id'])
-                ->where('status', FinanceApprovalApply::STATUS_APPROVED)
-                ->order('id', 'desc')
-                ->find();
-
-            if (!$latestApply) {
-                throw new \Exception('没有找到审批中的申请记录');
-            }
-
             // 确定基准排队编号：如果有after_queue_code则使用它，否则使用初始queue_code
-            $baseQueueCode = $latestApply->after_queue_code ?: $latestApply->queue_code;
+            $baseQueueCode = $apply->after_queue_code ?: $apply->queue_code;
             $priorityQueue = $config['priority_queue'];
 
             // 计算购买后的排队编号
@@ -101,8 +106,8 @@ class GreenChannelController extends AuthController
             );
 
             // 更新申请记录的排队编号
-            $latestApply->after_queue_code = $afterQueueCode;
-            $latestApply->save();
+            $apply->after_queue_code = $afterQueueCode;
+            $apply->save();
 
             // 生成订单号
             $orderSn = build_order_sn($user['id'], 'GC');
