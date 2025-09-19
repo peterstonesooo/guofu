@@ -90,6 +90,7 @@
                                 <th width="150">用户</th>
                                 <th width="120">审批档次</th>
                                 <th width="100">排队编号</th>
+                                 <th width="120">减去后的排队编号</th>
                                 <th width="100">提现金额</th>
                                 <th width="100">审批费</th>
                                 <th width="100">状态</th>
@@ -106,10 +107,17 @@
                                 <td>{$v.config_name}</td>
                                 <td>
                                     {if $v.queue_code}
-                                    <span class="label label-success">{$v.queue_code}</span>
+                                    <span class="label label-default">{$v.queue_code}</span>
                                     {else}
                                     <span class="text-muted">未分配</span>
                                     {/if}
+                                </td>
+                                <td>
+                                {if $v.after_queue_code}
+                                    <span class="label label-success">{$v.after_queue_code}</span>
+                                {else}
+                                    <span class="text-muted">未分配</span>
+                                {/if}
                                 </td>
                                 <td>¥{$v.withdraw_amount}</td>
                                 <td>¥{$v.approval_fee}</td>
