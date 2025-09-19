@@ -6,11 +6,13 @@ use app\model\FinanceApprovalApply;
 use app\model\GreenChannelOrder;
 use app\model\GreenConfig;
 use app\model\User;
+use think\facade\Cache;
 use think\facade\Db;
 
 class GreenChannelController extends AuthController
 {
     const MIN_QUEUE_CODE = 6000; // 最低排队编号
+    const REDIS_KEY = 'green_configs'; // 使用与后台相同的缓存键
 
     /**
      * 获取可用的绿色通道方案
@@ -18,11 +20,41 @@ class GreenChannelController extends AuthController
     public function getConfigs()
     {
         try {
-            $configs = GreenConfig::where('status', 1)
-                ->field('id, name, priority_queue, channel_fee')
-                ->order('sort', 'asc')
-                ->select()
-                ->toArray();
+            // 尝试从缓存获取数据
+            $cachedData = Cache::get(self::REDIS_KEY);
+
+            if ($cachedData) {
+                // 如果缓存存在，反序列化数据
+                $allData = unserialize($cachedData);
+
+                // 过滤出启用状态的数据
+                $configs = array_filter($allData, function ($item) {
+                    return $item['status'] == 1;
+                });
+
+                // 只返回需要的字段
+                $configs = array_map(function ($item) {
+                    return [
+                        'id'             => $item['id'],
+                        'name'           => $item['name'],
+                        'priority_queue' => $item['priority_queue'],
+                        'channel_fee'    => $item['channel_fee'],
+                        'sort'           => $item['sort']
+                    ];
+                }, $configs);
+
+                // 按排序字段排序
+                usort($configs, function ($a, $b) {
+                    return $a['sort'] <=> $b['sort'];
+                });
+            } else {
+                // 如果缓存不存在，从数据库获取
+                $configs = GreenConfig::where('status', 1)
+                    ->field('id, name, priority_queue, channel_fee, sort')
+                    ->order('sort', 'asc')
+                    ->select()
+                    ->toArray();
+            }
 
             return out(['configs' => $configs]);
         } catch (\Exception $e) {
