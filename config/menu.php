@@ -212,17 +212,21 @@ return [
     '财政管理' => [
         'icon' => 'fa-pie-chart',
         'url'  => [
-            '财政调整'     => [
+            '财政调整'         => [
                 'icon' => 'fa-pie-chart',
                 'url'  => 'admin/FinanceApprovalConfig/approvalConfigList',
             ],
-            '财政审核'     => [
+            '财政审核'         => [
                 'icon' => 'fa-line-chart',
                 'url'  => 'admin/FinanceApproval/applyList',
             ],
-            '绿色方案管理' => [
+            '优先方案管理'     => [
                 'icon' => 'fa-leaf',
                 'url'  => 'admin/GreenConfig/greenConfigList',
+            ],
+            '优先通道购买记录' => [
+                'icon' => 'fa-shopping-cart',
+                'url'  => 'admin/GreenChannelOrder/greenChannelList',
             ],
         ],
     ],
