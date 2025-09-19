@@ -92,8 +92,8 @@ class GreenChannelController extends AuthController
         }
 
         // 检查申请状态是否为待审核
-        if ($apply->status == FinanceApprovalApply::STATUS_APPROVED) {
-            return out(null, 10003, '只有待审核的申请可以购买绿色通道');
+        if ($apply->status == FinanceApprovalApply::STATUS_PENDING) {
+            return out(null, 10003, '只有先拿到银行编码后才能购买绿色通道 请耐心等待');
         }
 
         // 获取配置

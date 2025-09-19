@@ -54,7 +54,7 @@ class FinanceApprovalController extends AuthController
         }
 
         // 分页和排序
-        $data = $builder->orderRaw("CASE WHEN a.status = 2 THEN 1 ELSE 0 END")
+        $data = $builder->orderRaw("CASE WHEN a.status = 1 THEN 1 ELSE 0 END")
             ->orderRaw("CASE WHEN a.after_queue_code IS NOT NULL THEN a.after_queue_code ELSE a.queue_code END ASC")
             ->order('a.id', 'desc')
             ->paginate(['list_rows' => 15, 'query' => $req]);
