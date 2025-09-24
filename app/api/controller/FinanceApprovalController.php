@@ -10,6 +10,8 @@ use think\facade\Db;
 
 class FinanceApprovalController extends AuthController
 {
+    const GLOBAL_QUEUE_START = 60000;
+
     /**
      * 获取审批档次配置
      */
@@ -28,7 +30,21 @@ class FinanceApprovalController extends AuthController
             Cache::set($cacheKey, $configs, 3600 * 24 * 365);
         }
 
-        return out($configs);
+        // 获取倒计时编号
+        $countDownCacheKey = 'finance_approval_count_down';
+        $countDown = Cache::get($countDownCacheKey);
+        if (!$countDown) {
+            $countDown = self::GLOBAL_QUEUE_START + 1;
+        }
+
+        // 处理倒计时编号展示格式：
+        $lastThreeDigits = $countDown - 65999;
+        $displayCountDown = $lastThreeDigits;
+
+        return out([
+            'configs'    => $configs,
+            'count_down' => $displayCountDown
+        ]);
     }
 
     /**

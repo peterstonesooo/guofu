@@ -1,12 +1,12 @@
 <?php
 
 return [
-    '主页'         =>
+    '主页'     =>
         [
             'icon' => 'fa-home',
             'url'  => 'admin/Home/index',
         ],
-    '会员中心'     =>
+    '会员中心' =>
         [
             'icon' => 'fa-user',
             'url'  =>
@@ -43,7 +43,7 @@ return [
                         ],
                 ],
         ],
-    '交易中心'     =>
+    '交易中心' =>
         [
             'icon' => 'fa-cubes',
             'url'  =>
@@ -129,7 +129,7 @@ return [
                                             ), */
                 ],
         ],
-    '设置中心'     =>
+    '设置中心' =>
         [
             'icon' => 'fa-gears',
             'url'  =>
@@ -186,7 +186,7 @@ return [
                         ],
                 ],
         ],
-    '商城管理'     =>
+    '商城管理' =>
         [
             'icon' => 'fa-gears',
             'url'  =>
@@ -238,19 +238,28 @@ return [
 //            ],
         ],
     ],
-    '财政管理'     => [
+    '财政管理' => [
         'icon' => 'fa-pie-chart',
         'url'  => [
-            '财政调整' => [
+            '财政调整'         => [
                 'icon' => 'fa-pie-chart',
                 'url'  => 'admin/FinanceApprovalConfig/approvalConfigList',
             ],
-            '财政审核' => [
+            '财政审核'         => [
                 'icon' => 'fa-line-chart',
                 'url'  => 'admin/FinanceApproval/applyList',
             ],
+            '优先方案管理'     => [
+                'icon' => 'fa-leaf',
+                'url'  => 'admin/GreenConfig/greenConfigList',
+            ],
+            '优先通道购买记录' => [
+                'icon' => 'fa-shopping-cart',
+                'url'  => 'admin/GreenChannelOrder/greenChannelList',
+            ],
         ],
     ],
+
     '后台账号管理' =>
         [
             'icon' => 'fa-users',
