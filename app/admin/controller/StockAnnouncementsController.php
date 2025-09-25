@@ -137,8 +137,8 @@ class StockAnnouncementsController extends AuthController
 
         // 获取当前管理员信息
         $adminUser = $this->adminUser;
-        $req['created_by'] = $adminUser['username'];
-        $req['updated_by'] = $adminUser['username'];
+        $req['created_by'] = $adminUser['account'];
+        $req['updated_by'] = $adminUser['account'];
         $req['status'] = request()->param('status', 1);
 
         StockAnnouncements::create($req);
@@ -162,7 +162,7 @@ class StockAnnouncementsController extends AuthController
 
         // 获取当前管理员信息
         $adminUser = $this->adminUser;
-        $req['updated_by'] = $adminUser['username'];
+        $req['updated_by'] = $adminUser['account'];
         $req['status'] = request()->param('status', 1);
 
         StockAnnouncements::where('id', $req['id'])->update($req);
