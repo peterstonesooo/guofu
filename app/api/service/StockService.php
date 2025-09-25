@@ -14,9 +14,6 @@ use think\facade\Db;
 
 class StockService
 {
-
-    const DAILY_SELL_LIMIT = 10; // 全局每日卖出限额
-
     // 获取实时股价（从缓存获取）
     public static function getCurrentPrice()
     {
@@ -364,15 +361,18 @@ class StockService
         $today = date('Y-m-d');
 
         // 获取该来源今日已卖出量
+
+        $todayStart = date('Y-m-d 00:00:00');
+        $todayEnd = date('Y-m-d 23:59:59');
+
         $soldToday = StockTransactions::where('user_id', $user_id)
             ->where('stock_type_id', $stock_type_id)
-            ->where('source', $source)
-            ->where('type', 2) // 卖出
-            ->where('DATE(created_at)', $today)
+            ->where('type', 2) // 卖出交易
+            ->whereBetween('created_at', [$todayStart, $todayEnd])
             ->sum('quantity') ?: 0;
-
+        
         // 确定每日限额
-        $dailyLimit = self::DAILY_SELL_LIMIT;
+        $dailyLimit = self::getDailySellLimit($user_id, $stock_type_id);
         if ($source > 0) {
             // 如果是股权方案，检查是否有独立限额
             $package = StockPackages::find($source);
@@ -384,6 +384,30 @@ class StockService
         // 计算剩余额度
         $remaining = $dailyLimit - $soldToday;
         return max(0, $remaining);
+    }
+
+    /**
+     * 获取用户每日卖出限额
+     */
+    public static function getDailySellLimit($user_id, $stock_type_id)
+    {
+        // 获取股权类型信息
+        $stockType = StockTypes::find($stock_type_id);
+
+        // 如果是LTG001流通股权，根据购买次数计算限额
+        if ($stockType && $stockType->code == 'LTG001') {
+            // 获取用户对该股权类型的购买次数
+            $purchaseCount = Db::name('user_stock_purchase_count')
+                ->where('user_id', $user_id)
+                ->where('stock_type_id', $stock_type_id)
+                ->value('purchase_count') ?: 0;
+
+            // 每次购买增加10股限额
+            return $purchaseCount * 10;
+        }
+
+        // 其他股权类型使用默认限额
+        return 9999999;
     }
 
     /**
@@ -406,5 +430,37 @@ class StockService
             'created_at'    => date('Y-m-d H:i:s'),
             'updated_at'    => date('Y-m-d H:i:s')
         ]);
+    }
+
+    /**
+     * 增加用户股权类型购买次数
+     */
+    public static function incrementPurchaseCount($user_id, $stock_type_id, $increment = 1)
+    {
+        // 查找现有记录
+        $record = Db::name('user_stock_purchase_count')
+            ->where('user_id', $user_id)
+            ->where('stock_type_id', $stock_type_id)
+            ->find();
+
+        if ($record) {
+            // 更新现有记录
+            Db::name('user_stock_purchase_count')
+                ->where('id', $record['id'])
+                ->inc('purchase_count', $increment)
+                ->update();
+        } else {
+            // 插入新记录
+            Db::name('user_stock_purchase_count')
+                ->insert([
+                    'user_id'        => $user_id,
+                    'stock_type_id'  => $stock_type_id,
+                    'purchase_count' => $increment,
+                    'created_at'     => date('Y-m-d H:i:s'),
+                    'updated_at'     => date('Y-m-d H:i:s')
+                ]);
+        }
+
+        return true;
     }
 }

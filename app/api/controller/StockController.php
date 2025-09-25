@@ -36,15 +36,19 @@ class StockController extends AuthController
             $stockTypeId = $type['id'];
 
             // 获取该股权今日已卖出总量（type=2）
+            $todayStart = date('Y-m-d 00:00:00');
+            $todayEnd = date('Y-m-d 23:59:59');
+
             $soldToday = Db::name('stock_transactions')
                 ->where('user_id', $userId)
                 ->where('stock_type_id', $stockTypeId)
                 ->where('type', 2) // 卖出交易
-                ->where('DATE(created_at)', $today) // 今日的交易
+                ->whereBetween('created_at', [$todayStart, $todayEnd])
                 ->sum('quantity') ?: 0;
 
             // 计算当日剩余可卖出数量
-            $remainingToday = max(0, StockService::DAILY_SELL_LIMIT - $soldToday);
+            $dailyLimit = StockService::getDailySellLimit($userId, $stockTypeId);
+            $remainingToday = max(0, $dailyLimit - $soldToday);
 
             // 获取普通购买（source=0）的股权信息
             $normalHold = UserStockWallets::where('user_id', $userId)
@@ -103,7 +107,8 @@ class StockController extends AuthController
                     'hold_quantity' => $normalHold + $packageHold,
                     'current_value' => round($normalValue + $packageValue, 2)
                 ],
-                'daily_remaining_quantity' => $remainingToday // 当日剩余可卖出数量
+                'daily_remaining_quantity' => $remainingToday, // 当日剩余可卖出数量
+                'daily_sell_limit'         => $dailyLimit // 每日卖出限额
             ];
         }
 

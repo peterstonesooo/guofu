@@ -148,6 +148,7 @@ class PackageService
                     'created_at'    => $purchaseDate,
                     'updated_at'    => $purchaseDate
                 ]);
+                StockService::incrementPurchaseCount($userId, $item->stock_type_id);
             }
 
             Db::commit();
