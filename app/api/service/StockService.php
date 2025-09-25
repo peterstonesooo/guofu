@@ -370,7 +370,7 @@ class StockService
             ->where('type', 2) // 卖出交易
             ->whereBetween('created_at', [$todayStart, $todayEnd])
             ->sum('quantity') ?: 0;
-        
+
         // 确定每日限额
         $dailyLimit = self::getDailySellLimit($user_id, $stock_type_id);
         if ($source > 0) {
@@ -402,8 +402,8 @@ class StockService
                 ->where('stock_type_id', $stock_type_id)
                 ->value('purchase_count') ?: 0;
 
-            // 每次购买增加10股限额
-            return $purchaseCount * 10;
+            // 直接返回购买次数作为限额（不再乘以10）
+            return $purchaseCount;
         }
 
         // 其他股权类型使用默认限额

@@ -148,7 +148,9 @@ class PackageService
                     'created_at'    => $purchaseDate,
                     'updated_at'    => $purchaseDate
                 ]);
-                StockService::incrementPurchaseCount($userId, $item->stock_type_id);
+
+                // 修改：使用套餐的daily_sell_limit作为增量
+                StockService::incrementPurchaseCount($userId, $item->stock_type_id, $package->daily_sell_limit);
             }
 
             Db::commit();
