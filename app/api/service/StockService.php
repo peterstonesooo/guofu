@@ -2,7 +2,6 @@
 
 namespace app\api\service;
 
-use app\model\StockPackages;
 use app\model\StockTransactions;
 use app\model\StockTypes;
 use app\model\User;
@@ -373,13 +372,13 @@ class StockService
 
         // 确定每日限额
         $dailyLimit = self::getDailySellLimit($user_id, $stock_type_id);
-        if ($source > 0) {
-            // 如果是股权方案，检查是否有独立限额
-            $package = StockPackages::find($source);
-            if ($package && isset($package['daily_sell_limit'])) {
-                $dailyLimit = $package['daily_sell_limit'];
-            }
-        }
+//        if ($source > 0) {
+//            // 如果是股权方案，检查是否有独立限额
+//            $package = StockPackages::find($source);
+//            if ($package && isset($package['daily_sell_limit'])) {
+//                $dailyLimit = $package['daily_sell_limit'];
+//            }
+//        }
 
         // 计算剩余额度
         $remaining = $dailyLimit - $soldToday;
