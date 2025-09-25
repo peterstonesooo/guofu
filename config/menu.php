@@ -209,6 +209,31 @@ return [
                 ],
 
         ],
+    '股权管理' => [
+        'icon' => 'fa-pie-chart',  // 使用图表图标表示股权数据
+        'url'  => [
+            '股权配置'         => [
+                'icon' => 'fa-cog',  // 使用齿轮图标表示配置
+                'url'  => 'admin/Stock/index',
+            ],
+            '股权方案'         => [
+                'icon' => 'fa-line-chart',
+                'url'  => 'admin/StockPackage/index',
+            ],
+            '股权购买记录'     => [
+                'icon' => 'fa-exchange',  // 使用交换图标表示交易
+                'url'  => 'admin/StockTransaction/index',
+            ],
+            '股权方案购买记录' => [
+                'icon' => 'fa-exchange',  // 使用交换图标表示交易
+                'url'  => 'admin/PackagePurchase/index',
+            ],
+            '股权公告管理'     => [
+                'icon' => 'fa-bullhorn',  // 使用喇叭图标表示公告
+                'url'  => 'admin/StockAnnouncements/announcementList',
+            ],
+        ],
+    ],
     '财政管理' => [
         'icon' => 'fa-pie-chart',
         'url'  => [

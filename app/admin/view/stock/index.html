@@ -1,0 +1,652 @@
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-header">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="keyword" placeholder="股权名称/代码">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default" type="button" id="searchBtn">搜索</button>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-9 text-right">
+                            <button class="btn btn-primary" onclick="location.reload()"><i class="fa fa-refresh"></i> 刷新
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="box-body" style="border-bottom:1px solid #f4f4f4; padding-bottom:15px;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-inline">
+                                <div class="form-group">
+                                    <label for="globalPriceDisplay" style="margin-right:10px;">当前全局股价：</label>
+                                    <input type="text" class="form-control" id="globalPriceDisplay" readonly
+                                           style="width:100px; text-align:center; background-color:#fff; cursor:default;">
+                                </div>
+                                <button class="btn btn-primary" onclick="adjustPrice()" style="margin-left:10px;">
+                                    <i class="fa fa-edit"></i> 调整股价
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="box-body">
+                        <table id="dataTable" class="table table-bordered table-hover">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>股权名称</th>
+                                <th>股权代码</th>
+                                <th>总数量</th>
+                                <th>当前价格</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+</section>
+
+<!-- 调整股价模态框 -->
+<div class="modal fade" id="adjustPriceModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">调整全局股价</h4> <!-- 修改标题 -->
+            </div>
+            <form id="adjustPriceForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>当前全局价格</label>
+                        <input type="text" class="form-control" id="current_price" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>调整后价格 <span class="text-red">*</span></label>
+                        <input type="number" class="form-control" name="price" placeholder="请输入全局股权价格" min="0"
+                               step="0.01" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">确认调整</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 批量增加模态框 -->
+<div class="modal fade" id="batchAddModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">批量增加原始股权</h4>
+            </div>
+            <form id="batchAddForm">
+                <div class="modal-body">
+                    <input type="hidden" name="stock_type_id" id="batch_stock_type_id">
+                    <div class="form-group">
+                        <label>股权名称</label>
+                        <input type="text" class="form-control" id="batch_stock_name" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>股权代码</label>
+                        <input type="text" class="form-control" id="batch_stock_code" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>用户ID <span class="text-red">*</span></label>
+                        <textarea class="form-control" name="user_ids" rows="3"
+                                  placeholder="请输入用户ID，多个用逗号分隔" required></textarea>
+                        <p class="help-block">多个用户ID用英文逗号分隔</p>
+                    </div>
+                    <div class="form-group">
+                        <label>增加数量 <span class="text-red">*</span></label>
+                        <input type="number" class="form-control" name="quantity" placeholder="请输入增加数量" min="1"
+                               required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">确认增加</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑模态框 -->
+<div class="modal fade" id="editStockModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">编辑股权信息</h4>
+            </div>
+            <form id="editStockForm">
+                <input type="hidden" name="id" id="edit_stock_id">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>股权名称</label>
+                        <input type="text" class="form-control" name="name" id="edit_stock_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>总发行量</label>
+                        <input type="number" class="form-control" name="total_shares" id="edit_total_shares" min="0"
+                               required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">保存修改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 单个调整模态框 -->
+<div class="modal fade" id="adjustSingleModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">调整单个用户股权</h4>
+            </div>
+            <form id="adjustSingleForm">
+                <input type="hidden" name="stock_type_id" id="adjust_stock_type_id">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>股权名称</label>
+                        <input type="text" class="form-control" id="adjust_stock_name" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>选择用户 <span class="text-red">*</span></label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="searchUser"
+                                   placeholder="输入用户名或手机号搜索">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="button" id="searchUserBtn">搜索</button>
+                            </span>
+                        </div>
+                        <select class="form-control" id="userSelect" name="user_id"
+                                style="margin-top: 10px; display: none;">
+                            <option value="">请选择用户</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>操作类型 <span class="text-red">*</span></label>
+                        <select class="form-control" name="operation">
+                            <option value="+">增加股权</option>
+                            <option value="-">减少股权</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>数量 <span class="text-red">*</span></label>
+                        <input type="number" class="form-control" name="quantity" placeholder="请输入整数数量" min="1"
+                               step="1" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">确认调整</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Excel批量导入模态框 -->
+<div class="modal fade" id="batchImportModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Excel批量导入股权</h4>
+            </div>
+            <form id="batchImportForm" enctype="multipart/form-data">
+                <input type="hidden" name="stock_type_id" id="import_stock_type_id">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>股权名称</label>
+                        <input type="text" class="form-control" id="import_stock_name" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Excel文件 <span class="text-red">*</span></label>
+                        <input type="file" name="excel_file" accept=".xlsx,.xls,.csv" required>
+                        <p class="help-block">
+                            文件格式要求：第一行表头，第二行开始数据<br>
+                            列顺序：用户ID | 操作类型(+/-) | 数量（必须为整数）<br>
+                            <a href="{:url('admin/Stock/downloadTemplate')}">下载模板</a>
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">开始导入</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{block name="js"}
+<link href="https://cdn.datatables.net/v/dt/dt-2.3.3/datatables.min.css" rel="stylesheet"
+      integrity="sha384-C0ogMvg31Mu1GWzYxEEobPIlBlGbp/DY94Le4M9y/HFd9VGLT1zWL7MErNMsM2x6" crossorigin="anonymous">
+
+<script src="https://cdn.datatables.net/v/dt/dt-2.3.3/datatables.min.js"
+        integrity="sha384-qyN6ZT87DHLvgCDC+GYE3myTUDGpz3swpW19cYxOh4oa/8GNSGPMteQwbyM6Ot0D"
+        crossorigin="anonymous"></script>
+
+<script>
+    $(function () {
+        var table = $('#dataTable').DataTable({
+            'paging': true,
+            'lengthChange': true,
+            'searching': false,
+            'ordering': true,
+            'info': true,
+            'autoWidth': false,
+            'serverSide': true,
+            'ajax': {
+                url: '{:url("admin/Stock/index")}',
+                type: 'POST',
+                data: function (d) {
+                    return {
+                        start: d.start,      // 起始记录索引
+                        length: d.length,    // 每页数量
+                        draw: d.draw,        // DataTables绘次数
+                        // 搜索条件
+                        keyword: $('#keyword').val(),
+                        stock_type_id: $('#stockTypeFilter').val()
+                    };
+                }
+            },
+            'columns': [
+                {data: 'id'},
+                {data: 'name'},
+                {data: 'code'},
+                {data: 'total_shares'}, // 总数量列
+                {
+                    data: 'price',
+                    render: function (data) {
+                        return parseFloat(data).toFixed(2) + '元';
+                    }
+                },
+                {
+                    data: 'status',
+                    render: function (data) {
+                        return data == 1 ?
+                                '<span class="label label-success">启用</span>' :
+                                '<span class="label label-danger">禁用</span>';
+                    }
+                },
+                {data: 'created_at'},
+                {
+                    data: 'id',
+                    render: function (data, type, row) {
+                        // 根据状态显示不同的按钮
+                        var statusBtn = row.status == 1 ?
+                                '<button class="btn btn-xs btn-warning" onclick="changeStatus(' + data + ', 0)"><i class="fa fa-ban"></i> 停用</button>' :
+                                '<button class="btn btn-xs btn-success" onclick="changeStatus(' + data + ', 1)"><i class="fa fa-check"></i> 启用</button>';
+
+                        return `
+                        <div class="btn-group">
+                            <button class="btn btn-xs btn-info" onclick="editStock(${data})">
+                                <i class="fa fa-edit"></i> 编辑
+                            </button>
+                             ${statusBtn}
+                                <button class="btn btn-xs btn-success" onclick="adjustSingle(${data})">
+                                    <i class="fa fa-user"></i> 单个调整
+                                </button>
+                                <button class="btn btn-xs btn-warning" onclick="batchImport(${data})">
+                                    <i class="fa fa-file-excel-o"></i> Excel导入
+                                </button>
+                             <!--
+                            <button class="btn btn-xs btn-danger" onclick="deleteStock(${data})">
+                                <i class="fa fa-trash"></i> 删除
+                            </button>
+                           -->
+                        </div>
+                    `;
+                    }
+                }
+            ],
+            'language': {
+                // 修复中文显示
+                "sProcessing": "处理中...",
+                "sLengthMenu": "显示 _MENU_ 项结果",
+                "sZeroRecords": "没有匹配结果",
+                "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
+                "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
+                "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
+                "sInfoPostFix": "",
+                "sSearch": "搜索:",
+                "sUrl": "",
+                "sEmptyTable": "表中数据为空",
+                "sLoadingRecords": "载入中...",
+                "sInfoThousands": ",",
+                "oPaginate": {
+                    "sFirst": "首页",
+                    "sPrevious": "上页",
+                    "sNext": "下页",
+                    "sLast": "末页"
+                }
+            }
+        });
+
+        // 修复搜索功能
+        $('#searchBtn').click(function () {
+            table.draw();
+        });
+
+        $('#keyword').keypress(function (e) {
+            if (e.which == 13) {
+                table.draw();
+            }
+        });
+
+        updateGlobalPriceDisplay();
+    });
+
+
+    function updateGlobalPriceDisplay() {
+        $.get('{:url("admin/Stock/adjustPrice")}', function (res) {
+            if (res.code == 1) {
+                const price = parseFloat(res.data.price);
+                $('#globalPriceDisplay').val(isNaN(price) ? '0.00' : price.toFixed(2) + '元');
+            }
+        }, 'json');
+    }
+
+    // 调整股价
+    function adjustPrice() {
+        $.get('{:url("admin/Stock/adjustPrice")}', function (res) {
+            if (res.code == 1) {
+                const price = parseFloat(res.data.price);
+                $('#current_price').val(isNaN(price) ? '0.00' : price.toFixed(2) + '元');
+                $('#adjustPriceModal').modal('show');
+            } else {
+                layer.msg(res.msg, {icon: 2});
+
+            }
+        }, 'json').fail(function () {
+            layer.msg('请求失败，请稍后重试', {icon: 2});
+        });
+    }
+
+    // 批量增加
+    function batchAdd(id) {
+        $.get('{:url("admin/Stock/batchAdd")}', {id: id}, function (res) {
+            if (res.code == 1) {
+                $('#batch_stock_type_id').val(res.data.id);
+                $('#batch_stock_name').val(res.data.name);
+                $('#batch_stock_code').val(res.data.code);
+                $('#batchAddModal').modal('show');
+            } else {
+                layer.msg(res.msg, {icon: 2});
+            }
+        }, 'json').fail(function () {
+            layer.msg('请求失败，请稍后重试', {icon: 2});
+        });
+    }
+
+    // 提交调整股价表单
+    $('#adjustPriceForm').submit(function (e) {
+        e.preventDefault();
+        var form = $(this);
+        var load = layer.load(2);
+
+        $.post('{:url("admin/Stock/adjustPrice")}', form.serialize(), function (res) {
+            layer.close(load);
+            if (res.code == 1) {
+                layer.msg(res.msg, {icon: 1}, function () {
+                    $('#adjustPriceModal').modal('hide');
+                    $('#dataTable').DataTable().ajax.reload();
+                });
+                updateGlobalPriceDisplay();
+            } else {
+                layer.msg(res.msg, {icon: 2});
+            }
+        }, 'json').fail(function () {
+            layer.close(load);
+            layer.msg('请求失败，请稍后重试', {icon: 2});
+        });
+    });
+
+    // 提交批量增加表单
+    $('#batchAddForm').submit(function (e) {
+        e.preventDefault();
+        var form = $(this);
+        var load = layer.load(2);
+
+        $.post('{:url("admin/Stock/batchAdd")}', form.serialize(), function (res) {
+            layer.close(load);
+            if (res.code == 1) {
+                layer.msg(res.msg, {icon: 1}, function () {
+                    $('#batchAddModal').modal('hide');
+                    form[0].reset();
+                    $('#dataTable').DataTable().ajax.reload();
+                });
+            } else {
+                layer.msg(res.msg, {icon: 2});
+            }
+        }, 'json').fail(function () {
+            layer.close(load);
+            layer.msg('请求失败，请稍后重试', {icon: 2});
+        });
+    });
+
+
+    function changeStatus(id, status) {
+        layer.confirm('确定要' + (status == 1 ? '启用' : '停用') + '该股权吗？', {
+            icon: 3,
+            title: '提示'
+        }, function (index) {
+            var load = layer.load(2);
+            $.post('{:url("admin/Stock/setStatus")}', {id: id, status: status}, function (res) {
+                layer.close(load);
+                if (res.code == 1) {
+                    layer.msg(res.msg, {icon: 1}, function () {
+                        $('#dataTable').DataTable().ajax.reload();
+                    });
+                } else {
+                    layer.msg(res.msg, {icon: 2});
+                }
+            }, 'json').fail(function () {
+                layer.close(load);
+                layer.msg('请求失败，请稍后重试', {icon: 2});
+            });
+            layer.close(index);
+        });
+    }
+
+    // 删除股权
+    function deleteStock(id) {
+        layer.confirm('确定要删除该股权吗？删除后将无法恢复！', {
+            icon: 3,
+            title: '警告'
+        }, function (index) {
+            var load = layer.load(2);
+            $.post('{:url("admin/Stock/delete")}', {id: id}, function (res) {
+                layer.close(load);
+                if (res.code == 1) {
+                    layer.msg(res.msg, {icon: 1}, function () {
+                        $('#dataTable').DataTable().ajax.reload();
+                    });
+                } else {
+                    layer.msg(res.msg, {icon: 2});
+                }
+            }, 'json').fail(function () {
+                layer.close(load);
+                layer.msg('请求失败，请稍后重试', {icon: 2});
+            });
+            layer.close(index);
+        });
+    }
+
+    // 编辑股权函数
+    function editStock(id) {
+        $.get('{:url("admin/Stock/getStock")}', {id: id}, function (res) {
+            if (res.code == 1) {
+                $('#edit_stock_id').val(res.data.id);
+                $('#edit_stock_name').val(res.data.name);
+                // $('#edit_stock_code').val(res.data.code);
+                $('#edit_total_shares').val(res.data.total_shares);
+                $('#editStockModal').modal('show');
+            } else {
+                layer.msg(res.msg, {icon: 2});
+            }
+        }, 'json');
+    }
+
+    // 提交编辑表单
+    $('#editStockForm').submit(function (e) {
+        e.preventDefault();
+        var formData = $(this).serialize();
+        var load = layer.load(2);
+
+        $.post('{:url("admin/Stock/edit")}', formData, function (res) {
+            layer.close(load);
+            if (res.code == 1) {
+                layer.msg(res.msg, {icon: 1}, function () {
+                    $('#editStockModal').modal('hide');
+                    // 新增：更新全局股价显示
+                    updateGlobalPriceDisplay();
+                    $('#dataTable').DataTable().ajax.reload();
+                });
+            } else {
+                layer.msg(res.msg, {icon: 2});
+            }
+        });
+    });
+
+
+    // 单个调整按钮功能
+    function adjustSingle(stockTypeId) {
+        $.get('{:url("admin/Stock/getStock")}', {id: stockTypeId}, function (res) {
+            if (res.code == 1) {
+                $('#adjust_stock_type_id').val(res.data.id);
+                $('#adjust_stock_name').val(res.data.name);
+                $('#adjustSingleModal').modal('show');
+            } else {
+                layer.msg(res.msg, {icon: 2});
+            }
+        }, 'json');
+    }
+
+    // 用户搜索功能
+    $('#searchUserBtn').click(function () {
+        var keyword = $('#searchUser').val();
+        if (!keyword) {
+            layer.msg('请输入搜索关键词', {icon: 2});
+            return;
+        }
+
+        $.post('{:url("admin/Stock/adjustSingle")}', {keyword: keyword}, function (res) {
+            if (res.code == 1 && res.data.length > 0) {
+                var options = '<option value="">请选择用户</option>';
+                $.each(res.data, function (i, user) {
+                    options += '<option value="' + user.id + '">' +
+                            (user.realname || '未知用户') +
+                            (user.phone ? ' (' + user.phone + ')' : '') +
+                            '</option>';
+                });
+                $('#userSelect').html(options).show();
+            } else {
+                $('#userSelect').hide();
+                layer.msg('未找到相关用户', {icon: 2});
+            }
+        }, 'json');
+    });
+
+    // 提交单个调整表单
+    $('#adjustSingleForm').submit(function (e) {
+        e.preventDefault();
+        var formData = $(this).serialize();
+        var load = layer.load(2);
+
+        $.post('{:url("admin/Stock/adjustSingle")}', formData, function (res) {
+            layer.close(load);
+            if (res.code == 1) {
+                layer.msg(res.msg, {icon: 1}, function () {
+                    $('#adjustSingleModal').modal('hide');
+                    $('#dataTable').DataTable().ajax.reload();
+                });
+            } else {
+                layer.msg(res.msg, {icon: 2});
+            }
+        });
+    });
+
+    // Excel批量导入按钮功能
+    function batchImport(stockTypeId) {
+        $.get('{:url("admin/Stock/getStock")}', {id: stockTypeId}, function (res) {
+            if (res.code == 1) {
+                $('#import_stock_type_id').val(res.data.id);
+                $('#import_stock_name').val(res.data.name);
+                $('#batchImportModal').modal('show');
+            } else {
+                layer.msg(res.msg, {icon: 2});
+            }
+        }, 'json');
+    }
+
+    // 提交Excel导入表单
+    $('#batchImportForm').submit(function (e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+        var load = layer.load(2);
+
+        $.ajax({
+            url: '{:url("admin/Stock/batchImport")}',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (res) {
+                layer.close(load);
+                if (res.code == 1) {
+                    var msg = res.msg;
+                    if (res.errors && res.errors.length > 0) {
+                        msg += '<br>错误详情：<ul>';
+                        $.each(res.errors, function (i, error) {
+                            msg += '<li>' + error + '</li>';
+                        });
+                        msg += '</ul>';
+                    }
+
+                    layer.open({
+                        title: '导入结果',
+                        content: msg,
+                        btn: ['确定'],
+                        yes: function () {
+                            $('#batchImportModal').modal('hide');
+                            $('#dataTable').DataTable().ajax.reload();
+                        }
+                    });
+                } else {
+                    layer.msg(res.msg, {icon: 2});
+                }
+            }
+        });
+    });
+</script>
+{/block}

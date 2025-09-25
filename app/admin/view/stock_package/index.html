@@ -1,0 +1,135 @@
+<!-- Main content -->
+<section class="content">
+<div class="row">
+<div class="col-xs-12">
+<div class="box">
+    <div class="box-header">
+        <div class="row"> <!-- 添加行布局 -->
+            <div class="col-md-6"> <!-- 左侧列 -->
+                <div class="input-group" style="width: 200px;">
+                    <input type="text" name="keyword" class="form-control input-sm" placeholder="搜索股权方案名称" value="{$keyword|default=''}">
+                    <div class="input-group-btn">
+                        <button class="btn btn-sm btn-default" id="search-btn"><i class="fa fa-search"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 text-right"> <!-- 右侧列 -->
+                <a href="{:url('admin/StockPackage/add')}" class="btn btn-success btn-sm">
+                    <i class="fa fa-plus"></i> 添加股权方案
+                </a>
+            </div>
+        </div>
+    </div>
+        <br>
+    <!-- /.box-header -->
+    <div class="box-body table-responsive no-padding">
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>股权方案名称</th>
+                <th>价格(元)</th>
+                <th>锁定期(天)</th>
+                <th>每日可出售(股)</th>
+                <th>状态</th>
+                <th>创建时间</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            {if condition="!empty($stock_list) && count($stock_list) > 0"}
+            {volist name="stock_list" id="vo"}
+            <tr>
+                <td>{$vo.id}</td>
+                <td>{$vo.name}</td>
+                <td>{$vo.price}</td>
+                <td>{$vo.lock_period}</td>
+                <td>{$vo.daily_sell_limit}</td>
+            <td>
+            {if $vo.status == 1}
+                <button class="btn btn-success btn-xs" onclick="changeStatus({$vo.id}, 0)">启用</button>
+            {else}
+                <button class="btn btn-danger btn-xs" onclick="changeStatus({$vo.id}, 1)">禁用</button>
+            {/if}
+            </td>
+                <td>{$vo.created_at|date='Y-m-d H:i'}</td>
+                <td>
+                    <!-- 修改：使用直接链接而非JavaScript函数 -->
+                    <a href="{:url('admin/StockPackage/edit', ['id' => $vo.id])}" class="btn btn-xs btn-primary">编辑</a>
+                    <button class="btn btn-xs btn-danger" onclick="deletePackage({$vo.id})">删除</button>
+                </td>
+            </tr>
+            {/volist}
+            {else/}
+            <tr>
+                <td colspan="7" class="text-center">暂无数据</td>
+            </tr>
+            {/if}
+            </tbody>
+        </table>
+    </div>
+    <!-- /.box-body -->
+{if condition="!empty($stock_list) && count($stock_list) > 0"}
+<div class="box-footer clearfix">
+{$stock_list->render()|raw}
+</div>
+{/if}
+</div>
+    <!-- /.box -->
+</div>
+</div>
+</section>
+<!-- /.content -->
+
+
+<script>
+// 删除股权方案
+function deletePackage(id) {
+layer.confirm('确定要删除这个股权方案吗？此操作不可恢复！', {
+    icon: 3,
+    title: '删除确认'
+}, function(index){
+$.post('{:url("admin/StockPackage/delete")}', {id: id}, function(res){
+if (res.code == 1) {
+    layer.msg(res.msg, {icon: 1});
+    setTimeout(function() {
+        location.reload();
+    }, 1000);
+} else {
+    layer.msg(res.msg || '删除失败', {icon: 2});
+}
+}).fail(function() {
+    layer.msg('网络请求失败，请重试', {icon: 2});
+});
+    layer.close(index);
+});
+}
+
+// 搜索
+$('#search-btn').click(function(){
+    var keyword = $('input[name="keyword"]').val();
+var url = '{:url("admin/StockPackage/index")}';
+    if (keyword) {
+        url += '?keyword=' + encodeURIComponent(keyword);
+    }
+    window.location.href = url;
+});
+
+// 按回车键搜索
+$('input[name="keyword"]').keypress(function(e) {
+    if (e.which == 13) {
+        $('#search-btn').click();
+    }
+});
+
+function changeStatus(id, status) {
+$.post('{:url("admin/StockPackage/setStatus")}', {id: id, status: status}, function(res){
+    if (res.code == 1) {
+        layer.msg(res.msg, {icon: 1});
+        setTimeout(function() { location.reload(); }, 1000);
+    } else {
+    layer.msg(res.msg || '操作失败', {icon: 2});
+}
+});
+}
+</script>
