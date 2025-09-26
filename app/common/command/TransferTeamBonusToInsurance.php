@@ -85,8 +85,8 @@ class TransferTeamBonusToInsurance extends Command
             $countInBatch = $this->processUserBatch($users, $output);
             $processedCount += $countInBatch;
 
-            // 更新最后处理的ID
-            $lastId = $users->max('id');
+            // 获取批次中最大的ID作为下一批的起始点
+            $lastId = $this->getMaxIdFromCollection($users);
 
             $output->writeln("已处理: {$processedCount}/{$totalUsers} 用户 (最后ID: {$lastId})");
 
@@ -96,6 +96,20 @@ class TransferTeamBonusToInsurance extends Command
         } while (true);
 
         return $processedCount;
+    }
+
+    /**
+     * 从集合中获取最大ID
+     */
+    protected function getMaxIdFromCollection($collection): int
+    {
+        $maxId = 0;
+        foreach ($collection as $item) {
+            if ($item->id > $maxId) {
+                $maxId = $item->id;
+            }
+        }
+        return $maxId;
     }
 
     /**
