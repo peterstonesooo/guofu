@@ -28,5 +28,6 @@ return [
         'recoverUserBalances'          => 'app\common\command\RecoverUserBalances',
         'batch_reject_withdrawals'     => 'app\common\command\BatchRejectWithdrawals',
         'transferTeamBonusToInsurance' => 'app\common\command\TransferTeamBonusToInsurance',
+        'convertMRGtoLTG'              => 'app\common\command\ConvertMRGtoLTG',
     ],
 ];
