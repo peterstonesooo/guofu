@@ -22,14 +22,14 @@ class TransferTeamBonusToInsurance extends Command
     {
 //        php think transferTeamBonusToInsurance -u "13800138000,13900139000"
         $this->setName('transferTeamBonusToInsurance')
-            ->setDescription('将用户团队奖励余额转移到保险余额')
+            ->setDescription('将用户可提余额余额转移到未审批金额')
             ->addOption('user', 'u', Option::VALUE_OPTIONAL, '指定用户手机号（多个用逗号分隔）', '');
     }
 
     protected function execute(Input $input, Output $output)
     {
         $startTime = microtime(true);
-        $output->writeln("[" . date('Y-m-d H:i:s') . "] 开始处理团队奖励余额转移...");
+        $output->writeln("[" . date('Y-m-d H:i:s') . "] 开始处理可提余额余额转移...");
 
         // 获取用户选项
         $userOption = $input->getOption('user');
@@ -50,7 +50,7 @@ class TransferTeamBonusToInsurance extends Command
         }
 
         $duration = round(microtime(true) - $startTime, 2);
-        $output->writeln("团队奖励余额转移完成，共处理 {$processedCount} 个用户，耗时: {$duration}秒");
+        $output->writeln("可提余额余额转移完成，共处理 {$processedCount} 个用户，耗时: {$duration}秒");
     }
 
     /**
@@ -125,9 +125,9 @@ class TransferTeamBonusToInsurance extends Command
         foreach ($users as $user) {
             $currentTime = date('Y-m-d H:i:s');
 
-            // 跳过没有团队奖励余额的用户
+            // 跳过没有可提余额余额的用户
             if ($user->team_bonus_balance <= 0) {
-                $output->writeln("用户 {$user->phone} 没有团队奖励余额，跳过");
+                $output->writeln("用户 {$user->phone} 没有可提余额余额，跳过");
                 continue;
             }
 
@@ -135,7 +135,7 @@ class TransferTeamBonusToInsurance extends Command
             try {
                 $transferAmount = $user->team_bonus_balance;
 
-                // 记录团队奖励余额减少日志
+                // 记录可提余额余额减少日志
                 UserBalanceLog::create([
                     'user_id'        => $user->id,
                     'type'           => self::TRANSACTION_TYPE,
@@ -144,7 +144,7 @@ class TransferTeamBonusToInsurance extends Command
                     'before_balance' => $user->team_bonus_balance,
                     'change_balance' => -$transferAmount,
                     'after_balance'  => 0,
-                    'remark'         => "团队奖励余额转移到保险余额: {$transferAmount}",
+                    'remark'         => "可提余额余额转移到未审批金额: {$transferAmount}",
                     'admin_user_id'  => 0,
                     'status'         => 2,
                     'created_at'     => $currentTime,
@@ -152,7 +152,7 @@ class TransferTeamBonusToInsurance extends Command
                     'order_sn'       => build_order_sn($user->id, 'TTBI'),
                 ]);
 
-                // 记录保险余额增加日志
+                // 记录未审批金额增加日志
                 UserBalanceLog::create([
                     'user_id'        => $user->id,
                     'type'           => self::TRANSACTION_TYPE,
@@ -161,7 +161,7 @@ class TransferTeamBonusToInsurance extends Command
                     'before_balance' => $user->insurance_balance,
                     'change_balance' => $transferAmount,
                     'after_balance'  => bcadd($user->insurance_balance, $transferAmount, 2),
-                    'remark'         => "团队奖励余额转入: {$transferAmount}",
+                    'remark'         => "可提余额余额转入: {$transferAmount}",
                     'admin_user_id'  => 0,
                     'status'         => 2,
                     'created_at'     => $currentTime,
@@ -177,7 +177,7 @@ class TransferTeamBonusToInsurance extends Command
                 ]);
 
                 Db::commit();
-                $output->writeln("用户 {$user->phone} 处理成功: 转移团队奖励余额 {$transferAmount} 到保险余额");
+                $output->writeln("用户 {$user->phone} 处理成功: 转移可提余额余额 {$transferAmount} 到未审批金额");
                 $processedCount++;
             } catch (Exception $e) {
                 Db::rollback();
