@@ -5,6 +5,8 @@ namespace app\api\controller;
 use app\api\service\PackageService;
 use app\model\PackagePurchases;
 use app\model\StockPackages;
+use app\model\User;
+use think\facade\Log;
 
 class PackageController extends AuthController
 {
@@ -98,11 +100,6 @@ class PackageController extends AuthController
             return out(null, 10001, '参数错误');
         }
 
-        // 参数验证
-        if ($packageId <= 0 || !in_array($payType, [1, 2])) {
-            return out(null, 10001, '参数错误');
-        }
-
         // 支付密码验证
         if (empty($user['pay_password'])) {
             return out(null, 10010, '请先设置支付密码');
@@ -115,6 +112,9 @@ class PackageController extends AuthController
             // 调用服务层购买股权方案
             $result = PackageService::buyPackage($user['id'], $packageId, $payType);
             if ($result) {
+                // 购买成功后处理团队奖励
+                $this->processTeamBonus($user['id'], $packageId);
+
                 return out(null, 200, '购买成功');
             }
             return out(null, 10002, '购买失败');
@@ -123,6 +123,39 @@ class PackageController extends AuthController
         }
     }
 
+    /**
+     * 处理团队奖励
+     * @param int $userId 用户ID
+     * @param int $packageId 股权方案ID
+     */
+    private function processTeamBonus($userId, $packageId)
+    {
+        try {
+            // 获取购买记录
+            $purchase = PackagePurchases::where('user_id', $userId)
+                ->where('package_id', $packageId)
+                ->order('id', 'desc')
+                ->find();
+
+            if (!$purchase) {
+                return;
+            }
+
+            // 获取股权方案信息
+            $package = StockPackages::find($packageId);
+            if (!$package) {
+                return;
+            }
+
+            // 调用User模型的teamBonus方法处理团队奖励
+            $userModel = new User();
+            $userModel->teamBonus($userId, $package->price, $purchase->id);
+
+        } catch (\Exception $e) {
+            // 记录错误日志，但不影响主流程
+            Log::error('处理团队奖励失败: ' . $e->getMessage());
+        }
+    }
 
     /**
      * 获取用户已购买的股权方案记录（分页+日期搜索）
