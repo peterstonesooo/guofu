@@ -175,6 +175,10 @@ class StockController extends AuthController
         if (empty($stock_code) || $quantity <= 0 || !in_array($pay_type, [1, 2])) {
             return out(null, 10001, '参数错误');
         }
+
+        if ($stock_code !== 'MRG001') {
+            return out(null, 10012, '目前只允许卖出自由股权');
+        }
 //        if ($source < 0) { // source应为非负整数
 //            return out(null, 10001, '来源参数错误');
 //        }
