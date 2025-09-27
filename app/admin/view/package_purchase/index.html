@@ -1,132 +1,119 @@
-<div class="container-fluid">
+<section class="content">
     <div class="row">
         <div class="col-xs-12">
-            <div class="box box-success">
-                <div class="box-header">
-                    <div class="box-tools">
-                        <form class="form-inline">
-                            <div class="form-group">
-                                <input type="text" class="form-control input-sm" name="user_id" placeholder="用户ID">
-                            </div>
-                            <div class="form-group">
-                                <select class="form-control input-sm" name="package_id">
-                                    <option value="">所有方案</option>
-                                    {volist name="packages" id="vo"}
-                                        <option value="{$vo.id}">{$vo.name}</option>
-                                    {/volist}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <select class="form-control input-sm" name="pay_type">
-                                    <option value="">支付方式</option>
-                                    <option value="1">可用余额</option>
-                                    <option value="2">可提余额</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <select class="form-control input-sm" name="status">
-                                    <option value="">所有状态</option>
-                                    <option value="1">成功</option>
-                                    <option value="0">失败</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <input type="text" class="form-control input-sm" name="date_range" id="date-range"
-                                       placeholder="购买日期">
-                            </div>
-                            <button type="button" class="btn btn-sm btn-success" id="search-btn">
-                                <i class="fa fa-search"></i> 搜索
-                            </button>
-                        </form>
-                    </div>
-                </div>
-                <div class="box-body">
-                    <table id="dataTable" class="table table-bordered table-hover">
-                        <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>用户</th>
-                            <th>手机号</th>
-                            <th>方案名称</th>
-                            <th>支付金额</th>
-                            <th>支付方式</th>
-                            <th>状态</th>
-                            <th>购买时间</th>
-                        </tr>
-                        </thead>
-                    </table>
+        <div class="box box-primary">
+            <div class="box-header with-border">
+                <h3 class="box-title">搜索条件</h3>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" data-widget="collapse">
+                        <i class="fa fa-minus"></i>
+                    </button>
                 </div>
             </div>
+        <div class="box-body">
+        <div class="search">
+        <form class="form-inline">
+                <input type="text" value="{$req.user??''}" name="user" placeholder="搜索用户手机号/姓名"
+                       class="form-control">
+        <select name="package_id" class="form-control">
+            <option value="">全部套餐</option>
+        {volist name="packages" id="package"}
+                <option value="{$package.id}" {if isset($req.package_id) && $req.package_id==$package.id}selected{/if}>
+        {$package.name}
+        </option>
+        {/volist}
+        </select>
+        <select name="pay_type" class="form-control">
+            <option value="">全部支付方式</option>
+                <option value="1" {if isset($req.pay_type) && $req.pay_type==1}selected{/if}>可用余额</option>
+                <option value="2" {if isset($req.pay_type) && $req.pay_type==2}selected{/if}>可提余额</option>
+        </select>
+        <select name="status" class="form-control">
+            <option value="">全部状态</option>
+            <option value="1" {if isset($req.status) && $req.status==1}selected{/if}>成功</option>
+                <option value="0" {if isset($req.status) && $req.status==0}selected{/if}>失败</option>
+        </select>
+                <input placeholder="开始时间" value="{$req.start_date??''}" name="start_date"
+                       class="form-control layer-date" id="start">
+            ～
+                <input placeholder="结束时间" value="{$req.end_date??''}" name="end_date"
+                       class="form-control layer-date" id="end">
+            <input class="btn btn-flat btn-primary m_10" type="submit" value="搜索">
+
+            <!-- 添加导出按钮 -->
+            <input class="btn btn-flat btn-info m_10" name="export" type="submit" value="导出">
+        </form>
+        </div>
+        </div>
+        </div>
+
+        <div class="box">
+            <div class="box-header">
+                <h3 class="box-title">股权方案购买记录列表</h3>
+                <div class="box-tools">
+                    <div class="input-group input-group-sm" style="width: 150px;">
+                        <input type="text" name="table_search" class="form-control pull-right" placeholder="搜索">
+                        <div class="input-group-btn">
+                            <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <div class="box-body table-responsive no-padding">
+        <table class="table table-bordered table-hover table-striped">
+            <thead>
+            <tr>
+                <th width="100">ID</th>
+                <th width="150">用户</th>
+                <th width="150">股权套餐</th>
+                <th width="100">支付金额</th>
+                <th width="100">支付方式</th>
+                <th width="80">状态</th>
+                <th width="150">购买时间</th>
+            </tr>
+            </thead>
+        <tbody>
+        {volist name="data" id="v"}
+        <tr>
+            <td>{$v.id}</td>
+        <td>{$v.realname}（{$v.phone}）</td>
+            <td>{$v.package_name}</td>
+        <td>¥{$v.amount}</td>
+            <td>{$v.pay_type_text}</td>
+        <td>
+        {if $v.status == 1}
+            <span class="label label-success">成功</span>
+        {else}
+            <span class="label label-danger">失败</span>
+        {/if}
+        </td>
+            <td>{$v.created_at}</td>
+        </tr>
+        {/volist}
+        </tbody>
+        </table>
+        </div>
+        <div class="box-footer clearfix">
+        <div style="text-align:center;font-size: 14px;">
+        {$data->render()|raw}
+        </div>
+        </div>
+        </div>
         </div>
     </div>
-</div>
-<link href="__ADMIN__/plugins/datatable/datatables.min.css" rel="stylesheet">
-<script src="__ADMIN__/plugins/datatable/datatables.min.js"></script>
+</section>
 <script>
+    // 日期选择器初始化
     $(function () {
-        // 初始化日期范围选择
         laydate.render({
-            elem: '#date-range',
-            range: true,
-            max: 0
+            elem: '#start',
+            type: 'datetime',
+            theme: '#5b9bd1'
         });
-
-        // 初始化表格
-        var table = $('#dataTable').DataTable({
-            'paging': true,
-            'lengthChange': true,
-            'searching': false,
-            'ordering': true,
-            'info': true,
-            'autoWidth': false,
-            'serverSide': true,
-            ajax: {
-                url: "{:url('admin/package_purchase/index')}",
-                data: function (d) {
-                    d.user_id = $('[name="user_id"]').val();
-                    d.package_id = $('[name="package_id"]').val();
-                    d.pay_type = $('[name="pay_type"]').val();
-                    d.status = $('[name="status"]').val();
-                    d.date_range = $('[name="date_range"]').val();
-                }
-            },
-            columns: [
-                {data: 'id'},
-                {data: 'username'},
-                {data: 'mobile'},
-                {data: 'package_name'},
-                {data: 'amount', className: 'text-right', render: $.fn.dataTable.render.number(',', '.', 2)},
-                {data: 'pay_type_text'},
-                {data: 'status_text'},
-                {data: 'created_at'}
-            ],
-            order: [[0, 'desc']],
-            language: {
-                // 修复中文显示
-                "sProcessing": "处理中...",
-                "sLengthMenu": "显示 _MENU_ 项结果",
-                "sZeroRecords": "没有匹配结果",
-                "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
-                "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
-                "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
-                "sInfoPostFix": "",
-                "sSearch": "搜索:",
-                "sUrl": "",
-                "sEmptyTable": "表中数据为空",
-                "sLoadingRecords": "载入中...",
-                "sInfoThousands": ",",
-                "oPaginate": {
-                    "sFirst": "首页",
-                    "sPrevious": "上页",
-                    "sNext": "下页",
-                    "sLast": "末页"
-                }
-            }
-        });
-
-        // 搜索按钮
-        $('#search-btn').click(function () {
-            table.ajax.reload();
+        laydate.render({
+            elem: '#end',
+            type: 'datetime',
+            theme: '#5b9bd1'
         });
     });
 </script>

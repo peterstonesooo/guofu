@@ -56,7 +56,7 @@
                 <td>
                     <!-- 修改：使用直接链接而非JavaScript函数 -->
                     <a href="{:url('admin/StockPackage/edit', ['id' => $vo.id])}" class="btn btn-xs btn-primary">编辑</a>
-{/*                    <button class="btn btn-xs btn-danger" onclick="deletePackage({$vo.id&cc;)">删除</button>*/}
+                    <button class="btn btn-xs btn-danger" onclick="deletePackage({$vo.id})">删除</button>
                 </td>
             </tr>
             {/volist}
