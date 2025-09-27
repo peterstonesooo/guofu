@@ -157,10 +157,9 @@ class StockPackageController extends AuthController
                 // 重新添加股权方案项
                 foreach ($data['stock_items'] as $item) {
                     $stockTypeId = $item['stock_type_id'] ?? 0;
-                    $type = $item['type'] ?? 0;
                     $quantity = $item['quantity'] ?? 0;
 
-                    if ($stockTypeId <= 0 || $type <= 0 || $quantity <= 0) {
+                    if ($stockTypeId <= 0 || $quantity <= 0) {
                         throw new \Exception('股权配置信息不完整');
                     }
 
