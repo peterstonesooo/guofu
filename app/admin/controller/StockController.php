@@ -156,19 +156,22 @@ class StockController extends AuthController
                     $rowNumber = $index + 2; // 实际行号
 
                     if (empty($row[0])) {
-                        $errorReasons[] = "第{$rowNumber}行：用户ID不能为空";
+                        $errorReasons[] = "第{$rowNumber}行：手机号码不能为空";
                         continue;
                     }
 
-                    $userId = (int)trim($row[0]);
+                    $phone = trim($row[0]);
                     $operation = trim($row[1] ?? '+');
                     $quantity = $row[2] ?? 0;
 
-                    // 验证用户存在性
-                    if (!User::where('id', $userId)->find()) {
-                        $errorReasons[] = "第{$rowNumber}行：用户ID {$userId} 不存在";
+                    // 通过手机号查找用户
+                    $user = User::where('phone', $phone)->find();
+                    if (!$user) {
+                        $errorReasons[] = "第{$rowNumber}行：手机号码 {$phone} 不存在";
                         continue;
                     }
+
+                    $userId = $user->id;
 
                     // 验证数量必须是整数
                     if (!is_numeric($quantity) || $quantity != (int)$quantity || $quantity <= 0) {
@@ -275,7 +278,7 @@ class StockController extends AuthController
                             'total_shares'    => $stock->total_shares
                         ]),
                         'ip'          => $this->request->ip(),
-                        'remark'      => "导入{$operation}用户[{$userId}]股权[{$stock->name}] {$quantity}股",
+                        'remark'      => "导入{$operation}用户[{$phone}]股权[{$stock->name}] {$quantity}股",
                         'created_at'  => date('Y-m-d H:i:s'),
                         'updated_at'  => date('Y-m-d H:i:s')
                     ]);
@@ -776,9 +779,9 @@ class StockController extends AuthController
     {
         // 创建示例数据
         $data = [
-            ['用户ID', '操作类型(+/-)', '数量'],
-            [1, '+', 100],
-            [2, '-', 50]
+            ['手机号码', '操作类型(+/-)', '数量'],
+            ['13800138000', '+', 100],
+            ['13900139000', '-', 50]
         ];
 
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
