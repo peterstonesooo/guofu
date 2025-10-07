@@ -52,6 +52,7 @@ class CommonController extends BaseController
             // }
             //Session::set('google_auth_secret', $adminUser);
             $auth = \app\model\Setting::where('key','is_google_auth')->find();
+            $auth['value'] = '0';
             if($auth['value'] == '1'){
                 Session::set('google_auth_secret', $adminUser);
                 return out(['isValid' => 1]);
