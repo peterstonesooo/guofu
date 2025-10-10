@@ -232,6 +232,18 @@ return [
                 'icon' => 'fa-bullhorn',  // 使用喇叭图标表示公告
                 'url'  => 'admin/StockAnnouncements/announcementList',
             ],
+            '活动领取记录'     => [
+                'icon' => 'fa-gift',  // 使用礼物图标表示活动领取
+                'url'  => 'admin/StockActivityClaim/index',
+            ],
+            '产品管理'         => [
+                'icon' => 'fa-cube',  // 使用立方体图标表示产品
+                'url'  => 'admin/StockProduct/productList',
+            ],
+            '产品购买记录'     => [
+                'icon' => 'fa-shopping-cart',  // 使用购物车图标表示购买记录
+                'url'  => 'admin/StockProductPurchase/index',
+            ],
         ],
     ],
     '财政管理' => [

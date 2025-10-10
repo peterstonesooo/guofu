@@ -222,7 +222,7 @@ class StockController extends AuthController
         $where = [['user_id', '=', $user_id]];
 
         // 添加交易类型条件
-        if (in_array($type, [1, 2])) {
+        if (in_array($type, [1, 2, 3])) {
             $where[] = ['type', '=', $type];
         }
 
@@ -290,7 +290,12 @@ class StockController extends AuthController
                         }
 
                         // 添加交易类型文本
-                        $item['type_text'] = $item['type'] == 1 ? '买入' : '卖出';
+                        $typeMap = [
+                            1 => '买入',
+                            2 => '卖出',
+                            3 => '活动'
+                        ];
+                        $item['type_text'] = $typeMap[$item['type']] ?? '未知类型';
                     }
                 }
             }
