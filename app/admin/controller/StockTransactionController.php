@@ -4,6 +4,8 @@ namespace app\admin\controller;
 
 use app\model\StockTransactions;
 use app\model\StockTypes;
+use app\model\User;
+use think\facade\Request;
 use think\facade\View;
 
 class StockTransactionController extends AuthController
@@ -11,79 +13,80 @@ class StockTransactionController extends AuthController
     // 股权交易记录列表
     public function index()
     {
-        if ($this->request->isAjax()) {
-            $params = $this->request->only([
-                'page', 'limit', 'draw', 'start', 'length',
-                'user_id', 'stock_type_id',
-                'type', 'status', 'date_range'
-            ]);
+        $req = Request::param();
 
-            $page = $params['page'] ?? 1;
-            $limit = $params['limit'] ?? 15;
-
-            $query = StockTransactions::with(['user', 'stockType'])
-                ->order('id', 'desc');
-
-            // 搜索条件
-            if (!empty($params['user_id'])) {
-                $query->where('user_id', $params['user_id']);
-            }
-
-            if (!empty($params['stock_type_id'])) {
-                $query->where('stock_type_id', $params['stock_type_id']);
-            }
-
-            if (!empty($params['type'])) {
-                $query->where('type', $params['type']);
-            }
-
-            if (!empty($params['status'])) {
-                $query->where('status', $params['status']);
-            }
-
-            if (!empty($params['date_range'])) {
-                [$start, $end] = explode(' - ', $params['date_range']);
-                $query->whereBetweenTime('created_at', $start, $end);
-            }
-
-            $page = ($params['start'] / $params['length']) + 1;
-            $list = $query->paginate([
-                'list_rows' => $params['length'],
-                'page'      => $page
-            ]);
-
-            // 格式化数据
-            $data = [];
-            foreach ($list->items() as $item) {
-                $data[] = [
-                    'id'          => $item->id,
-                    'username'    => $item->user->realname ?? '已删除',
-                    'mobile'      => $item->user->phone ?? '',
-                    'stock_name'  => $item->stockType->name ?? '已删除',
-                    'type_text'   => $item->type == 1 ? '买入' : '卖出',
-                    'quantity'    => (float)$item->quantity, // 转换为浮点数
-                    'price'       => (float)$item->price,    // 转换为浮点数
-                    'amount'      => (float)$item->amount,   // 转换为浮点数
-                    'status_text' => $item->status == 1 ? '成功' : '失败',
-                    'remark'      => $item->remark,
-                    'created_at'  => $item->created_at,
-                    'source_text' => $this->getSourceText($item->source)
-                ];
-            }
-
-            return json([
-                'draw'            => $params['draw'] ?? 1, // DataTables必需参数
-                'recordsTotal'    => $list->total(),
-                'recordsFiltered' => $list->total(),
-                'data'            => $data
-            ]);
+        // 检查是否是导出请求
+        if (!empty($req['export'])) {
+            return $this->exportStockTransactionList();
         }
+
+        // 构建查询
+        $query = StockTransactions::alias('t')
+            ->field('t.*, u.phone, u.realname, st.name as stock_name, st.code as stock_code')
+            ->join('user u', 'u.id = t.user_id')
+            ->join('stock_types st', 'st.id = t.stock_type_id')
+            ->order('t.id', 'desc');
+
+        // 搜索条件
+        if (isset($req['user']) && $req['user'] !== '') {
+            $user_ids = User::where('phone|realname', 'like', "%{$req['user']}%")->column('id');
+            $query->whereIn('t.user_id', $user_ids);
+        }
+        if (isset($req['stock_type_id']) && $req['stock_type_id'] !== '') {
+            $query->where('t.stock_type_id', $req['stock_type_id']);
+        }
+        if (isset($req['type']) && $req['type'] !== '') {
+            $query->where('t.type', $req['type']);
+        }
+        if (isset($req['status']) && $req['status'] !== '') {
+            $query->where('t.status', $req['status']);
+        }
+        if (!empty($req['start_date'])) {
+            $query->where('t.created_at', '>=', $req['start_date'] . ' 00:00:00');
+        }
+        if (!empty($req['end_date'])) {
+            $query->where('t.created_at', '<=', $req['end_date'] . ' 23:59:59');
+        }
+
+        // 获取数据并处理类型和状态文本
+        $data = $query->paginate(['list_rows' => 15, 'query' => $req]);
+
+        // 处理类型和状态文本
+        $data->each(function ($item) {
+            $item->type_text = $this->getTypeText($item->type);
+            $item->status_text = $this->getStatusText($item->status);
+            $item->source_text = $this->getSourceText($item->source);
+            return $item;
+        });
 
         // 股权类型下拉
         $stockTypes = StockTypes::select();
         View::assign('stockTypes', $stockTypes);
+        View::assign('req', $req);
+        View::assign('data', $data);
 
         return View::fetch();
+    }
+
+    // 获取交易类型文本
+    private function getTypeText($type)
+    {
+        $map = [
+            1 => '买入',
+            2 => '卖出',
+            3 => '活动'
+        ];
+        return $map[$type] ?? '未知';
+    }
+
+    // 获取状态文本
+    private function getStatusText($status)
+    {
+        $map = [
+            1 => '成功',
+            0 => '失败'
+        ];
+        return $map[$status] ?? '未知';
     }
 
     // 获取来源文本
@@ -94,5 +97,79 @@ class StockTransactionController extends AuthController
             1 => '股权方案购买所得',
         ];
         return $map[$source] ?? '股权方案购买';
+    }
+
+    // 导出股权交易记录
+    public function exportStockTransactionList()
+    {
+        $req = Request::param();
+
+        $builder = StockTransactions::alias('t')
+            ->field('t.*, u.phone, u.realname, st.name as stock_name, st.code as stock_code')
+            ->join('user u', 'u.id = t.user_id')
+            ->join('stock_types st', 'st.id = t.stock_type_id');
+
+        // 搜索条件
+        if (isset($req['user']) && $req['user'] !== '') {
+            $user_ids = User::where('phone|realname', 'like', "%{$req['user']}%")->column('id');
+            $builder->whereIn('t.user_id', $user_ids);
+        }
+        if (isset($req['stock_type_id']) && $req['stock_type_id'] !== '') {
+            $builder->where('t.stock_type_id', $req['stock_type_id']);
+        }
+        if (isset($req['type']) && $req['type'] !== '') {
+            $builder->where('t.type', $req['type']);
+        }
+        if (isset($req['status']) && $req['status'] !== '') {
+            $builder->where('t.status', $req['status']);
+        }
+        if (!empty($req['start_date'])) {
+            $builder->where('t.created_at', '>=', $req['start_date'] . ' 00:00:00');
+        }
+        if (!empty($req['end_date'])) {
+            $builder->where('t.created_at', '<=', $req['end_date'] . ' 23:59:59');
+        }
+
+        // 获取数据
+        $data = $builder->order('t.id', 'desc')->select();
+
+        // 处理数据
+        $exportData = [];
+        foreach ($data as $item) {
+            $exportData[] = [
+                'id'          => $item['id'],
+                'phone'       => $item['phone'],
+                'realname'    => $item['realname'],
+                'stock_name'  => $item['stock_name'] . '(' . $item['stock_code'] . ')',
+                'type_text'   => $this->getTypeText($item['type']),
+                'quantity'    => $item['quantity'],
+                'price'       => $item['price'],
+                'amount'      => $item['amount'],
+                'source_text' => $this->getSourceText($item['source']),
+                'status_text' => $this->getStatusText($item['status']),
+                'remark'      => $item['remark'],
+                'created_at'  => $item['created_at'],
+            ];
+        }
+
+        // 表头
+        $header = [
+            'id'          => 'ID',
+            'phone'       => '用户手机号',
+            'realname'    => '用户姓名',
+            'stock_name'  => '股权类型',
+            'type_text'   => '交易类型',
+            'quantity'    => '交易数量',
+            'price'       => '交易价格',
+            'amount'      => '交易金额',
+            'source_text' => '来源',
+            'status_text' => '状态',
+            'remark'      => '备注',
+            'created_at'  => '交易时间',
+        ];
+
+        // 导出Excel
+        $filename = '股权交易记录-' . date('YmdHis');
+        create_excel($exportData, $header, $filename);
     }
 }

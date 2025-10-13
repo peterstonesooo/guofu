@@ -3,9 +3,12 @@
 namespace app\api\controller;
 
 use app\api\service\PackageService;
+use app\api\service\StockActivityService;
 use app\model\PackagePurchases;
+use app\model\StockActivityClaims;
 use app\model\StockPackages;
 use app\model\User;
+use think\facade\Cache;
 use think\facade\Log;
 
 class PackageController extends AuthController
@@ -225,5 +228,125 @@ class PackageController extends AuthController
         } catch (\Exception $e) {
             return out([], 10001, '查询失败: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * 领取活动股权
+     */
+    public function getNewUserPrize()
+    {
+        $user = $this->user;
+        $lockKey = 'stock_activity:' . $user['id'];
+
+        // 获取锁
+        $lockIdentifier = $this->acquireLock($lockKey);
+        if (!$lockIdentifier) {
+            return out(null, 10007, '系统繁忙，请稍后再试');
+        }
+
+        try {
+            // 检查用户是否已实名认证
+            if (empty($user['realname'])) {
+                return out(null, 10002, '请先完成实名认证');
+            }
+
+            // 检查活动时间（10月1日-10月8日）
+            $currentDate = date('Y-m-d');
+            $startDate = '2025-10-01';
+            $endDate = '2025-10-08';
+
+            if ($currentDate < $startDate || $currentDate > $endDate) {
+                return out(null, 10003, '活动未开始或已结束');
+            }
+
+            // 检查用户注册时间，只有活动期间注册的用户才能领取
+            $userCreateDate = date('Y-m-d', strtotime($user['created_at']));
+            if ($userCreateDate < $startDate || $userCreateDate > $endDate) {
+                return out(null, 10008, '只有活动期间注册的新用户才能领取');
+            }
+
+            // 检查是否已领取（双重检查，确保在锁内再次验证）
+            $existingClaim = StockActivityClaims::where('user_id', $user['id'])
+                ->where('activity_name', '国庆新人福利')
+                ->find();
+
+            if ($existingClaim) {
+                return out(null, 10004, '您已领取过该活动股权');
+            }
+
+            // 调用服务层处理领取逻辑
+            $result = StockActivityService::claimActivityStock(
+                $user['id'],
+                $user['phone'],
+                '国庆新人福利',
+                1800, // 流通股权数量
+                3000  // 原始股权数量
+            );
+
+            if ($result) {
+                return out(null, 200, '领取成功');
+            }
+
+            return out(null, 10005, '领取失败');
+        } catch (DbException $e) {
+            // 捕获数据库异常，特别是唯一约束违反异常
+            if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                return out(null, 10004, '您已领取过该活动股权');
+            }
+            return out(null, 10006, '系统错误，请稍后再试');
+        } catch (\Exception $e) {
+            return out(null, 10006, $e->getMessage());
+        } finally {
+            // 释放锁
+            $this->releaseLock($lockKey, $lockIdentifier);
+        }
+    }
+
+
+    /**
+     * 自定义Redis锁实现
+     */
+    private function acquireLock($key, $timeout = 10)
+    {
+        $redis = Cache::store('redis')->handler();
+        $lockKey = "lock:{$key}";
+        $identifier = uniqid();
+
+        $endTime = time() + $timeout;
+        while (time() < $endTime) {
+            // 尝试获取锁
+            if ($redis->setnx($lockKey, $identifier)) {
+                // 设置锁过期时间，防止死锁
+                $redis->expire($lockKey, $timeout);
+                return $identifier;
+            }
+
+            // 检查锁是否已过期但没有被释放
+            $ttl = $redis->ttl($lockKey);
+            if ($ttl < 0) {
+                $redis->del($lockKey);
+            }
+
+            usleep(100000); // 等待100毫秒后重试
+        }
+
+        return false;
+    }
+
+    /**
+     * 释放锁
+     */
+    private function releaseLock($key, $identifier)
+    {
+        $redis = Cache::store('redis')->handler();
+        $lockKey = "lock:{$key}";
+
+        // 只有锁的持有者才能释放锁
+        if ($redis->get($lockKey) == $identifier) {
+            $redis->del($lockKey);
+            return true;
+        }
+
+        return false;
     }
 }

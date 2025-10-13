@@ -1,0 +1,337 @@
+<!-- Main content -->
+<section class="content">
+<div class="row">
+<div class="col-xs-12">
+<div class="box box-primary">
+<div class="box-header with-border">
+<h3 class="box-title">{if isset($data['id'])}编辑补贴{else}添加补贴{/if}</h3>
+    <div class="box-tools pull-right">
+        <a href="{:url('admin/Butie/butieList')}" class="btn btn-sm btn-default">
+            <i class="fa fa-list"></i> 返回列表
+        </a>
+    </div>
+</div>
+    <!-- /.box-header -->
+<form role="form" id="butieForm">
+<div class="box-body">
+    <input type="hidden" name="id" value="{$data['id']??''}">
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="title">补贴名称 <span class="text-red">*</span></label>
+                <input type="text" class="form-control" id="title" name="title"
+                       placeholder="请输入补贴名称" value="{$data['title']??''}" required>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="price">补贴金额 <span class="text-red">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-addon">¥</span>
+                    <input type="number" class="form-control" id="price" name="price"
+                           placeholder="请输入补贴金额" value="{$data['price']??''}" step="0.01" min="0"
+                           required>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<div class="row">
+<div class="col-md-6">
+<div class="form-group">
+    <label for="imgurl">补贴图片 <span class="text-red">*</span></label>
+    <input type="hidden" name="imgurl" id="imgurl" value="{$data['imgurl']??''}">
+    <div>
+        <button type="button" class="btn btn-primary" id="uploadBtn">
+            <i class="fa fa-upload"></i> 上传图片
+        </button>
+        <input type="file" id="fileInput" style="display: none;" accept="image/*">
+    </div>
+<div class="img-preview-container mt-10">
+{if isset($data['imgurl']) && $data['imgurl']}
+    <div class="img-preview">
+        <img id="previewImg" src="{$data['img_url']}" style="width: 200px;height: 150px;">
+        <a href="javascript:void(0)" onclick="removeImage()" class="text-red"
+           style="display: block; text-align: center;">
+            <i class="fa fa-trash"></i> 移除
+        </a>
+    </div>
+{else}
+    <div id="previewContainer" class="img-preview" style="display: none;">
+
+        <a href="javascript:void(0)" onclick="removeImage()" class="text-red"
+           style="display: block; text-align: center;">
+            <i class="fa fa-trash"></i> 移除
+        </a>
+    </div>
+{/if}
+</div>
+</div>
+</div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="sort">排序值 <span class="text-red">*</span></label>
+            <input type="number" class="form-control" id="sort" name="sort" placeholder="请输入排序值"
+                   value="{$data['sort']??100}" required>
+            <p class="help-block">数字越大越靠前</p>
+        </div>
+
+        <div class="form-group">
+            <label>状态 <span class="text-red">*</span></label>
+            <div>
+                <label class="radio-inline">
+                    <input type="radio" name="status" value="1" {if !isset($data['status']) || $data['status']==1}checked{/if}>
+                    启用
+                </label>
+                <label class="radio-inline">
+                    <input type="radio" name="status" value="0" {if isset($data['status']) && $data['status']==0}checked{/if}>
+                    禁用
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div class="form-group">
+        <label for="editor">补贴详情 <span class="text-red">*</span></label>
+        <div class="editor-container">
+            <div id="editor"></div>
+            <input type="hidden" name="infos" id="infos" value="{$data['infos']??''}">
+        </div>
+    </div>
+</div>
+    <!-- /.box-body -->
+
+    <div class="box-footer">
+        <button type="submit" class="btn btn-primary">
+            <i class="fa fa-save"></i> 提交
+        </button>
+        <a href="{:url('admin/Butie/butieList')}" class="btn btn-default">
+            <i class="fa fa-times"></i> 取消
+        </a>
+    </div>
+</form>
+</div>
+    <!-- /.box -->
+</div>
+    <!-- /.col -->
+</div>
+    <!-- /.row -->
+</section>
+<!-- /.content -->
+
+<!-- 引入wangEditor -->
+<script type="text/javascript" src="__ADMIN__/bower_components/wangeditor3/xss.js"></script>
+<script type="text/javascript" src="__ADMIN__/bower_components/wangeditor3/wangEditor.js"></script>
+
+<script>
+    // 图片预览功能
+    function seePhoto(url) {
+        if (!url) return;
+
+        layer.open({
+            type: 1,
+            title: false,
+            closeBtn: 1,
+            shadeClose: true,
+            area: ['80%', '80%'],
+            content: ''
+        });
+    }
+
+    // 移除图片
+    function removeImage() {
+        $('#imgurl').val('');
+        $('.img-preview').hide();
+        $('#previewImg').attr('src', '');
+        $('#fileInput').val('');
+    }
+
+    $(document).ready(function () {
+        $('.img-preview').show();
+        // 初始化编辑器
+        var uploadUrl = "{:url('admin/Common/uploadStockButie')}";
+        var content = $("#infos").val();
+        var E = window.wangEditor;
+        var editor = new E('#editor');
+        editor.customConfig.uploadImgServer = uploadUrl;
+        editor.customConfig.uploadImgHooks = {
+            customInsert: function (insertImg, result, editor) {
+                if (result.code == 200) {
+                    for (var i = 0; i < result.data.url.length; i++) {
+                        var url = result.data.url[i];
+                        insertImg(url);
+                    }
+                }
+            }
+        };
+        editor.customConfig.menus = [
+            'head',  // 标题
+            'bold',  // 粗体
+            'fontSize',  // 字号
+            'fontName',  // 字体
+            'italic',  // 斜体
+            'underline',  // 下划线
+            'strikeThrough',  // 删除线
+            'foreColor',  // 文字颜色
+            'backColor',  // 背景颜色
+            'link',  // 插入链接
+            'list',  // 列表
+            'justify',  // 对齐方式
+            'quote',  // 引用
+            'emoticon',  // 表情
+            'image',  // 插入图片
+            'table',  // 表格
+            'video',  // 插入视频
+            'code',  // 插入代码
+            'undo',  // 撤销
+            'redo'  // 重复
+        ];
+        editor.create();
+
+        // 编辑时回显内容
+        if (content != '') {
+            editor.txt.html(content);
+        }
+
+        // 图片上传按钮点击事件
+        $('#uploadBtn').click(function () {
+            $('#fileInput').click();
+        });
+
+        // 文件选择变化事件
+        $('#fileInput').change(function (e) {
+            if (this.files && this.files[0]) {
+                var formData = new FormData();
+                formData.append('file', this.files[0]);
+
+                // 显示加载中
+                layer.load(2);
+
+                // 发送AJAX请求上传图片
+                $.ajax({
+                    url: '{:url("admin/Common/uploadStockButie")}',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (res) {
+                        layer.closeAll('loading');
+
+                        if (res.code == 200) {
+                            // 确保只存储相对路径
+                            var relativePath = res.data.url;
+
+                            // 如果返回的是完整URL，提取相对路径部分
+                            if (relativePath.indexOf('http') === 0) {
+                                // 提取/butie/之后的部分
+                                var storageIndex = relativePath.indexOf('/butie/');
+                                if (storageIndex !== -1) {
+                                    relativePath = relativePath.substring(storageIndex + '/butie/'.length);
+                                }
+                            }
+
+                            // 设置隐藏域值 - 只存储相对路径
+                            $("#imgurl").val(relativePath);
+
+                            // 显示预览图片
+                            var fullUrl = "{:env('app.img_host')}/storage/" + relativePath;
+                            $("#previewContainer").show();
+                            $("#previewImg").attr("src", fullUrl);
+                            $("#previewImg").attr("onclick", "seePhoto('" + fullUrl + "')");
+                            $('.img-preview').show();
+
+                            layer.msg('上传成功', { icon: 1 });
+                        } else {
+                            layer.msg(res.msg || '上传失败', { icon: 2 });
+                        }
+                    },
+                    error: function () {
+                        layer.closeAll('loading');
+                        layer.msg('上传出错，请重试', { icon: 2 });
+                    }
+                });
+            }
+        });
+
+        // 表单提交
+        $('#butieForm').on('submit', function (e) {
+            e.preventDefault();
+
+            // 获取编辑器内容
+            var html = editor.txt.html();
+            // XSS过滤
+            var contents = filterXSS(html, {
+                onIgnoreTagAttr: function (tag, name, value, isWhiteAttr) {
+                    if (name.substr(0, 5) === 'style') {
+                        return name + '="' + filterXSS.escapeAttrValue(value) + '"';
+                    }
+                }
+            });
+
+            // 设置到隐藏域
+            $("#infos").val(contents);
+
+            // 表单验证
+            var title = $('#title').val();
+            var price = $('#price').val();
+            var imgurl = $('#imgurl').val();
+            // 如果返回的是完整URL，提取相对路径部分
+            if (imgurl.indexOf('http') === 0) {
+                // 提取/storage/之后的部分
+                var storageIndex = imgurl.indexOf('/storage/');
+                if (storageIndex !== -1) {
+                    imgurl = imgurl.substring(storageIndex + '/storage/'.length);
+                }
+            }
+
+            // alert(imgurl);
+            var sort = $('#sort').val();
+            var status = $('input[name="status"]:checked').val();
+
+            if (!title) {
+                layer.msg('请输入补贴名称', { icon: 2 });
+                return;
+            }
+            if (!price || price <= 0) {
+                layer.msg('请输入有效的补贴金额', { icon: 2 });
+                return;
+            }
+            if (!imgurl) {
+                layer.msg('请上传补贴图片', { icon: 2 });
+                return;
+            }
+            if (!sort || sort < 0) {
+                layer.msg('请输入有效的排序值', { icon: 2 });
+                return;
+            }
+            if (!status) {
+                layer.msg('请选择状态', { icon: 2 });
+                return;
+            }
+
+            var url = '{:url("admin/Butie/addButie")}';
+            if ($('input[name="id"]').val()) {
+                url = '{:url("admin/Butie/editButie")}';
+            }
+
+            // 显示加载中
+            layer.load(2);
+
+            $.post(url, $(this).serialize(), function (res) {
+                layer.closeAll();
+                if (res.code == 200) {
+                    layer.msg(res.msg, { icon: 1 }, function () {
+                        location.href = '{:url("admin/Butie/butieList")}';
+                    });
+                } else {
+                    layer.msg(res.msg, { icon: 2 });
+                }
+            }).fail(function() {
+                layer.closeAll();
+                layer.msg('网络错误，请重试', { icon: 2 });
+            });
+        });
+    });
+</script>

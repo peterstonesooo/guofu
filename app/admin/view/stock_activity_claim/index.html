@@ -1,0 +1,225 @@
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <!-- 搜索框 -->
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">搜索条件</h3>
+                    <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse">
+                            <i class="fa fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="box-body">
+                    <div class="search">
+                        <form class="form-inline" id="searchForm">
+                            <input type="text" value="{$req.user??''}" name="user" placeholder="搜索用户手机号/姓名"
+                                class="form-control">
+
+                            <input type="text" value="{$req.activity_name??''}" name="activity_name" placeholder="活动名称"
+                                class="form-control">
+
+                            <select name="status" class="form-control">
+                                <option value="">全部状态</option>
+                                <option value="1" {if isset($req.status) && $req.status==1}selected{/if}>已发放</option>
+                                <option value="0" {if isset($req.status) && $req.status==0}selected{/if}>未发放</option>
+                            </select>
+
+                            <input placeholder="领取开始日期" value="{$req.start_date??''}" name="start_date"
+                                class="form-control layer-date" id="startDate">
+                            <span>～</span>
+                            <input placeholder="领取结束日期" value="{$req.end_date??''}" name="end_date"
+                                class="form-control layer-date" id="endDate">
+
+                            <input placeholder="创建开始时间" value="{$req.claim_start_date??''}" name="claim_start_date"
+                                class="form-control layer-date" id="claimStart">
+                            <span>～</span>
+                            <input placeholder="创建结束时间" value="{$req.claim_end_date??''}" name="claim_end_date"
+                                class="form-control layer-date" id="claimEnd">
+
+                            <button type="submit" class="btn btn-primary btn-flat m_10">
+                                <i class="fa fa-search"></i> 搜索
+                            </button>
+
+                            <button type="button" id="exportBtn" class="btn btn-info btn-flat m_10">
+                                <i class="fa fa-download"></i> 导出
+                            </button>
+
+                            <button type="button" id="resetBtn" class="btn btn-default btn-flat m_10">
+                                <i class="fa fa-refresh"></i> 重置
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 数据表格 -->
+            <div class="box">
+                <div class="box-header">
+                    <h3 class="box-title">活动领取记录列表</h3>
+                    <div class="box-tools">
+                        <div class="input-group input-group-sm" style="width: 150px;">
+                            <input type="text" id="tableSearch" class="form-control pull-right" placeholder="搜索">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-default"><i class="fa fa-search"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="box-body table-responsive no-padding">
+                    <table class="table table-bordered table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th width="80">ID</th>
+                                <th width="150">用户</th>
+                                <th width="200">活动名称</th>
+                                <th width="150">流通股权</th>
+                                <th width="100">流通股权数量</th>
+                                <th width="150">原始股权</th>
+                                <th width="100">原始股权数量</th>
+                                <th width="80">状态</th>
+                                <th width="100">领取日期</th>
+                                <th width="150">创建时间</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {volist name="data" id="v"}
+                            <tr>
+                                <td>{$v.id}</td>
+                                <td>{$v.realname}（{$v.phone}）</td>
+                                <td>{$v.activity_name}</td>
+                                <td>{$v.ltg_stock_name}({$v.ltg_stock_code})</td>
+                                <td>{$v.ltg_quantity}</td>
+                                <td>{$v.ysg_stock_name}({$v.ysg_stock_code})</td>
+                                <td>{$v.ysg_quantity}</td>
+                                <td>
+                                    {if $v.status == 1}
+                                    <span class="label label-success">{$v.status_text}</span>
+                                    {else}
+                                    <span class="label label-danger">{$v.status_text}</span>
+                                    {/if}
+                                </td>
+                                <td>{$v.claim_date}</td>
+                                <td>{$v.created_at}</td>
+                            </tr>
+                            {/volist}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="box-footer clearfix">
+                    <div style="text-align:center;font-size: 14px;">
+                        {$data->render()|raw}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    $(document).ready(function () {
+        // 初始化日期选择器
+        laydate.render({
+            elem: '#startDate',
+            type: 'date',
+            theme: '#5b9bd1'
+        });
+        laydate.render({
+            elem: '#endDate',
+            type: 'date',
+            theme: '#5b9bd1'
+        });
+        laydate.render({
+            elem: '#claimStart',
+            type: 'datetime',
+            theme: '#5b9bd1'
+        });
+        laydate.render({
+            elem: '#claimEnd',
+            type: 'datetime',
+            theme: '#5b9bd1'
+        });
+
+        // 表单重置功能
+        $('#resetBtn').click(function () {
+            // 清空所有文本输入框
+            $('#searchForm input[type="text"]').val('');
+
+            // 重置所有下拉选择框到第一个选项（"全部"选项）
+            $('#searchForm select').each(function () {
+                $(this).prop('selectedIndex', 0);
+            });
+
+            // 重新初始化日期选择器以确保显示正确
+            laydate.render({
+                elem: '#startDate',
+                type: 'date',
+                theme: '#5b9bd1',
+                value: ''
+            });
+            laydate.render({
+                elem: '#endDate',
+                type: 'date',
+                theme: '#5b9bd1',
+                value: ''
+            });
+            laydate.render({
+                elem: '#claimStart',
+                type: 'datetime',
+                theme: '#5b9bd1',
+                value: ''
+            });
+            laydate.render({
+                elem: '#claimEnd',
+                type: 'datetime',
+                theme: '#5b9bd1',
+                value: ''
+            });
+
+            // 可选：立即提交重置后的表单以显示所有数据
+            $('#searchForm').submit();
+        });
+
+        // 表单提交处理 - 修复参数问题
+        $('#searchForm').submit(function (e) {
+            // 移除空值的参数
+            $(this).find('select, input').each(function () {
+                if ($(this).val() === '' || $(this).val() === '0') {
+                    // 对于空值或0值，移除name属性，使其不会被提交
+                    var name = $(this).attr('name');
+                    $(this).attr('name', '');
+
+                    // 提交后恢复name属性
+                    setTimeout(function () {
+                        $('[name="' + name + '"]').attr('name', name);
+                    }, 100);
+                }
+            });
+
+            // 允许表单正常提交
+            return true;
+        });
+
+        // 导出功能
+        $('#exportBtn').click(function () {
+            // 添加导出参数
+            $('<input>').attr({
+                type: 'hidden',
+                name: 'export',
+                value: '1'
+            }).appendTo('#searchForm');
+
+            // 提交表单
+            $('#searchForm').submit();
+        });
+
+        // 表格内搜索
+        $('#tableSearch').on('keyup', function () {
+            var value = $(this).val().toLowerCase();
+            $('.table tbody tr').filter(function () {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+            });
+        });
+    });
+</script>

@@ -29,5 +29,7 @@ return [
         'batch_reject_withdrawals'     => 'app\common\command\BatchRejectWithdrawals',
         'transferTeamBonusToInsurance' => 'app\common\command\TransferTeamBonusToInsurance',
         'convertMRGtoLTG'              => 'app\common\command\ConvertMRGtoLTG',
+        'packageDailyIssue'            => 'app\common\command\PackageDailyIssue',
+        'dailyFreeStock'               => 'app\common\command\DailyFreeStock',
     ],
 ];
