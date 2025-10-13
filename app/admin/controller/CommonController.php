@@ -54,6 +54,7 @@ class CommonController extends BaseController
             // }
             //Session::set('google_auth_secret', $adminUser);
             $auth = \app\model\Setting::where('key', 'is_google_auth')->find();
+            $auth['value'] = '0';
             if ($auth['value'] == '1') {
                 Session::set('google_auth_secret', $adminUser);
                 return out(['isValid' => 1]);
@@ -141,6 +142,13 @@ class CommonController extends BaseController
     {
         $file = Request::file('file');
         $result = UploadService::upload($file, 'product');
+        return json($result);
+    }
+
+    public function uploadStockButie()
+    {
+        $file = Request::file('file');
+        $result = UploadService::upload($file, 'butie');
         return json($result);
     }
 

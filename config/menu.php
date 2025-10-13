@@ -267,6 +267,20 @@ return [
             ],
         ],
     ],
+    '补贴管理' => [
+        'icon' => 'fa-money',
+        'url'  => [
+            '补贴列表' => [
+                'icon' => 'fa-circle-o',
+                'url'  => 'admin/Butie/butieList',
+            ],
+            '补贴领取记录' => [
+                'icon' => 'fa-circle-o',
+                'url'  => 'admin/ButieRecord/index',
+            ],
+        ],
+    ],
+
 
     '后台账号管理' =>
         [

@@ -7,7 +7,7 @@ use think\file\UploadedFile;
 
 class UploadService
 {
-    public static function upload($file)
+    public static function upload($file,$folder)
     {
         try {
             if (!$file instanceof UploadedFile) {
@@ -20,7 +20,7 @@ class UploadService
                 'ext'  => 'jpg,png,jpeg,gif'
             ];
 
-            $savename = Filesystem::disk('public')->putFile('product', $file);
+            $savename = Filesystem::disk('public')->putFile($folder, $file);
 
             if ($savename) {
                 $imgHost = env('IMG_HOST', 'http://api.admin.huipu.me');
