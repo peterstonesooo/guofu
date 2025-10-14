@@ -1,13 +1,6 @@
 <div class="search">
     <form class="form-inline">
         <input placeholder="用户手机/姓名" autocomplete="on" value="{$req['user']??''}" name="user" class="form-control">
-        <select name="meeting_id" class="form-control">
-            <option value="">全部会议</option>
-            {foreach $meetings as $meeting}
-            <option value="{$meeting.id}" {if isset($req['meeting_id']) &&
-                $req['meeting_id']==$meeting.id}selected{/if}>{$meeting.title}</option>
-            {/foreach}
-        </select>
         <select name="status" class="form-control">
             <option value="">全部状态</option>
             <option value="1" {if isset($req['status']) && $req['status']=='1' }selected{/if}>成功</option>
@@ -37,7 +30,6 @@
                             <th>ID</th>
                             <th>用户手机</th>
                             <th>用户姓名</th>
-                            <th>会议名称</th>
                             <th>奖励金额</th>
                             <th>状态</th>
                             <th>签到日期</th>
@@ -51,7 +43,6 @@
                             <td>{$v['id']}</td>
                             <td>{$v['phone']}</td>
                             <td>{$v['realname']}</td>
-                            <td>{$v['meeting_name']}</td>
                             <td>¥{$v['bonus_amount']}</td>
                             <td>
                                 {if $v['status'] == 1}

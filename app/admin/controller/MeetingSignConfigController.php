@@ -2,14 +2,13 @@
 
 namespace app\admin\controller;
 
-use app\model\meeting\Meeting;
 use app\model\meeting\MeetingSignConfig;
 use app\model\meeting\MeetingSignRecords;
+use app\model\User;
+use think\facade\Cache;
 use think\facade\Log;
 use think\facade\Request;
 use think\facade\View;
-use think\facade\Cache;
-use app\model\User;
 
 class MeetingSignConfigController extends AuthController
 {
@@ -28,7 +27,7 @@ class MeetingSignConfigController extends AuthController
     public function editSignConfig()
     {
         $req = $this->validate(Request::param(), [
-            'sign_bonus|签到奖金' => 'require|float|min:0',
+            'sign_bonus|签到奖金'  => 'require|float|min:0',
             'sign_status|签到开关' => 'require|in:0,1',
         ]);
 
@@ -73,6 +72,9 @@ class MeetingSignConfigController extends AuthController
         }
     }
 
+    /**
+     * 签到记录管理
+     */
     public function meetingSignRecord()
     {
         $req = Request::param();
@@ -83,11 +85,10 @@ class MeetingSignConfigController extends AuthController
         }
 
         // 构建查询
-        $query = MeetingSignRecords::with(['user', 'meeting'])
+        $query = MeetingSignRecords::with(['user'])
             ->alias('sr')
-            ->field('sr.*, u.phone, u.realname, m.title as meeting_name')
+            ->field('sr.*, u.phone, u.realname')
             ->join('mp_user u', 'u.id = sr.user_id')
-            ->join('mp_meeting m', 'm.id = sr.meeting_id', 'LEFT')
             ->order('sr.id', 'desc');
 
         // 搜索条件
@@ -98,10 +99,6 @@ class MeetingSignConfigController extends AuthController
             } else {
                 $query->where('sr.user_id', 0); // 确保没有结果
             }
-        }
-
-        if (isset($req['meeting_id']) && $req['meeting_id'] !== '') {
-            $query->where('sr.meeting_id', $req['meeting_id']);
         }
 
         if (isset($req['status']) && $req['status'] !== '') {
@@ -119,19 +116,12 @@ class MeetingSignConfigController extends AuthController
         // 获取数据并处理状态文本
         $data = $query->paginate(['list_rows' => 15, 'query' => $req]);
 
-        // 处理状态文本和会议名称
+        // 处理状态文本
         $data->each(function ($item) {
             $item->status_text = $item->status_text;
-            // 如果没有关联会议，显示独立签到
-            if (empty($item->meeting_name)) {
-                $item->meeting_name = '日常签到';
-            }
             return $item;
         });
 
-        // 会议下拉
-        $meetings = Meeting::where('status', 1)->select();
-        View::assign('meetings', $meetings);
         View::assign('req', $req);
         View::assign('data', $data);
 
@@ -146,9 +136,8 @@ class MeetingSignConfigController extends AuthController
         $req = Request::param();
 
         $builder = MeetingSignRecords::alias('sr')
-            ->field('sr.*, u.phone, u.realname, m.title as meeting_name')
-            ->join('mp_user u', 'u.id = sr.user_id')
-            ->join('mp_meeting m', 'm.id = sr.meeting_id', 'LEFT');
+            ->field('sr.*, u.phone, u.realname')
+            ->join('mp_user u', 'u.id = sr.user_id');
 
         // 搜索条件
         if (isset($req['user']) && $req['user'] !== '') {
@@ -158,10 +147,6 @@ class MeetingSignConfigController extends AuthController
             } else {
                 $builder->where('sr.user_id', 0); // 确保没有结果
             }
-        }
-
-        if (isset($req['meeting_id']) && $req['meeting_id'] !== '') {
-            $builder->where('sr.meeting_id', $req['meeting_id']);
         }
 
         if (isset($req['status']) && $req['status'] !== '') {
@@ -182,33 +167,30 @@ class MeetingSignConfigController extends AuthController
         // 处理数据
         $exportData = [];
         foreach ($data as $item) {
-            $meetingName = $item->meeting_name ?: '日常签到';
             $statusText = $item->status == 1 ? '成功' : '失败';
 
             $exportData[] = [
-                'id' => $item->id,
-                'phone' => $item->phone,
-                'realname' => $item->realname,
-                'meeting_name' => $meetingName,
+                'id'           => $item->id,
+                'phone'        => $item->phone,
+                'realname'     => $item->realname,
                 'bonus_amount' => $item->bonus_amount,
-                'sign_date' => $item->sign_date,
-                'status_text' => $statusText,
-                'remark' => $item->remark,
-                'created_at' => $item->created_at,
+                'sign_date'    => $item->sign_date,
+                'status_text'  => $statusText,
+                'remark'       => $item->remark,
+                'created_at'   => $item->created_at,
             ];
         }
 
         // 表头
         $header = [
-            'id' => 'ID',
-            'phone' => '用户手机号',
-            'realname' => '用户姓名',
-            'meeting_name' => '会议名称',
+            'id'           => 'ID',
+            'phone'        => '用户手机号',
+            'realname'     => '用户姓名',
             'bonus_amount' => '奖励金额',
-            'sign_date' => '签到日期',
-            'status_text' => '状态',
-            'remark' => '备注',
-            'created_at' => '创建时间',
+            'sign_date'    => '签到日期',
+            'status_text'  => '状态',
+            'remark'       => '备注',
+            'created_at'   => '创建时间',
         ];
 
         // 导出Excel
