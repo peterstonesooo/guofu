@@ -280,6 +280,23 @@ return [
             ],
         ],
     ],
+    '会议管理' => [
+        'icon' => 'fa-calendar',
+        'url'  => [
+            '会议列表' => [
+                'icon' => 'fa-circle-o',
+                'url'  => 'admin/Meeting/meetingList',
+            ],
+            '会议签到配置' => [
+                'icon' => 'fa-circle-o',
+                'url'  => 'admin/MeetingSignConfig/index',
+            ],
+            '会议签到记录' => [
+                'icon' => 'fa-circle-o',
+                'url'  => 'admin/MeetingSignConfig/meetingSignRecord',
+            ],
+        ],
+    ],
 
 
     '后台账号管理' =>
