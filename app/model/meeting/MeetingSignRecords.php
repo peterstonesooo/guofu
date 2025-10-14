@@ -2,8 +2,8 @@
 
 namespace app\model\meeting;
 
-use think\Model;
 use app\model\User;
+use think\Model;
 
 class MeetingSignRecords extends Model
 {
@@ -25,33 +25,22 @@ class MeetingSignRecords extends Model
     }
 
     /**
-     * 关联会议
-     */
-    public function meeting()
-    {
-        return $this->belongsTo(Meeting::class, 'meeting_id');
-    }
-
-    /**
      * 获取状态文本
      */
     public function getStatusTextAttr($value, $data)
     {
         $map = [
             self::STATUS_SUCCESS => '成功',
-            self::STATUS_FAILED => '失败'
+            self::STATUS_FAILED  => '失败'
         ];
         return $map[$data['status']] ?? '未知';
     }
 
     /**
-     * 获取会议名称（包含日常签到处理）
+     * 获取签到类型名称
      */
-    public function getMeetingNameAttr($value, $data)
+    public function getSignTypeAttr()
     {
-        if (!empty($data['meeting_id']) && $this->meeting) {
-            return $this->meeting->title;
-        }
         return '日常签到';
     }
 }
