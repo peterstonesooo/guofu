@@ -1,0 +1,102 @@
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">会议签到配置</h3>
+                    <div class="box-tools pull-right">
+                        <a href="{:url('admin/Meeting/meetingList')}" class="btn btn-sm btn-default">
+                            <i class="fa fa-list"></i> 返回会议列表
+                        </a>
+                    </div>
+                </div>
+                <!-- /.box-header -->
+                <form role="form" id="signConfigForm">
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="sign_bonus">签到奖金金额 <span class="text-red">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-addon">¥</span>
+                                        <input type="number" class="form-control" id="sign_bonus" name="sign_bonus"
+                                            placeholder="请输入签到奖金金额" value="{$config.sign_bonus??0.00}" step="0.01"
+                                            min="0" required>
+                                    </div>
+                                    <p class="help-block">用户每次签到可获得的奖励金额</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>签到开关 <span class="text-red">*</span></label>
+                                    <div>
+                                        <label class="radio-inline">
+                                            <input type="radio" name="sign_status" value="1" {if
+                                                isset($config.sign_status) && $config.sign_status==1}checked{/if}>
+                                            开启
+                                        </label>
+                                        <label class="radio-inline">
+                                            <input type="radio" name="sign_status" value="0" {if
+                                                !isset($config.sign_status) || $config.sign_status==0}checked{/if}>
+                                            关闭
+                                        </label>
+                                    </div>
+                                    <p class="help-block">开启后用户可以进行会议签到</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /.box-body -->
+
+                    <div class="box-footer">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa fa-save"></i> 保存配置
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <!-- /.box -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+</section>
+<!-- /.content -->
+
+<script>
+    $(document).ready(function () {
+        // 表单提交
+        $('#signConfigForm').on('submit', function (e) {
+            e.preventDefault();
+
+            // 表单验证
+            var sign_bonus = $('#sign_bonus').val();
+            var sign_status = $('input[name="sign_status"]:checked').val();
+
+            if (!sign_bonus || sign_bonus < 0) {
+                layer.msg('请输入有效的签到奖金金额', { icon: 2 });
+                return;
+            }
+            if (!sign_status) {
+                layer.msg('请选择签到开关状态', { icon: 2 });
+                return;
+            }
+
+            // 显示加载中
+            layer.load(2);
+
+            $.post('{:url("admin/MeetingSignConfig/editSignConfig")}', $(this).serialize(), function (res) {
+                layer.closeAll();
+                if (res.code == 200) {
+                    layer.msg(res.msg, { icon: 1 });
+                } else {
+                    layer.msg(res.msg, { icon: 2 });
+                }
+            }).fail(function () {
+                layer.closeAll();
+                layer.msg('网络错误，请重试', { icon: 2 });
+            });
+        });
+    });
+</script>

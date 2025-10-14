@@ -152,6 +152,13 @@ class CommonController extends BaseController
         return json($result);
     }
 
+    public function uploadMeeting()
+    {
+        $file = Request::file('file');
+        $result = UploadService::upload($file, 'meeting');
+        return json($result);
+    }
+
     public function doc()
     {
         $database = env('database.database');

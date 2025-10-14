@@ -1,0 +1,88 @@
+<div class="search">
+    <form class="form-inline">
+        <input placeholder="用户手机/姓名" autocomplete="on" value="{$req['user']??''}" name="user" class="form-control">
+        <select name="meeting_id" class="form-control">
+            <option value="">全部会议</option>
+            {foreach $meetings as $meeting}
+            <option value="{$meeting.id}" {if isset($req['meeting_id']) &&
+                $req['meeting_id']==$meeting.id}selected{/if}>{$meeting.title}</option>
+            {/foreach}
+        </select>
+        <select name="status" class="form-control">
+            <option value="">全部状态</option>
+            <option value="1" {if isset($req['status']) && $req['status']=='1' }selected{/if}>成功</option>
+            <option value="0" {if isset($req['status']) && $req['status']=='0' }selected{/if}>失败</option>
+        </select>
+        <input placeholder="开始日期" autocomplete="on" value="{$req['start_date']??''}" name="start_date"
+            class="form-control" id="start_date">
+        <input placeholder="结束日期" autocomplete="on" value="{$req['end_date']??''}" name="end_date" class="form-control"
+            id="end_date">
+        <input class="btn btn-flat btn-primary m_10" type="submit" value="搜索">
+        <a class="btn btn-flat btn-success m_10" href="{:url('admin/MeetingSignRecord/index', ['export' => 1])}">
+            <i class="fa fa-download"></i> 导出
+        </a>
+    </form>
+</div>
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="box">
+            <div class="box-header">
+                <h3 class="box-title">会议签到记录</h3>
+            </div>
+            <div class="box-body table-responsive no-padding">
+                <table class="table table-bordered table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>用户手机</th>
+                            <th>用户姓名</th>
+                            <th>会议名称</th>
+                            <th>奖励金额</th>
+                            <th>状态</th>
+                            <th>签到日期</th>
+                            <th>签到时间</th>
+                            <th>备注</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {foreach $data as $v}
+                        <tr>
+                            <td>{$v['id']}</td>
+                            <td>{$v['phone']}</td>
+                            <td>{$v['realname']}</td>
+                            <td>{$v['meeting_name']}</td>
+                            <td>¥{$v['bonus_amount']}</td>
+                            <td>
+                                {if $v['status'] == 1}
+                                <span class="label label-success">{$v['status_text']}</span>
+                                {else}
+                                <span class="label label-danger">{$v['status_text']}</span>
+                                {/if}
+                            </td>
+                            <td>{$v['sign_date']}</td>
+                            <td>{$v['created_at']}</td>
+                            <td>{$v['remark']}</td>
+                        </tr>
+                        {/foreach}
+                    </tbody>
+                </table>
+            </div>
+            <div class="box-footer clearfix">
+                {$data|raw}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 日期选择器
+    laydate.render({
+        elem: '#start_date',
+        type: 'date'
+    });
+    laydate.render({
+        elem: '#end_date',
+        type: 'date'
+    });
+</script>
