@@ -2,6 +2,8 @@
 
 namespace app\api\service;
 
+use app\model\butie\StockButie;
+use app\model\butie\StockButieRecords;
 use app\model\User;
 use think\Exception;
 use think\facade\Db;
@@ -19,10 +21,9 @@ class ButieService
     {
         Db::startTrans();
         try {
-            // 获取补贴信息
-            $butie = Db::name('stock_butie')
-                ->where('id', $butie_id)
-                ->where('status', 1)
+            // 使用Model获取补贴信息
+            $butie = StockButie::where('id', $butie_id)
+                ->where('status', StockButie::STATUS_ENABLED)
                 ->find();
 
             if (!$butie) {
@@ -30,8 +31,7 @@ class ButieService
             }
 
             // 检查用户是否已经领取过该补贴
-            $exists = Db::name('stock_butie_records')
-                ->where('user_id', $user_id)
+            $exists = StockButieRecords::where('user_id', $user_id)
                 ->where('butie_id', $butie_id)
                 ->find();
 
@@ -39,26 +39,25 @@ class ButieService
                 throw new Exception('您已经领取过该补贴');
             }
 
-            // 记录领取记录
-            $recordId = Db::name('stock_butie_records')->insertGetId([
-                'user_id'    => $user_id,
-                'butie_id'   => $butie_id,
-                'quantity'   => 1,
-                'price'      => $butie['price'],
-                'amount'     => $butie['price'],
-                'type'       => 1, // 补贴类型(1=活动)
-                'status'     => 1,
-                'remark'     => "领取{$butie['title']}",
-                'created_at' => date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s')
-            ]);
+            // 使用Model创建领取记录
+            $record = new StockButieRecords();
+            $recordData = [
+                'user_id'  => $user_id,
+                'butie_id' => $butie_id,
+                'quantity' => 1,
+                'price'    => $butie->price,
+                'amount'   => $butie->price,
+                'type'     => 1, // 补贴类型(1=活动)
+                'status'   => StockButieRecords::STATUS_SUCCESS,
+                'remark'   => "领取{$butie->title}",
+            ];
 
-            if (!$recordId) {
+            if (!$record->save($recordData)) {
                 throw new Exception('记录领取记录失败');
             }
 
             // 增加用户的国补钱包余额
-            User::changeInc($user_id, $butie['price'], 'national_subsidy_balance', 99, $recordId, 14, "领取补贴:{$butie['title']}");
+            User::changeInc($user_id, $butie->price, 'national_subsidy_balance', 99, $record->id, 14, "领取补贴:{$butie->title}");
 
             Db::commit();
             return true;

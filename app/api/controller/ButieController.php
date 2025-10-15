@@ -4,8 +4,8 @@ namespace app\api\controller;
 
 use app\api\service\ButieService;
 use app\model\butie\StockButie;
+use app\model\butie\StockButieRecords;
 use think\facade\Cache;
-use think\facade\Db;
 
 class ButieController extends AuthController
 {
@@ -25,6 +25,7 @@ class ButieController extends AuthController
     {
         $page = $this->request->param('page/d', 1);
         $limit = $this->request->param('limit/d', 10);
+        $user_id = $this->user['id'];
 
         try {
             // 生成缓存键，包含分页参数
@@ -36,46 +37,59 @@ class ButieController extends AuthController
 
             if ($cachedData !== false) {
                 // 如果缓存存在，直接返回缓存数据
-                return out(unserialize($cachedData));
-            }
-
-            // 使用 Model 查询
-            $query = StockButie::where('status', StockButie::STATUS_ENABLED)
-                ->order('sort', 'desc')
-                ->order('id', 'desc');
-
-            // 获取总数
-            $total = $query->count();
-
-            // 获取分页数据
-            $list = $query->page($page, $limit)
-                ->select()
-                ->each(function ($item) {
-                    // 添加完整图片URL
-                    $item['img_url'] = env('app.img_host') . '/storage/' . $item['imgurl'];
-                    return $item;
-                });
-
-            // 处理空数据情况
-            if ($list->isEmpty()) {
-                $result = [
-                    'list'         => [],
-                    'total'        => 0,
-                    'current_page' => $page,
-                    'total_page'   => 0
-                ];
+                $result = unserialize($cachedData);
             } else {
-                $result = [
-                    'list'         => $list->toArray(),
-                    'total'        => $total,
-                    'current_page' => $page,
-                    'total_page'   => ceil($total / $limit)
-                ];
+                // 使用 Model 查询
+                $query = StockButie::where('status', StockButie::STATUS_ENABLED)
+                    ->order('sort', 'desc')
+                    ->order('id', 'desc');
+
+                // 获取总数
+                $total = $query->count();
+
+                // 获取分页数据
+                $list = $query->page($page, $limit)
+                    ->select()
+                    ->each(function ($item) {
+                        // 添加完整图片URL
+                        $item['img_url'] = env('app.img_host') . '/storage/' . $item['imgurl'];
+                        return $item;
+                    });
+
+                // 处理空数据情况
+                if ($list->isEmpty()) {
+                    $result = [
+                        'list'         => [],
+                        'total'        => 0,
+                        'current_page' => $page,
+                        'total_page'   => 0
+                    ];
+                } else {
+                    $result = [
+                        'list'         => $list->toArray(),
+                        'total'        => $total,
+                        'current_page' => $page,
+                        'total_page'   => ceil($total / $limit)
+                    ];
+                }
+
+                // 将数据存入缓存
+                if (!empty($result)) {
+                    $redis->setex($cacheKey, self::CACHE_TIME, serialize($result));
+                }
             }
 
-            // 将数据存入缓存
-            if (!empty($result)) {
-                $redis->setex($cacheKey, self::CACHE_TIME, serialize($result));
+            // 获取用户已领取的补贴ID列表
+            $receivedButieIds = StockButieRecords::where('user_id', $user_id)
+                ->where('status', StockButieRecords::STATUS_SUCCESS)
+                ->column('butie_id');
+
+            // 为每个补贴项添加领取状态
+            if (!empty($result['list'])) {
+                foreach ($result['list'] as &$item) {
+                    $item['is_received'] = in_array($item['id'], $receivedButieIds) ? 1 : 0;
+                }
+                unset($item);
             }
 
             return out($result);
@@ -143,13 +157,10 @@ class ButieController extends AuthController
         $limit = $this->request->param('limit/d', 10);
 
         try {
-            // 查询领取记录
-            $query = Db::table('mp_stock_butie_records')
-                ->alias('r')
-                ->join('mp_stock_butie b', 'r.butie_id = b.id')
-                ->where('r.user_id', $user_id)
-                ->field('r.*, b.title as butie_name, b.imgurl')
-                ->order('r.id', 'desc');
+            // 使用Model查询领取记录
+            $query = StockButieRecords::with(['butie'])
+                ->where('user_id', $user_id)
+                ->order('id', 'desc');
 
             // 获取总数
             $total = $query->count();
@@ -159,15 +170,13 @@ class ButieController extends AuthController
                 ->select()
                 ->each(function ($item) {
                     // 添加完整图片URL
-                    if (!empty($item['imgurl'])) {
-                        $item['img_url'] = env('app.img_host') . '/storage/' . $item['imgurl'];
+                    if ($item->butie && !empty($item->butie->imgurl)) {
+                        $item['img_url'] = env('app.img_host') . '/storage/' . $item->butie->imgurl;
+                        $item['butie_name'] = $item->butie->title;
                     }
 
-                    // 补贴类型文本
-                    $typeMap = [
-                        1 => '活动补贴'
-                    ];
-                    $item['type_text'] = $typeMap[$item['type']] ?? '未知';
+                    // 使用模型获取器获取类型文本
+                    $item['type_text'] = $item->type_text;
 
                     return $item;
                 });
