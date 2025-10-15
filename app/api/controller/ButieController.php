@@ -3,6 +3,7 @@
 namespace app\api\controller;
 
 use app\api\service\ButieService;
+use app\model\butie\StockButie;
 use think\facade\Cache;
 use think\facade\Db;
 
@@ -38,12 +39,8 @@ class ButieController extends AuthController
                 return out(unserialize($cachedData));
             }
 
-            // 构建查询条件
-            $where = [['status', '=', 1]];
-
-            // 查询补贴列表
-            $query = Db::table('mp_stock_butie')
-                ->where($where)
+            // 使用 Model 查询
+            $query = StockButie::where('status', StockButie::STATUS_ENABLED)
                 ->order('sort', 'desc')
                 ->order('id', 'desc');
 
@@ -59,19 +56,33 @@ class ButieController extends AuthController
                     return $item;
                 });
 
-            $result = [
-                'list'         => $list,
-                'total'        => $total,
-                'current_page' => $page,
-                'total_page'   => ceil($total / $limit)
-            ];
+            // 处理空数据情况
+            if ($list->isEmpty()) {
+                $result = [
+                    'list'         => [],
+                    'total'        => 0,
+                    'current_page' => $page,
+                    'total_page'   => 0
+                ];
+            } else {
+                $result = [
+                    'list'         => $list->toArray(),
+                    'total'        => $total,
+                    'current_page' => $page,
+                    'total_page'   => ceil($total / $limit)
+                ];
+            }
 
             // 将数据存入缓存
-            $redis->setex($cacheKey, self::CACHE_TIME, serialize($result));
+            if (!empty($result)) {
+                $redis->setex($cacheKey, self::CACHE_TIME, serialize($result));
+            }
 
             return out($result);
 
         } catch (\Exception $e) {
+            // 记录详细错误日志
+            trace('获取补贴列表失败: ' . $e->getMessage(), 'error');
             return out(null, 10001, '获取补贴列表失败: ' . $e->getMessage());
         }
     }
