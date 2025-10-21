@@ -2,33 +2,32 @@
 
 namespace app\api\controller;
 
+use AlibabaCloud\Dara\Models\RuntimeOptions;
+use AlibabaCloud\SDK\Cloudauth\V20190307\Cloudauth;
+use AlibabaCloud\SDK\Cloudauth\V20190307\Models\Id2MetaVerifyRequest;
 use app\model\Apply;
-use app\model\AssetOrder;
-use app\model\EquityYuanRecord;
-use app\model\LevelConfig;
+use app\model\Certificate;
+use app\model\KlineChartNew;
+use app\model\MettingLog;
 use app\model\Order;
 use app\model\PaymentConfig;
 use app\model\Project;
-use app\model\User;
-use app\model\UserBalanceLog;
-use app\model\UserRelation;
-use app\model\KlineChartNew;
-use app\model\Capital;
-use app\model\Certificate;
-use app\model\MettingLog;
-use app\model\Payment;
 use app\model\Realname;
 use app\model\TaxOrder;
+use app\model\User;
+use app\model\UserBalanceLog;
 use app\model\UserDelivery;
 use app\model\UserLottery;
-use app\model\WalletAddress;
-use think\facade\Db;
-use Exception;
+use app\model\UserPath;
+use app\model\UserRelation;
+use Darabonba\OpenApi\Models\Config;
+use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
-use Endroid\QrCode\Encoding\Encoding;
+use Exception;
 use think\facade\App;
-use \Qiniu\Auth;
+use think\facade\Db;
+use think\facade\Log;
 
 class UserController extends AuthController
 {
@@ -38,182 +37,191 @@ class UserController extends AuthController
 
         //$user = User::where('id', $user['id'])->append(['equity', 'digital_yuan', 'my_bonus', 'total_bonus', 'profiting_bonus', 'exchange_equity', 'exchange_digital_yuan', 'passive_total_income', 'passive_receive_income', 'passive_wait_income', 'subsidy_total_income', 'team_user_num', 'team_performance', 'can_withdraw_balance'])->find()->toArray();
         $user = User::where('id', $user['id'])->field('large_subsidy,id,phone,signin_integral,realname,pay_password,up_user_id,is_active,invite_code,ic_number,level,integral,topup_balance,poverty_subsidy_amount,team_bonus_balance,income_balance,bonus_balance,created_at,avatar,is_realname,allow_withdraw_money,ph_wallet,insurance_balance')->find()->toArray();
-    
+
         $user['is_set_pay_password'] = !empty($user['pay_password']) ? 1 : 0;
         $user['address'] = '';
         //$user['wallet_address'] = '';
         unset($user['password'], $user['pay_password']);
-        $delivery=UserDelivery::where('user_id', $user['id'])->find();
-        if($delivery){
-            $user['address']=$delivery['address'];
+        $delivery = UserDelivery::where('user_id', $user['id'])->find();
+        if ($delivery) {
+            $user['address'] = $delivery['address'];
         }
 
         $user['realname_mark'] = '';
-        if($user['is_realname']==0){
-            $realnameData = Realname::where('user_id',$user['id'])->find();
-            if($realnameData){
+        if ($user['is_realname'] == 0) {
+            $realnameData = Realname::where('user_id', $user['id'])->find();
+            if ($realnameData) {
                 $user['is_realname'] = 2;
-                if($realnameData['status']==2){
+                if ($realnameData['status'] == 2) {
                     //实名审核已拒绝
                     $user['is_realname'] = 3;
                     $user['realname_mark'] = $realnameData['mark'];
                 }
             }
         }
-        $speedUp = UserLottery::where('user_id',$user['id'])->find();
+        $speedUp = UserLottery::where('user_id', $user['id'])->find();
         $user['speed_up_balance'] = 0;
         $user['lottery_num'] = 0;
-        if(!$speedUp){
-            UserLottery::create(['user_id'=>$user['id'],'lottery_num'=>0,'speed_up_balance'=>0]);
-        }else{
+        if (!$speedUp) {
+            UserLottery::create(['user_id' => $user['id'], 'lottery_num' => 0, 'speed_up_balance' => 0]);
+        } else {
             $user['speed_up_balance'] = User::fomartDayInHour($speedUp['speed_up_balance']);
             $user['lottery_num'] = $speedUp['lottery_num'];
         }
 
-        $sum = TaxOrder::where('user_id',$user['id'])->where('type',5)->sum('money');
+        $sum = TaxOrder::where('user_id', $user['id'])->where('type', 5)->sum('money');
 
         $user['hezhun_money'] = $sum;
-        $user['total_balance'] = $user['topup_balance']+$user['team_bonus_balance']+$user['income_balance']+$user['poverty_subsidy_amount']+$user['bonus_balance'];
+        $user['total_balance'] = $user['topup_balance'] + $user['team_bonus_balance'] + $user['income_balance'] + $user['poverty_subsidy_amount'] + $user['bonus_balance'];
         return out($user);
     }
 
-    public function applyMedal(){
+    public function applyMedal()
+    {
         $req = $this->validate(request(), [
             'address|详细地址' => 'require',
         ]);
         $user = $this->user;
 
 
-        UserDelivery::updateAddress($user,$req);
-        $subCount = UserRelation::where('user_id',$user['id'])->where('is_active',1)->count();
-        if($subCount<500){
-            return out(null,10002,'激活人数不足500人');
+        UserDelivery::updateAddress($user, $req);
+        $subCount = UserRelation::where('user_id', $user['id'])->where('is_active', 1)->count();
+        if ($subCount < 500) {
+            return out(null, 10002, '激活人数不足500人');
         }
-        $msg = Apply::add($user['id'],1);
-        if($msg==""){
+        $msg = Apply::add($user['id'], 1);
+        if ($msg == "") {
             return out();
-        }else{
-            return out(null,10003,$msg);
+        } else {
+            return out(null, 10003, $msg);
         }
 
     }
-    public function applyHouse(){
+
+    public function applyHouse()
+    {
         $user = $this->user;
         $is_three_stage = User::isThreeStage($user['id']);
-        if(!$is_three_stage){
-            return out(null,10001,'暂未满足条件');
+        if (!$is_three_stage) {
+            return out(null, 10001, '暂未满足条件');
         }
-        $msg = Apply::add($user['id'],2);
-        if($msg==""){
+        $msg = Apply::add($user['id'], 2);
+        if ($msg == "") {
             return out();
-        }else{
-            return out(null,10002,"预约看房申请已提交，请耐心等待，留意好您的手机。");
-        }
-    }
-    public function applyCar(){
-        $user = $this->user;
-        $count = UserRelation::where('user_id',$user['id'])->where('is_active',1)->count();
-        if($count<1000){
-            $projectIds = [53,54,55,56,57];
-            foreach($projectIds as $v){
-                $order = Order::where('user_id',$user['id'])->where('project_group_id',4)->where('project_id',$v)->where('status','>=',2)->find();
-                if(!$order){
-                    return out(null,10001,'暂未满足条件');
-                }
-            }
-       }
-        $msg = Apply::add($user['id'],3);
-        if($msg==""){
-            return out();
-        }else{
-            return out(null,10002,"预约提车申请已提交，请耐心等待，留意好您的手机。");
+        } else {
+            return out(null, 10002, "预约看房申请已提交，请耐心等待，留意好您的手机。");
         }
     }
 
-    public function myHouse(){
+    public function applyCar()
+    {
+        $user = $this->user;
+        $count = UserRelation::where('user_id', $user['id'])->where('is_active', 1)->count();
+        if ($count < 1000) {
+            $projectIds = [53, 54, 55, 56, 57];
+            foreach ($projectIds as $v) {
+                $order = Order::where('user_id', $user['id'])->where('project_group_id', 4)->where('project_id', $v)->where('status', '>=', 2)->find();
+                if (!$order) {
+                    return out(null, 10001, '暂未满足条件');
+                }
+            }
+        }
+        $msg = Apply::add($user['id'], 3);
+        if ($msg == "") {
+            return out();
+        } else {
+            return out(null, 10002, "预约提车申请已提交，请耐心等待，留意好您的手机。");
+        }
+    }
+
+    public function myHouse()
+    {
         $user = $this->user;
         $data = User::myHouse($user['id']);
-        if($data['msg']!=''){
-            return out(null,10001,$data['msg']);
+        if ($data['msg'] != '') {
+            return out(null, 10001, $data['msg']);
         }
         $house = $data['house'];
-        $coverImg = Project::where('id',$house['project_id'])->value('cover_img');
-        $houseFee = \app\model\HouseFee::where('user_id',$user['id'])->find();
+        $coverImg = Project::where('id', $house['project_id'])->value('cover_img');
+        $houseFee = \app\model\HouseFee::where('user_id', $user['id'])->find();
         $data = [
-            'name'=>$house['project_name'],
-            'cover_img'=>$coverImg,
-            'is_house_fee'=>$houseFee?1:0,
+            'name'         => $house['project_name'],
+            'cover_img'    => $coverImg,
+            'is_house_fee' => $houseFee ? 1 : 0,
         ];
-        
+
         return out($data);
     }
 
-    public function cardAuth(){
+    public function cardAuth()
+    {
         $user = $this->user;
-        $order = Order::where('user_id',$user['id'])->where('project_group_id',5)->where('status','>=',2)->find();
-        if(!$order){
-            return out(null,10001,'请先购买办卡项目');
+        $order = Order::where('user_id', $user['id'])->where('project_group_id', 5)->where('status', '>=', 2)->find();
+        if (!$order) {
+            return out(null, 10001, '请先购买办卡项目');
         }
-        $req= $this->validate(request(), [
-            'realname|真实姓名' => 'require',
+        $req = $this->validate(request(), [
+            'realname|真实姓名'  => 'require',
             'ic_number|身份证号' => 'require',
         ]);
-        if($user['realname']=='' || $user['ic_number']==''){
-            return out(null,10002,'请先完成实名认证');
+        if ($user['realname'] == '' || $user['ic_number'] == '') {
+            return out(null, 10002, '请先完成实名认证');
         }
-        if($user['realname']!=$req['realname'] || $user['ic_number']!=$req['ic_number']){
-            return out(null,10003,'与实名认证信息不一致');
+        if ($user['realname'] != $req['realname'] || $user['ic_number'] != $req['ic_number']) {
+            return out(null, 10003, '与实名认证信息不一致');
         }
-        $msg = Apply::add($user['id'],5);
-        if($msg==""){
+        $msg = Apply::add($user['id'], 5);
+        if ($msg == "") {
             return out();
-        }else if($msg=="已经申请过了"){
+        } else if ($msg == "已经申请过了") {
             return out();
-        }else{
-            return out(null,10004,$msg);
+        } else {
+            return out(null, 10004, $msg);
         }
     }
 
-    public function cardProgress(){
+    public function cardProgress()
+    {
         $user = $this->user;
-        $apply = Apply::where('user_id',$user['id'])->where('type',5)->find();
-        if(!$apply){
-            return out(null,10001,'请先开户认证');
+        $apply = Apply::where('user_id', $user['id'])->where('type', 5)->find();
+        if (!$apply) {
+            return out(null, 10001, '请先开户认证');
         }
-        $order = Order::where('user_id',$user['id'])->where('project_group_id',5)->where('status','>=',2)->select();
+        $order = Order::where('user_id', $user['id'])->where('project_group_id', 5)->where('status', '>=', 2)->select();
         $data = [];
         //$ids = [];
-        foreach($order as $v){
+        foreach ($order as $v) {
             // if(isset($ids[$v['project_id']])){
             //     continue;
             // }
             $data[] = [
-                'name'=>$v['project_name'],
-                'cover_img'=>get_img_api($v['cover_img']),
+                'name'      => $v['project_name'],
+                'cover_img' => get_img_api($v['cover_img']),
             ];
             //$ids[$v['project_id']] = 1;
         }
-        
+
         return out($data);
     }
 
 
-    public function invite(){
+    public function invite()
+    {
         $user = $this->user;
         $host = env('app.host', '');
         $frontHost = env('app.front_host', 'https://h5.zdrxm.com');
-       
+
         $url = "$frontHost/#/pages/system-page/gf_register?invite_code={$user['invite_code']}";
         //$img = $user['invite_img'];
         $img = '';
-        if($img==''){
+        if ($img == '') {
             $qrCode = QrCode::create($url)
-            // 内容编码
-            ->setEncoding(new Encoding('UTF-8'))
-            // 内容区域大小
-            ->setSize(200)
-            // 内容区域外边距
-            ->setMargin(10);
+                // 内容编码
+                ->setEncoding(new Encoding('UTF-8'))
+                // 内容区域大小
+                ->setSize(200)
+                // 内容区域外边距
+                ->setMargin(10);
             // 生成二维码数据对象
             $result = (new PngWriter)->write($qrCode);
             // 直接输出在浏览器中
@@ -222,50 +230,49 @@ class UserController extends AuthController
             // echo $result->getString();
             // 将二维码图片保存到本地服务器
             $today = date("Y-m-d");
-            $basePath = App::getRootPath()."public/";
-            $path =  "storage/qrcode/$today";
-            if(!is_dir($basePath.$path)){
-                mkdir($basePath.$path);
-            }   
+            $basePath = App::getRootPath() . "public/";
+            $path = "storage/qrcode/$today";
+            if (!is_dir($basePath . $path)) {
+                mkdir($basePath . $path);
+            }
             $name = "{$user['id']}.png";
-            $filePath = $basePath.$path.'/'.$name;
+            $filePath = $basePath . $path . '/' . $name;
             //$result->saveToFile($filePath);
-            $img = $path.'/'.$name;
-            User::where('id',$user['id'])->update(['invite_img'=>$img]);
-        }else{
+            $img = $path . '/' . $name;
+            User::where('id', $user['id'])->update(['invite_img' => $img]);
+        } else {
         }
-        $img = $host.'/'.$img;
+        $img = $host . '/' . $img;
         // 返回 base64 格式的图片
         //$dataUri = $result->getDataUri();
         //echo "<img src='{$dataUri}'>";
-        $data=[
-            'url'=>$url,
-            'img'=>$img,
+        $data = [
+            'url' => $url,
+            'img' => $img,
         ];
         return out($data);
     }
-    
 
- 
 
     //数字人民币转账
-    public function transferAccounts(){
+    public function transferAccounts()
+    {
         $req = $this->validate(request(), [
-            'type' => 'require|in:1,2,3,4',//1余额 2提现金额
-            'realname|对方姓名' => 'max:20',
-            'account|对方账号' => 'require',//虚拟币钱包地址
-            'money|转账金额' => 'require|number|between:100,100000',
+            'type'                  => 'require|in:1,2,3,4',//1余额 2提现金额
+            'realname|对方姓名'     => 'max:20',
+            'account|对方账号'      => 'require',//虚拟币钱包地址
+            'money|转账金额'        => 'require|number|between:100,100000',
             'pay_password|支付密码' => 'require',
         ]);//type 1 数字人民币，realname 对方姓名，account 对方账号，money 转账金额，pay_password 支付密码
-/*         if($req['type'] == 2) {
-            return out(null, 10001, '暂不支持本项操作');
-        } */
+        /*         if($req['type'] == 2) {
+                    return out(null, 10001, '暂不支持本项操作');
+                } */
 
         $user = $this->user;
 
-/*         if($req['type'] == 2) {
-            return out(null, 10001, '暂不支持本项操作');
-        } */
+        /*         if($req['type'] == 2) {
+                    return out(null, 10001, '暂不支持本项操作');
+                } */
 
         if (empty($user['ic_number'])) {
             return out(null, 10001, '请先完成实名认证');
@@ -276,27 +283,26 @@ class UserController extends AuthController
         if (!empty($req['pay_password']) && $user['pay_password'] !== sha1(md5($req['pay_password']))) {
             return out(null, 10001, '支付密码错误');
         }
-        if (!in_array($req['type'], [1,2])) {
+        if (!in_array($req['type'], [1, 2])) {
             return out(null, 10001, '不支持该方式');
         }
         if ($user['phone'] == $req['account']) {
             return out(null, 10001, '不能转帐给自己');
         }
-/*         if($req['type'] == 4) {
-            return out(null, 10001, '为了保障您的资金安全，请尽快完成办理项目收益申报，办理完成后请耐心等待开放转账通知！');
-        } */
+        /*         if($req['type'] == 4) {
+                    return out(null, 10001, '为了保障您的资金安全，请尽快完成办理项目收益申报，办理完成后请耐心等待开放转账通知！');
+                } */
 
         Db::startTrans();
         try {
             //topup_balance充值余额 team_bonus_balance
             $user = User::where('id', $user['id'])->lock(true)->find();//转账人
 
-            if(!isset($req['realname'])){
+            if (!isset($req['realname'])) {
                 return out(null, 10001, '请输入对方姓名');
             }
-            $take = User::where('phone',$req['account'])->where('realname',$req['realname'])->lock(true)->find();//收款人
+            $take = User::where('phone', $req['account'])->where('realname', $req['realname'])->lock(true)->find();//收款人
 
-            
 
             if (!$take) {
                 exit_out(null, 10001, '用户不存在');
@@ -304,16 +310,16 @@ class UserController extends AuthController
             if (empty($take['ic_number'])) {
                 exit_out(null, 10001, '请收款用户先完成实名认证');
             }
-            
-            if($req['type'] ==1){
+
+            if ($req['type'] == 1) {
                 $field = 'topup_balance';
                 $fieldText = '可用余额';
-                $logType=1;
-            } elseif($req['type'] ==2){
+                $logType = 1;
+            } elseif ($req['type'] == 2) {
                 $field = 'team_bonus_balance';
                 $fieldText = '可提余额';
                 $logType = 3;
-             } /* elseif($req['type'] ==4){
+            } /* elseif($req['type'] ==4){
                 $field = 'gf_purse';
                 $fieldText = '共富工程钱包余额';
                 $logType = 1;
@@ -329,7 +335,7 @@ class UserController extends AuthController
             }
             //转出金额  扣金额 可用金额 转账金额
             $change_balance = 0 - $req['money'];
-            
+
 
             //2 转账余额（充值金额加他人转账的金额）
             //User::where('id', $user['id'])->inc('balance', $change_balance)->inc($field, $change_balance)->update();
@@ -337,38 +343,38 @@ class UserController extends AuthController
             //User::changeBalance($user['id'], $change_balance, 18, 0, 1,'转账余额转账给'.$take['realname']);
             //增加资金明细
             UserBalanceLog::create([
-                'user_id' => $user['id'],
-                'type' => 18,
-                'log_type' => $logType,
-                'relation_id' => $take['id'],
+                'user_id'        => $user['id'],
+                'type'           => 18,
+                'log_type'       => $logType,
+                'relation_id'    => $take['id'],
                 'before_balance' => $user[$field],
                 'change_balance' => $change_balance,
-                'after_balance' =>  $user[$field]-$req['money'],
-                'remark' => '转账'.$fieldText.'转账给'.$take['realname'],
-                'admin_user_id' => 0,
-                'status' => 2,
+                'after_balance'  => $user[$field] - $req['money'],
+                'remark'         => '转账' . $fieldText . '转账给' . $take['realname'],
+                'admin_user_id'  => 0,
+                'status'         => 2,
             ]);
 
             //收到金额  加金额 转账金额
             //User::where('id', $take['id'])->inc('balance', $req['money'])->inc('topup_balance', $req['money'])->update();
-/*             if(in_array($req['type'],[2,3,4])){
-                $field2 = 'topup_balance';
-            }else if($req['type'] ==1){
-                $field2 = 'digital_yuan_amount';
-            } */
+            /*             if(in_array($req['type'],[2,3,4])){
+                            $field2 = 'topup_balance';
+                        }else if($req['type'] ==1){
+                            $field2 = 'digital_yuan_amount';
+                        } */
             User::where('id', $take['id'])->inc($field, $req['money'])->update();
             //User::changeBalance($take['id'], $req['money'], 18, 0, 1,'接收转账来自'.$user['realname']);
             UserBalanceLog::create([
-                'user_id' => $take['id'],
-                'type' => 19,
-                'log_type' => $logType,
-                'relation_id' => $user['id'],
+                'user_id'        => $take['id'],
+                'type'           => 19,
+                'log_type'       => $logType,
+                'relation_id'    => $user['id'],
                 'before_balance' => $take[$field],
                 'change_balance' => $req['money'],
-                'after_balance' =>  $take[$field]+$req['money'],
-                'remark' => '接收'.$fieldText.'来自'.$user['realname'],
-                'admin_user_id' => 0,
-                'status' => 2,
+                'after_balance'  => $take[$field] + $req['money'],
+                'remark'         => '接收' . $fieldText . '来自' . $user['realname'],
+                'admin_user_id'  => 0,
+                'status'         => 2,
             ]);
             Db::commit();
         } catch (Exception $e) {
@@ -378,15 +384,16 @@ class UserController extends AuthController
         return out();
     }
 
-    
+
     //转账2
-    public function transferAccounts2(){
+    public function transferAccounts2()
+    {
         //return out(null, 10001, '此功能暂时不能使用');
         $req = $this->validate(request(), [
-            'type' => 'require|in:1,2,3',//1推荐给奖励,2 转账余额（充值金额）3 可提现余额
+            'type'                  => 'require|in:1,2,3',//1推荐给奖励,2 转账余额（充值金额）3 可提现余额
             //'realname|对方姓名' => 'require|max:20',
-            'account|对方账号' => 'require',//phone
-            'money|转账金额' => 'require|number|between:100,100000',
+            'account|对方账号'      => 'require',//phone
+            'money|转账金额'        => 'require|number|between:100,100000',
             'pay_password|支付密码' => 'require',
         ]);//type 1 数字人民币，，realname 对方姓名，account 对方账号，money 转账金额，pay_password 支付密码
         $user = $this->user;
@@ -400,10 +407,10 @@ class UserController extends AuthController
         if (!empty($req['pay_password']) && $user['pay_password'] !== sha1(md5($req['pay_password']))) {
             return out(null, 10001, '支付密码错误');
         }
-        if (!in_array($req['type'], [1,2,3])) {
+        if (!in_array($req['type'], [1, 2, 3])) {
             return out(null, 10001, '不支持该支付方式');
         }
-        if ($user['phone'] == $req['account'] && $req['type']==2) {
+        if ($user['phone'] == $req['account'] && $req['type'] == 2) {
             return out(null, 10001, '不能转帐给自己');
         }
 
@@ -420,11 +427,11 @@ class UserController extends AuthController
             if (empty($take['ic_number'])) {
                 exit_out(null, 10002, '请收款用户先完成实名认证');
             }
-            
-            if($req['type'] ==1){
+
+            if ($req['type'] == 1) {
                 $field = 'digital_yuan_amount';
                 $fieldText = '数字人民币';
-                $logType=2;
+                $logType = 2;
             }/* elseif($req['type'] ==2){
                 $field = 'balance';
                 $fieldText = '充值余额';
@@ -441,7 +448,7 @@ class UserController extends AuthController
             }
             //转出金额  扣金额 可用金额 转账金额
             $change_balance = 0 - $req['money'];
-            
+
 
             //2 转账余额（充值金额加他人转账的金额）
             //User::where('id', $user['id'])->inc('balance', $change_balance)->inc($field, $change_balance)->update();
@@ -449,17 +456,17 @@ class UserController extends AuthController
             //User::changeBalance($user['id'], $change_balance, 18, 0, 1,'转账余额转账给'.$take['realname']);
             //增加资金明细
             UserBalanceLog::create([
-                'user_id' => $user['id'],
-                'type' => 18,
-                'log_type' => $logType,
-                'relation_id' => $take['id'],
+                'user_id'        => $user['id'],
+                'type'           => 18,
+                'log_type'       => $logType,
+                'relation_id'    => $take['id'],
                 'before_balance' => $user[$field],
                 'change_balance' => $change_balance,
-                'after_balance' =>  $user[$field]-$req['money'],
-                'remark' => '转账'.$fieldText.'转账给'.$take['realname'],
-                'admin_user_id' => 0,
-                'status' => 2,
-                'project_name' => ''
+                'after_balance'  => $user[$field] - $req['money'],
+                'remark'         => '转账' . $fieldText . '转账给' . $take['realname'],
+                'admin_user_id'  => 0,
+                'status'         => 2,
+                'project_name'   => ''
             ]);
 
             //收到金额  加金额 转账金额
@@ -467,17 +474,17 @@ class UserController extends AuthController
             User::where('id', $take['id'])->inc('balance', $req['money'])->update();
             //User::changeBalance($take['id'], $req['money'], 18, 0, 1,'接收转账来自'.$user['realname']);
             UserBalanceLog::create([
-                'user_id' => $take['id'],
-                'type' => 19,
-                'log_type' => 1,
-                'relation_id' => $user['id'],
+                'user_id'        => $take['id'],
+                'type'           => 19,
+                'log_type'       => 1,
+                'relation_id'    => $user['id'],
                 'before_balance' => $take[$field],
                 'change_balance' => $req['money'],
-                'after_balance' =>  $take[$field]+$req['money'],
-                'remark' => '接收'.$fieldText.'来自'.$user['realname'],
-                'admin_user_id' => 0,
-                'status' => 2,
-                'project_name' => ''
+                'after_balance'  => $take[$field] + $req['money'],
+                'remark'         => '接收' . $fieldText . '来自' . $user['realname'],
+                'admin_user_id'  => 0,
+                'status'         => 2,
+                'project_name'   => ''
             ]);
             Db::commit();
         } catch (Exception $e) {
@@ -495,195 +502,291 @@ class UserController extends AuthController
         ]);
         $user = $this->user;
 
-        $builder = UserBalanceLog::where('user_id', $user['id'])->whereIn('type', [18,19])->order('created_at','desc')
-                    ->paginate(10,false,['query'=>request()->param()]);
-        if($builder){
-            foreach($builder as $k => $v){
+        $builder = UserBalanceLog::where('user_id', $user['id'])->whereIn('type', [18, 19])->order('created_at', 'desc')
+            ->paginate(10, false, ['query' => request()->param()]);
+        if ($builder) {
+            foreach ($builder as $k => $v) {
                 $builder[$k]['phone'] = User::where('id', $v['relation_id'])->value('phone');
-            } 
-        }    
-        
+            }
+        }
+
         return out($builder);
     }
 
- /*    public function submitProfile()
-    {
-        $req = $this->validate(request(), [
-            'realname|真实姓名' => 'require',
-            'ic_number|身份证号' => 'require',
-        ]);
-        $userToken = $this->user;
-        $redis = new \Predis\Client(config('cache.stores.redis'));
-        $ret = $redis->set('profile_'.$userToken['id'],1,'EX',20,'NX');
-        if(!$ret){
-            return out("服务繁忙，请稍后再试");
-        }
+    /*    public function submitProfile()
+       {
+           $req = $this->validate(request(), [
+               'realname|真实姓名' => 'require',
+               'ic_number|身份证号' => 'require',
+           ]);
+           $userToken = $this->user;
+           $redis = new \Predis\Client(config('cache.stores.redis'));
+           $ret = $redis->set('profile_'.$userToken['id'],1,'EX',20,'NX');
+           if(!$ret){
+               return out("服务繁忙，请稍后再试");
+           }
 
-        if(strlen($userToken['phone'])==11){
-            $validate = \think\facade\Validate::rule([
-                    'ic_number'  => 'idCard',
-                ]);
+           if(strlen($userToken['phone'])==11){
+               $validate = \think\facade\Validate::rule([
+                       'ic_number'  => 'idCard',
+                   ]);
 
-                if (!$validate->check($req)) {
-                    //dump($validate->getError());
-                    return out(null, 10001, '身份证号码不正确');
-                }
-        }
-        //\think\facade\Log::debug('submitProfile method start.');
-        //\think\facade\Log::debug('Request validated'.json_encode(['request' => $req,'user_id'=>$userToken['id']],JSON_UNESCAPED_SLASHES));
-        Db::startTrans();
-        try{
-            $user = User::where('id',$userToken['id'])->find();
-            
-            if ($user['ic_number']!='') {
-                return out(null, 10001, '您已经实名认证了');
-            }
-            if($user['realname']!=''){
-                return out(null, 10001, '您已经实名认证了');
-            }
+                   if (!$validate->check($req)) {
+                       //dump($validate->getError());
+                       return out(null, 10001, '身份证号码不正确');
+                   }
+           }
+           //\think\facade\Log::debug('submitProfile method start.');
+           //\think\facade\Log::debug('Request validated'.json_encode(['request' => $req,'user_id'=>$userToken['id']],JSON_UNESCAPED_SLASHES));
+           Db::startTrans();
+           try{
+               $user = User::where('id',$userToken['id'])->find();
 
-            if (User::where('ic_number', $req['ic_number'])->count()) {
-                return out(null, 10001, '该身份证号已经实名过了');
-            }
-            //\think\facade\Log::debug('User not verified.'.json_encode(['user_id' => $user['id'],'realname'=>$user['realname'],'ic_number'=>$user['ic_number']],JSON_UNESCAPED_SLASHES));
-            $req['is_realname']= 1;
-            User::where('id', $user['id'])->update($req);
+               if ($user['ic_number']!='') {
+                   return out(null, 10001, '您已经实名认证了');
+               }
+               if($user['realname']!=''){
+                   return out(null, 10001, '您已经实名认证了');
+               }
 
-            //注册赠送100万数字人民币
-            if($user['is_realname']==0){
-                //User::changeInc($user['id'], 1000000,'income_balance',24,0,4,'实名赠送民生养老金',0,4,'ZS');
-                User::changeInc($user['up_user_id'], 5,'integral',24,0,2,'直推实名赠送普惠信用点',0,4,'ZS');
+               if (User::where('ic_number', $req['ic_number'])->count()) {
+                   return out(null, 10001, '该身份证号已经实名过了');
+               }
+               //\think\facade\Log::debug('User not verified.'.json_encode(['user_id' => $user['id'],'realname'=>$user['realname'],'ic_number'=>$user['ic_number']],JSON_UNESCAPED_SLASHES));
+               $req['is_realname']= 1;
+               User::where('id', $user['id'])->update($req);
 
-                //User::changeInc($user['id'], 3000000,'poverty_subsidy_amount',24,0,5,'注册赠送养老金',0,5,'ZS');
-            }
-            Db::commit();
+               //注册赠送100万数字人民币
+               if($user['is_realname']==0){
+                   //User::changeInc($user['id'], 1000000,'income_balance',24,0,4,'实名赠送民生养老金',0,4,'ZS');
+                   User::changeInc($user['up_user_id'], 5,'integral',24,0,2,'直推实名赠送普惠信用点',0,4,'ZS');
 
-        }catch(\Exception $e){
-            //\think\facade\Log::debug('Error in submitProfile method.'. $e->getMessage());
-            Db::rollback();
-            return out(null,10012,$e->getMessage());
-        } */
-        //\think\facade\Log::debug('submitProfile method completed.');
-        
-        
-        // 给直属上级额外奖励
-/*         if (!empty($user['up_user_id'])) {
-            User::changeBalance($user['up_user_id'], dbconfig('direct_recommend_reward_amount'), 7, $user['id']);
-        } */
+                   //User::changeInc($user['id'], 3000000,'poverty_subsidy_amount',24,0,5,'注册赠送养老金',0,5,'ZS');
+               }
+               Db::commit();
 
-        // // 把注册赠送的股权给用户
-        // EquityYuanRecord::where('user_id', $user['id'])->where('type', 1)->where('status', 1)->where('relation_type', 2)->update(['status' => 2, 'give_time' => time()]);
-        
-        //         // 把注册赠送的数字人民币给用户
-        // EquityYuanRecord::where('user_id', $user['id'])->where('type', 2)->where('status', 1)->where('relation_type', 2)->update(['status' => 2, 'give_time' => time()]);
+           }catch(\Exception $e){
+               //\think\facade\Log::debug('Error in submitProfile method.'. $e->getMessage());
+               Db::rollback();
+               return out(null,10012,$e->getMessage());
+           } */
+    //\think\facade\Log::debug('submitProfile method completed.');
 
-        // // 把注册赠送的贫困补助金给用户
-        // EquityYuanRecord::where('user_id', $user['id'])->where('type', 3)->where('status', 1)->where('relation_type', 2)->update(['status' => 2, 'give_time' => time()]);
 
- /*        return out();
-    } */
+    // 给直属上级额外奖励
+    /*         if (!empty($user['up_user_id'])) {
+                User::changeBalance($user['up_user_id'], dbconfig('direct_recommend_reward_amount'), 7, $user['id']);
+            } */
+
+    // // 把注册赠送的股权给用户
+    // EquityYuanRecord::where('user_id', $user['id'])->where('type', 1)->where('status', 1)->where('relation_type', 2)->update(['status' => 2, 'give_time' => time()]);
+
+    //         // 把注册赠送的数字人民币给用户
+    // EquityYuanRecord::where('user_id', $user['id'])->where('type', 2)->where('status', 1)->where('relation_type', 2)->update(['status' => 2, 'give_time' => time()]);
+
+    // // 把注册赠送的贫困补助金给用户
+    // EquityYuanRecord::where('user_id', $user['id'])->where('type', 3)->where('status', 1)->where('relation_type', 2)->update(['status' => 2, 'give_time' => time()]);
+
+    /*        return out();
+       } */
 
 
     public function submitProfile()
     {
         $req = $this->validate(request(), [
-            'realname|真实姓名' => 'require',
+            'realname|真实姓名'  => 'require',
             'ic_number|身份证号' => 'require|idCard',
-            'img1|身份证正面' => 'require',
-            'img2|身份证反面' => 'require',
-            'img3|身份证反面' => 'require',
         ]);
+
         $userToken = $this->user;
-/*         $redis = new \Predis\Client(config('cache.stores.redis'));
-        $ret = $redis->set('profile_'.$userToken['id'],1,'EX',20,'NX');
-        if(!$ret){
-            return out("服务繁忙，请稍后再试");
-        }
- */
-/*         if(strlen($userToken['phone'])==11){
-            $validate = \think\facade\Validate::rule([
-                    'ic_number'  => 'idCard',
-                ]);
 
-                if (!$validate->check($req)) {
-                    //dump($validate->getError());
-                    return out(null, 10001, '身份证号码不正确');
-                }
-        } */
-        //\think\facade\Log::debug('submitProfile method start.');
-        //\think\facade\Log::debug('Request validated'.json_encode(['request' => $req,'user_id'=>$userToken['id']],JSON_UNESCAPED_SLASHES));
+        // 检查用户是否已经实名认证
+//        if (!empty($userToken['ic_number']) || !empty($userToken['realname'])) {
+//            return out(null, 10001, '您已经实名认证了');
+//        }
+//
+//        // 检查身份证号是否已被使用
+//        if (User::where('ic_number', $req['ic_number'])->count()) {
+//            return out(null, 10001, '该身份证号已经实名过了');
+//        }
+
         Db::startTrans();
-        try{
-            $user = User::where('id',$userToken['id'])->find();
-            
-            if ($user['ic_number']!='') {
-                return out(null, 10001, '您已经实名认证了');
-            }
-            if($user['realname']!=''){
-                return out(null, 10001, '您已经实名认证了');
+        try {
+            // 调用阿里云二要素验证接口
+            $verifyResult = $this->id2MetaVerify($req['realname'], $req['ic_number']);
+
+            if (!$verifyResult['success']) {
+                return out(null, 10002, '实名认证失败');
             }
 
-            if (User::where('ic_number', $req['ic_number'])->count()) {
-                return out(null, 10001, '该身份证号已经实名过了');
-            }
-            //\think\facade\Log::debug('User not verified.'.json_encode(['user_id' => $user['id'],'realname'=>$user['realname'],'ic_number'=>$user['ic_number']],JSON_UNESCAPED_SLASHES));
-            //$req['is_realname']= 1;
-            //User::where('id', $user['id'])->update($req);
-            $realname = Realname::where('user_id',$user['id'])->find();
-            $data = [
-                'realname' => $req['realname'],
-                'ic_number' => $req['ic_number'],
-                'img1' => $req['img1'],
-                'img2' => $req['img2'],
-                'img3' => isset($req['img3']) ? $req['img3'] : '',
-                'phone' => $user['phone'],
-                'user_id'=>$user['id'],
-                'status'=>0,
+            // 验证通过，直接更新用户实名信息
+            $updateData = [
+                'realname'    => $req['realname'],
+                'ic_number'   => $req['ic_number'],
+                'is_realname' => 1
             ];
-            if(!$realname){
-                Realname::insert($data);
-            }else{
-                Realname::where('user_id',$user['id'])->update($data);
+
+            User::where('id', $userToken['id'])->update($updateData);
+
+            // 实名认证通过后的奖励逻辑
+            if (!empty($userToken['up_user_id'])) {
+                // 给上级用户赠送积分
+                User::changeInc($userToken['up_user_id'], 5, 'integral', 24, $userToken['id'], 2, '直推实名赠送积分', 0, 4, 'ZS');
+
+                // 给当前用户赠送体验金
+                User::changeInc($userToken['id'], 10, 'topup_balance', 24, $userToken['id'], 1, '帮扶计划体验金', 0, 4, 'ZS');
             }
 
-            //注册赠送100万数字人民币
-/*             if($user['is_realname']==0){
-                //User::changeInc($user['id'], 1000000,'income_balance',24,0,4,'实名赠送民生养老金',0,4,'ZS');
-                User::changeInc($user['up_user_id'], 5,'integral',24,0,2,'直推实名赠送普惠信用点',0,4,'ZS');
+            // 更新团队实名人数统计
+            $userPathModel = new UserPath();
+            $parentPath = $userPathModel->where('user_id', $userToken['id'])->value('path');
+            if ($parentPath) {
+                $userPathModel->updateCount($parentPath, 'team_real_count');
+            }
 
-                //User::changeInc($user['id'], 3000000,'poverty_subsidy_amount',24,0,5,'注册赠送养老金',0,5,'ZS');
-            } */
             Db::commit();
 
-        }catch(\Exception $e){
-            //\think\facade\Log::debug('Error in submitProfile method.'. $e->getMessage());
+        } catch (\Exception $e) {
             Db::rollback();
-            return out(null,10012,$e->getMessage());
-        } 
-        //\think\facade\Log::debug('submitProfile method completed.');
-        
-        
-        // 给直属上级额外奖励
-/*         if (!empty($user['up_user_id'])) {
-            User::changeBalance($user['up_user_id'], dbconfig('direct_recommend_reward_amount'), 7, $user['id']);
-        } */
+            // 记录详细的错误日志
+            Log::error('实名认证失败 - 系统异常: ' . $e->getMessage(), [
+                'user_id'   => $userToken['id'],
+                'realname'  => $req['realname'],
+                'ic_number' => substr($req['ic_number'], 0, 6) . '****' . substr($req['ic_number'], -4),
+                'trace'     => $e->getTraceAsString()
+            ]);
+            return out(null, 10012, '实名认证失败');
+        }
 
-        // // 把注册赠送的股权给用户
-        // EquityYuanRecord::where('user_id', $user['id'])->where('type', 1)->where('status', 1)->where('relation_type', 2)->update(['status' => 2, 'give_time' => time()]);
-        
-        //         // 把注册赠送的数字人民币给用户
-        // EquityYuanRecord::where('user_id', $user['id'])->where('type', 2)->where('status', 1)->where('relation_type', 2)->update(['status' => 2, 'give_time' => time()]);
+        return out(['message' => '实名认证成功']);
+    }
 
-        // // 把注册赠送的贫困补助金给用户
-        // EquityYuanRecord::where('user_id', $user['id'])->where('type', 3)->where('status', 1)->where('relation_type', 2)->update(['status' => 2, 'give_time' => time()]);
+    /**
+     * 身份二要素核验API
+     */
+    private function id2MetaVerify($realname, $icNumber)
+    {
+        try {
+            $accessKeyId = config('aliyun.access_key_id');
+            $accessKeySecret = config('aliyun.access_key_secret');
+            $regionId = config('aliyun.region_id', 'cn-shanghai');
+            $endpoint = config('aliyun.endpoint');
 
-        return out();
-    } 
-    
+            // 检查阿里云配置
+            if (empty($accessKeyId) || empty($accessKeySecret)) {
+                Log::error('实名认证失败 - 阿里云配置缺失', [
+                    'realname'  => $realname,
+                    'ic_number' => substr($icNumber, 0, 6) . '****' . substr($icNumber, -4),
+                    'config'    => [
+                        'access_key_id'     => !empty($accessKeyId),
+                        'access_key_secret' => !empty($accessKeySecret)
+                    ]
+                ]);
+                return [
+                    'success' => false,
+                    'message' => '实名认证服务配置错误'
+                ];
+            }
+
+            // 创建配置对象 - 修正这里
+            $config = new Config([
+                'accessKeyId'     => $accessKeyId,
+                'accessKeySecret' => $accessKeySecret,
+                'regionId'        => $regionId,
+//                'endpoint'           => 'cloudauth.' . $regionId . '.aliyuncs.com',
+                'endpoint'        => $endpoint,
+//                'signatureVersion'   => 'v3',
+//                'signatureAlgorithm' => 'ACS3-HMAC-SHA256',
+            ]);
+
+            // 初始化客户端
+            $client = new Cloudauth($config);
+
+
+            // 创建请求对象
+            $id2MetaVerifyRequest = new Id2MetaVerifyRequest([
+                'paramType'   => 'normal', // 加密方式: normal-明文, md5-MD5加密
+                'identifyNum' => $icNumber, // 身份证号
+                'userName'    => $realname, // 姓名
+            ]);
+
+            $runtime = new RuntimeOptions([]);
+
+            // 发送请求
+            $response = $client->id2MetaVerifyWithOptions($id2MetaVerifyRequest, $runtime);
+
+            // 处理响应
+            if ($response->statusCode === 200) {
+                $body = $response->body;
+                if ($body->code === "200") {
+                    // 业务核验结果: 1-校验一致, 2-校验不一致
+                    if (isset($body->resultObject->bizCode) && $body->resultObject->bizCode == 1) {
+                        Log::info('实名认证成功', [
+                            'realname'   => $realname,
+                            'ic_number'  => substr($icNumber, 0, 6) . '****' . substr($icNumber, -4),
+                            'request_id' => $body->requestId,
+                            'biz_code'   => $body->resultObject->bizCode
+                        ]);
+                        return [
+                            'success' => true,
+                            'message' => '验证成功'
+                        ];
+                    } else {
+                        Log::warning('实名认证失败 - 姓名与身份证号不匹配', [
+                            'realname'   => $realname,
+                            'ic_number'  => substr($icNumber, 0, 6) . '****' . substr($icNumber, -4),
+                            'request_id' => $body->requestId,
+                            'biz_code'   => $body->resultObject->bizCode ?? 2
+                        ]);
+                        return [
+                            'success' => false,
+                            'message' => '姓名与身份证号不匹配'
+                        ];
+                    }
+                } else {
+                    Log::error('实名认证失败 - 阿里云API返回错误', [
+                        'realname'   => $realname,
+                        'ic_number'  => substr($icNumber, 0, 6) . '****' . substr($icNumber, -4),
+                        'code'       => $body->code,
+                        'message'    => $body->message ?? '未知错误',
+                        'request_id' => $body->requestId ?? ''
+                    ]);
+                    return [
+                        'success' => false,
+                        'message' => '实名认证服务异常'
+                    ];
+                }
+            } else {
+                Log::error('实名认证失败 - HTTP错误', [
+                    'realname'    => $realname,
+                    'ic_number'   => substr($icNumber, 0, 6) . '****' . substr($icNumber, -4),
+                    'status_code' => $response->statusCode
+                ]);
+                return [
+                    'success' => false,
+                    'message' => '实名认证服务异常'
+                ];
+            }
+
+        } catch (\Exception $e) {
+            // 记录详细的异常信息
+            Log::error('实名认证失败 - 异常详情: ' . $e->getMessage(), [
+                'realname'  => $realname,
+                'ic_number' => substr($icNumber, 0, 6) . '****' . substr($icNumber, -4),
+                'exception' => get_class($e),
+                'trace'     => $e->getTraceAsString()
+            ]);
+            return [
+                'success' => false,
+                'message' => '实名认证服务异常'
+            ];
+        }
+    }
+
     public function changePassword()
     {
         $req = $this->validate(request(), [
-            'type' => 'require|in:1,2',
+            'type'                => 'require|in:1,2',
             'new_password|新密码' => 'require|alphaNum|length:6,12',
             'old_password|原密码' => 'requireIf:type,1',
         ]);
@@ -707,25 +810,26 @@ class UserController extends AuthController
         return out();
     }
 
-/*     public function userBalanceLog()
-    {
-        $req = $this->validate(request(), [
-            'log_type' => 'require|in:1,2,3,4',
-            'type' => 'number',
-        ]);
-        $user = $this->user;
+    /*     public function userBalanceLog()
+        {
+            $req = $this->validate(request(), [
+                'log_type' => 'require|in:1,2,3,4',
+                'type' => 'number',
+            ]);
+            $user = $this->user;
 
-        $builder = UserBalanceLog::where('user_id', $user['id'])->where('log_type', $req['log_type']);
-        if (!empty($req['type'])) {
-            $builder->where('type', $req['type']);
+            $builder = UserBalanceLog::where('user_id', $user['id'])->where('log_type', $req['log_type']);
+            if (!empty($req['type'])) {
+                $builder->where('type', $req['type']);
+            }
+            $data = $builder->order('id', 'desc')->paginate();
+
+            return out($data);
         }
-        $data = $builder->order('id', 'desc')->paginate();
+     */
 
-        return out($data);
-    }
- */
-
-    public function team(){
+    public function team()
+    {
         $user = $this->user;
         $data['total_num'] = UserRelation::where('user_id', $user['id'])->count();
         $data['total_receive_num'] = UserRelation::where('user_id', $user['id'])->where('is_active', 1)->count();
@@ -733,41 +837,42 @@ class UserController extends AuthController
         return out($data);
     }
 
-    public function inviteBonus(){
+    public function inviteBonus()
+    {
         $user = $this->user;
-        $invite_bonus = UserBalanceLog::alias('l')->join('mp_order o','l.relation_id=o.id')
-                                                ->field('l.created_at,l.type,l.remark,change_balance,single_amount,buy_num,project_name,o.user_id')
-                                                ->where('l.type',9)
-                                                ->where('l.user_id',$user['id'])
-                                                ->order('l.created_at','desc')
-                                                ->limit(10)
-                                                //->fetchSql(true)
-                                                ->paginate();
-                                                
-                                                
+        $invite_bonus = UserBalanceLog::alias('l')->join('mp_order o', 'l.relation_id=o.id')
+            ->field('l.created_at,l.type,l.remark,change_balance,single_amount,buy_num,project_name,o.user_id')
+            ->where('l.type', 9)
+            ->where('l.user_id', $user['id'])
+            ->order('l.created_at', 'desc')
+            ->limit(10)
+            //->fetchSql(true)
+            ->paginate();
+
+
         //echo $invite_bonus;
         //exit;
-        foreach($invite_bonus as $key=>$item){
-        
-            $orderPrice = bcmul($item['single_amount'],$item['buy_num'],2);
+        foreach ($invite_bonus as $key => $item) {
+
+            $orderPrice = bcmul($item['single_amount'], $item['buy_num'], 2);
             $realname = User::where($item['user_id'])->value('realname');
             $invite_bonus[$key]['realname'] = $realname;
-            $level = UserRelation::where('user_id',$user['id'])->where('sub_user_id',$item['user_id'])->value('level');
+            $level = UserRelation::where('user_id', $user['id'])->where('sub_user_id', $item['user_id'])->value('level');
             $levelText = [
-                '1'=>"一级",
-                '2'=>'二级',
-                '3'=>'三级',
+                '1' => "一级",
+                '2' => '二级',
+                '3' => '三级',
             ];
-            if($item['type'] == 8){
+            if ($item['type'] == 8) {
                 $remark = $item['remark'];
-            }elseif($item['type'] == 9){
+            } elseif ($item['type'] == 9) {
                 $remark = $item['remark'];
-            }else{
+            } else {
                 $remark = '奖励';
             }
             $invite_bonus[$key]['text'] = "推荐{$levelText[$level]}用户 $realname 投资 $orderPrice ,{$remark} {$item['change_balance']} ";
 
-        }                                     
+        }
         $data['list'] = $invite_bonus;
         return out($data);
     }
@@ -781,28 +886,28 @@ class UserController extends AuthController
 
         $total_num = UserRelation::where('user_id', $user['id'])->where('level', $req['level'])->count();
         $active_num = UserRelation::where('user_id', $user['id'])->where('level', $req['level'])->where('is_active', 1)->count();
-        $realname_num = UserRelation::alias('r')->join('mp_user u','r.sub_user_id = u.id')->where('user_id',$user['id'])->where('r.level', $req['level'])->where('u.realname','<>','')->count();
+        $realname_num = UserRelation::alias('r')->join('mp_user u', 'r.sub_user_id = u.id')->where('user_id', $user['id'])->where('r.level', $req['level'])->where('u.realname', '<>', '')->count();
 
 
         $list = UserRelation::where('user_id', $user['id'])->where('level', $req['level'])->field('sub_user_id')->paginate(100);
-        if($list){
-            foreach ($list as $k =>$v){
+        if ($list) {
+            foreach ($list as $k => $v) {
                 $user = User::field('id,avatar,phone,realname,invite_bonus,invest_amount,equity_amount,level,is_active,created_at')->where('id', $v['sub_user_id'])->find();
-                $user['phone']= substr_replace($user['phone'],'****', 3, 4);
-                if($user['realname']!=''){
-                    $user['realname']= mb_substr($user['realname'],0,1)."*".mb_substr($user['realname'],2);
+                $user['phone'] = substr_replace($user['phone'], '****', 3, 4);
+                if ($user['realname'] != '') {
+                    $user['realname'] = mb_substr($user['realname'], 0, 1) . "*" . mb_substr($user['realname'], 2);
                 }
                 $list[$k] = $user;
-            }  
+            }
         }
-        
+
         // $list = User::field('id,avatar,phone,invest_amount,equity_amount,level,is_active,created_at')->whereIn('id', $sub_user_ids)->order('equity_amount', 'desc')->paginate();
 
         return out([
-            'total_num' => $total_num,
-            'receive_num'=> $active_num,
-            'realname_num'=> $realname_num,
-            'list' => $list,
+            'total_num'    => $total_num,
+            'receive_num'  => $active_num,
+            'realname_num' => $realname_num,
+            'list'         => $list,
         ]);
     }
 
@@ -814,139 +919,139 @@ class UserController extends AuthController
         ]);
         $user = $this->user;
         $userModel = new User();
-        $toupTotal = $userModel->getTotalTopupAmountAttr(0,$user);
+        $toupTotal = $userModel->getTotalTopupAmountAttr(0, $user);
         $data = [];
-/*         foreach (config('map.payment_config.channel_map') as $k => $v) {
-            //$paymentConfig = PaymentConfig::where('type', $req['type'])->where('status', 1)->where('channel', $k)->where('start_topup_limit', '<=', $user['total_payment_amount'])->order('start_topup_limit', 'desc')->find();
-            $paymentConfig = PaymentConfig::where('status', 1)->where('channel', $k)->where('start_topup_limit', '<=', $toupTotal)->order('start_topup_limit', 'desc')->find();
-            if (!empty($paymentConfig)) {
-                //$confs = PaymentConfig::where('type', $req['type'])->where('status', 1)->where('channel', $k)->where('start_topup_limit', $paymentConfig['start_topup_limit'])->select()->toArray();
-                $confs = PaymentConfig::where('status', 1)->where('channel', $k)->where('start_topup_limit', $paymentConfig['start_topup_limit'])->select()->toArray();
-                $data = array_merge($data, $confs);
-            }
-        } */
-        $data = PaymentConfig::Where('status',1)->where('start_topup_limit', '<=', $toupTotal)->order('sort desc')->select();
-        $img =[1=>'wechat.png',2=>'alipay.png',3=>'unionpay.png',4=>'unionpay.png',5=>'unionpay.png',6=>'unionpay.png',7=>'unionpay.png',8=>'unionpay.png',];
-        foreach($data as &$item){
-            $item['img'] = env('app.img_host').'/storage/pay_img/'.$img[$item['type']];
-            if($item['type']==4){
+        /*         foreach (config('map.payment_config.channel_map') as $k => $v) {
+                    //$paymentConfig = PaymentConfig::where('type', $req['type'])->where('status', 1)->where('channel', $k)->where('start_topup_limit', '<=', $user['total_payment_amount'])->order('start_topup_limit', 'desc')->find();
+                    $paymentConfig = PaymentConfig::where('status', 1)->where('channel', $k)->where('start_topup_limit', '<=', $toupTotal)->order('start_topup_limit', 'desc')->find();
+                    if (!empty($paymentConfig)) {
+                        //$confs = PaymentConfig::where('type', $req['type'])->where('status', 1)->where('channel', $k)->where('start_topup_limit', $paymentConfig['start_topup_limit'])->select()->toArray();
+                        $confs = PaymentConfig::where('status', 1)->where('channel', $k)->where('start_topup_limit', $paymentConfig['start_topup_limit'])->select()->toArray();
+                        $data = array_merge($data, $confs);
+                    }
+                } */
+        $data = PaymentConfig::Where('status', 1)->where('start_topup_limit', '<=', $toupTotal)->order('sort desc')->select();
+        $img = [1 => 'wechat.png', 2 => 'alipay.png', 3 => 'unionpay.png', 4 => 'unionpay.png', 5 => 'unionpay.png', 6 => 'unionpay.png', 7 => 'unionpay.png', 8 => 'unionpay.png',];
+        foreach ($data as &$item) {
+            $item['img'] = env('app.img_host') . '/storage/pay_img/' . $img[$item['type']];
+            if ($item['type'] == 4) {
                 $item['type'] = 6;
-            }else{
-                $item['type'] = $item['type']+1;
+            } else {
+                $item['type'] = $item['type'] + 1;
             }
-           
+
         }
 
         return out($data);
     }
 
-    public function payList(){
+    public function payList()
+    {
 
     }
+
     public function klineTotal()
     {
-        $k = KlineChartNew::where('date',date("Y-m-d",strtotime("-1 day")))->field('price25')->order('id desc')->find();
+        $k = KlineChartNew::where('date', date("Y-m-d", strtotime("-1 day")))->field('price25')->order('id desc')->find();
         $data['klineTotal'] = $k['price25'];
         return out($data);
     }
-    
+
     public function balanceLog()
     {
         $user = $this->user;
         $req = $this->validate(request(), [
-            'type' => 'require|number',
+            'type'     => 'require|number',
             'log_type' => 'require|number|in:0,1,2,3,4,5,6,7,8,9,10,11,12,13,14',
         ]);
         $map = config('map.user_balance_log')['type_map'];
-        $log_type = [1,2,3,4,5,6,7,8,9,10,11,12,13,14];
-        if(($req['log_type'] == '' || $req['log_type']==0)){
-            $log_type = [1,2,3,4,5,6,7,8,9,10,11,12,13,14];
-        }else{
+        $log_type = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
+        if (($req['log_type'] == '' || $req['log_type'] == 0)) {
+            $log_type = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
+        } else {
             $log_type = [$req['log_type']];
         }
 
 
- 
-        if($req['type']==3){
-            $log_type = [1,3];
+        if ($req['type'] == 3) {
+            $log_type = [1, 3];
         }
 
         $query = UserBalanceLog::where('user_id', $user['id'])
-        ->whereIn('log_type', $log_type);
+            ->whereIn('log_type', $log_type);
 
-        if($req['type']!=0){
+        if ($req['type'] != 0) {
             $query->where('type', $req['type']);
         }
 
 
         $list = $query->order('id', 'desc')
-        ->paginate(10)
-        ->each(function ($item, $key) use ($map) {
-            $typeText = $map[$item['type']];
-            if($item['remark']) {
-                $item['type_text'] = $item['remark'];
-            } else {
-                $item['type_text'] = $typeText;
-            }
-            
-/*             if ($item['type'] == 6) {
-                $projectName = Order::where('id', $item['relation_id'])->value('project_name');
-                $item['type_text'] = $projectName.'分配额度';
-            } */
+            ->paginate(10)
+            ->each(function ($item, $key) use ($map) {
+                $typeText = $map[$item['type']];
+                if ($item['remark']) {
+                    $item['type_text'] = $item['remark'];
+                } else {
+                    $item['type_text'] = $typeText;
+                }
 
-            return $item;
-        });
+                /*             if ($item['type'] == 6) {
+                                $projectName = Order::where('id', $item['relation_id'])->value('project_name');
+                                $item['type_text'] = $projectName.'分配额度';
+                            } */
+
+                return $item;
+            });
 
         $temp = $list->toArray();
         $data = [
             'current_page' => $temp['current_page'],
-            'last_page' => $temp['last_page'],
-            'total' => $temp['total'],
-            'per_page' => $temp['per_page'],
+            'last_page'    => $temp['last_page'],
+            'total'        => $temp['total'],
+            'per_page'     => $temp['per_page'],
         ];
         $datas = [];
         $sort_key = [];
-        foreach($list as $v)
-        {
+        foreach ($list as $v) {
             $in = [
-                'id'=>$v['id'],
-                'after_balance' => $v['after_balance'],
+                'id'             => $v['id'],
+                'after_balance'  => $v['after_balance'],
                 'before_balance' => $v['before_balance'],
                 'change_balance' => $v['change_balance'],
-                'order_sn'=>$v['order_sn'],
-                'type' => $v['type'],
-                'status' => $v['status'],
-                'type_text' => $v['type_text'],
-                'created_at' => $v['created_at'],
+                'order_sn'       => $v['order_sn'],
+                'type'           => $v['type'],
+                'status'         => $v['status'],
+                'type_text'      => $v['type_text'],
+                'created_at'     => $v['created_at'],
             ];
             //array_push($sort_key,$v['created_at']);
-            array_push($datas,$in);
+            array_push($datas, $in);
         }
-/*         if($log_type == 1)
-        {
-            $builder = Capital::where('user_id', $user['id'])->order('id', 'desc');
-            $builder->where('type', 1)->where('status',1);
-            $list= $builder->append(['audit_date'])->paginate(10);
-            foreach($list as $v)
-            {
-                $in = [
-                    'after_balance' => $user['balance'],
-                    'before_balance' => $user['balance'],
-                    'type' => 1,
-                    'change_balance' => $v['amount'],
-                    'status' => $v['status'],
-                    'type_text' => "充值",
-                    'created_at' => $v['created_at'],
-                ];
-                array_push($sort_key,$v['created_at']);
-                array_push($datas,$in);
-            }
-        }
+        /*         if($log_type == 1)
+                {
+                    $builder = Capital::where('user_id', $user['id'])->order('id', 'desc');
+                    $builder->where('type', 1)->where('status',1);
+                    $list= $builder->append(['audit_date'])->paginate(10);
+                    foreach($list as $v)
+                    {
+                        $in = [
+                            'after_balance' => $user['balance'],
+                            'before_balance' => $user['balance'],
+                            'type' => 1,
+                            'change_balance' => $v['amount'],
+                            'status' => $v['status'],
+                            'type_text' => "充值",
+                            'created_at' => $v['created_at'],
+                        ];
+                        array_push($sort_key,$v['created_at']);
+                        array_push($datas,$in);
+                    }
+                }
 
-        array_multisort($sort_key,SORT_DESC,$datas); */
+                array_multisort($sort_key,SORT_DESC,$datas); */
         $data['data'] = $datas;
         return out($data);
-       
+
     }
 
     public function balanceLogPurse()
@@ -954,169 +1059,176 @@ class UserController extends AuthController
         $user = $this->user;
         $map = config('map.user_balance_log')['type_map'];
         $list = UserBalanceLog::where('user_id', $user['id'])
-        ->whereIn('log_type', [9])
-        ->order('id', 'desc')
-        ->paginate(10)
-        ->each(function ($item, $key) use ($map) {
-            $typeText = $map[$item['type']];
-            if($item['remark']) {
-                $item['type_text'] = $item['remark'];
-            } else {
-                $item['type_text'] = $typeText;
-            }
-            
-            if ($item['type'] == 6) {
-                $projectName = Order::where('id', $item['relation_id'])->value('project_name');
-                $item['type_text'] = $projectName.'分配额度';
-            }
+            ->whereIn('log_type', [9])
+            ->order('id', 'desc')
+            ->paginate(10)
+            ->each(function ($item, $key) use ($map) {
+                $typeText = $map[$item['type']];
+                if ($item['remark']) {
+                    $item['type_text'] = $item['remark'];
+                } else {
+                    $item['type_text'] = $typeText;
+                }
 
-            return $item;
-        });
+                if ($item['type'] == 6) {
+                    $projectName = Order::where('id', $item['relation_id'])->value('project_name');
+                    $item['type_text'] = $projectName . '分配额度';
+                }
+
+                return $item;
+            });
 
         $temp = $list->toArray();
         $data = [
             'current_page' => $temp['current_page'],
-            'last_page' => $temp['last_page'],
-            'total' => $temp['total'],
-            'per_page' => $temp['per_page'],
+            'last_page'    => $temp['last_page'],
+            'total'        => $temp['total'],
+            'per_page'     => $temp['per_page'],
         ];
         $datas = [];
         $sort_key = [];
-        foreach($list as $v)
-        {
+        foreach ($list as $v) {
             $in = [
-                'id'=>$v['id'],
-                'after_balance' => $v['after_balance'],
+                'id'             => $v['id'],
+                'after_balance'  => $v['after_balance'],
                 'before_balance' => $v['before_balance'],
                 'change_balance' => $v['change_balance'],
-                'order_sn'=>$v['order_sn'],
-                'type' => $v['type'],
-                'status' => $v['status'],
-                'type_text' => $v['type_text'],
-                'created_at' => $v['created_at'],
+                'order_sn'       => $v['order_sn'],
+                'type'           => $v['type'],
+                'status'         => $v['status'],
+                'type_text'      => $v['type_text'],
+                'created_at'     => $v['created_at'],
             ];
-            array_push($datas,$in);
+            array_push($datas, $in);
         }
         $data['data'] = $datas;
         return out($data);
-       
+
     }
 
-    public function certificateList(){
+    public function certificateList()
+    {
         $user = $this->user;
-        $list = Certificate::where('user_id',$user['id'])->order('id','desc')->select();
-        foreach($list as $k=>&$v){
-           $v['format_time']=Certificate::getFormatTime($v['created_at']);
+        $list = Certificate::where('user_id', $user['id'])->order('id', 'desc')->select();
+        foreach ($list as $k => &$v) {
+            $v['format_time'] = Certificate::getFormatTime($v['created_at']);
         }
         return out($list);
     }
 
-    public function certificate(){
+    public function certificate()
+    {
         $req = $this->validate(request(), [
-            'id|id' => 'integer',
+            'id|id'                 => 'integer',
             'project_group_id|组ID' => 'integer',
         ]);
-        if(!isset($req['id']) && !isset($req['project_group_id'])){
+        if (!isset($req['id']) && !isset($req['project_group_id'])) {
             return out('参数错误');
         }
-        $query = Certificate::order('id','desc');
-        if(isset($req['id'])){
-            $query->where('id',$req['id']);
-        }else if(isset($req['project_group_id'])){
-            $query->where('project_group_id',$req['project_group_id']);
+        $query = Certificate::order('id', 'desc');
+        if (isset($req['id'])) {
+            $query->where('id', $req['id']);
+        } else if (isset($req['project_group_id'])) {
+            $query->where('project_group_id', $req['project_group_id']);
         }
         $certificate = $query->find();
-        if(!$certificate){
-            return out([],10001,'证书不存在');
+        if (!$certificate) {
+            return out([], 10001, '证书不存在');
         }
-        $certificate['format_time']=Certificate::getFormatTime($certificate['created_at']);
+        $certificate['format_time'] = Certificate::getFormatTime($certificate['created_at']);
         return out($certificate);
     }
 
-    public function saveUserInfo(){
+    public function saveUserInfo()
+    {
         $user = $this->user;
         $req = $this->validate(request(), [
-            'qq|QQ' => 'min:5',
-            'address|地址' => 'min:4',
+            'qq|QQ'                => 'min:5',
+            'address|地址'         => 'min:4',
             'now_address|现住地址' => 'max:255',
         ]);
-        if((!isset($req['qq']) || trim($req['qq'])=='') && (!isset($req['address']) || trim($req['address'])=='') && (!isset($req['now_address']) || trim($req['now_address'])=='')){
-            return out(null,10010,'请填写对应字段');
+        if ((!isset($req['qq']) || trim($req['qq']) == '') && (!isset($req['address']) || trim($req['address']) == '') && (!isset($req['now_address']) || trim($req['now_address']) == '')) {
+            return out(null, 10010, '请填写对应字段');
         }
-        if(isset($req['address']) && $req['address']!=''){
-            UserDelivery::updateAddress($user,['address'=>$req['address']]);
-        }
-
-        if(isset($req['qq']) && $req['qq']!=''){
-            User::where('id',$user['id'])->update(['qq'=>$req['qq']]);
+        if (isset($req['address']) && $req['address'] != '') {
+            UserDelivery::updateAddress($user, ['address' => $req['address']]);
         }
 
-        if(isset($req['now_address']) && $req['now_address']!=''){
-            User::where('id',$user['id'])->update(['now_address'=>$req['now_address']]);
+        if (isset($req['qq']) && $req['qq'] != '') {
+            User::where('id', $user['id'])->update(['qq' => $req['qq']]);
+        }
+
+        if (isset($req['now_address']) && $req['now_address'] != '') {
+            User::where('id', $user['id'])->update(['now_address' => $req['now_address']]);
         }
         return out();
 
     }
 
-    public function avatar(){
+    public function avatar()
+    {
         $user = $this->user;
         $req = $this->validate(request(), [
             'avatar|头像' => 'require',
         ]);
-        User::where('id',$user['id'])->update(['avatar'=>$req['avatar']]);
+        User::where('id', $user['id'])->update(['avatar' => $req['avatar']]);
         return out();
     }
 
-    public function upToken(){
+    public function upToken()
+    {
         $conf = config('filesystem.disks.qiniu');
         $auth = new \Qiniu\Auth($conf['accessKey'], $conf['secretKey']);
         $upToken = $auth->uploadToken($conf['bucket']);
-        return out(['upToken'=>$upToken,'domain'=>$conf['domain'],'region'=>$conf['region']]);
+        return out(['upToken' => $upToken, 'domain' => $conf['domain'], 'region' => $conf['region']]);
     }
 
-    public function realnameDetail(){
+    public function realnameDetail()
+    {
         $user = $this->user;
-        $realname = Realname::where('user_id',$user['id'])->find();
+        $realname = Realname::where('user_id', $user['id'])->find();
         return out($realname);
     }
 
-    public function mettingImg(){
+    public function mettingImg()
+    {
         //return out(null,10001,'暂未开启');
         $req = $this->validate(request(), [
             'metting_img|会议凭证' => 'require',
         ]);
-        $date = date('Y-m-d',time());
-        $metting = MettingLog::where('user_id',$this->user['id'])->where('date',$date)->find();
-        if($metting){
-            return out(null,10001,'今日凭证已上传');
+        $date = date('Y-m-d', time());
+        $metting = MettingLog::where('user_id', $this->user['id'])->where('date', $date)->find();
+        if ($metting) {
+            return out(null, 10001, '今日凭证已上传');
         }
         $user = $this->user;
-        $endTime = time()+10*60;
+        $endTime = time() + 10 * 60;
         $data = [
             'metting_img' => $req['metting_img'],
-            'user_id' => $user['id'],
-            'date' => $date,
-            'end_time' => $endTime,
+            'user_id'     => $user['id'],
+            'date'        => $date,
+            'end_time'    => $endTime,
         ];
         MettingLog::create($data);
         return out();
     }
 
-    public function isMettingImg(){
-        $date = date('Y-m-d',time());
+    public function isMettingImg()
+    {
+        $date = date('Y-m-d', time());
 
-        $metting = MettingLog::where('user_id',$this->user['id'])->where('date',$date)->find();
+        $metting = MettingLog::where('user_id', $this->user['id'])->where('date', $date)->find();
         $data = [
-            'is_metting' => 0,
+            'is_metting'  => 0,
             'metting_img' => '',
         ];
-        if($metting){
+        if ($metting) {
             $data['is_metting'] = 1;
             $data['metting_img'] = $metting['metting_img'];
         }
-        return out($data); 
-        
+        return out($data);
+
     }
 
-    
+
 }
