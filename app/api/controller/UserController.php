@@ -27,6 +27,7 @@ use Endroid\QrCode\Writer\PngWriter;
 use Exception;
 use think\facade\App;
 use think\facade\Db;
+use think\facade\Log;
 
 class UserController extends AuthController
 {
@@ -599,7 +600,7 @@ class UserController extends AuthController
 
         $userToken = $this->user;
 
-//        // 检查用户是否已经实名认证
+        // 检查用户是否已经实名认证
 //        if (!empty($userToken['ic_number']) || !empty($userToken['realname'])) {
 //            return out(null, 10001, '您已经实名认证了');
 //        }
@@ -615,7 +616,7 @@ class UserController extends AuthController
             $verifyResult = $this->id2MetaVerify($req['realname'], $req['ic_number']);
 
             if (!$verifyResult['success']) {
-                return out(null, 10002, $verifyResult['message'] ?? '实名认证失败');
+                return out(null, 10002, '实名认证失败');
             }
 
             // 验证通过，直接更新用户实名信息
@@ -647,14 +648,21 @@ class UserController extends AuthController
 
         } catch (\Exception $e) {
             Db::rollback();
-            return out(null, 10012, '实名认证失败：' . $e->getMessage());
+            // 记录详细的错误日志
+            Log::error('实名认证失败 - 系统异常: ' . $e->getMessage(), [
+                'user_id'   => $userToken['id'],
+                'realname'  => $req['realname'],
+                'ic_number' => substr($req['ic_number'], 0, 6) . '****' . substr($req['ic_number'], -4),
+                'trace'     => $e->getTraceAsString()
+            ]);
+            return out(null, 10012, '实名认证失败');
         }
 
         return out(['message' => '实名认证成功']);
     }
 
     /**
-     * 身份二要素核验API - 带路由容灾
+     * 身份二要素核验API
      */
     private function id2MetaVerify($realname, $icNumber)
     {
@@ -664,9 +672,20 @@ class UserController extends AuthController
             $regionId = config('aliyun.region_id', 'cn-shanghai');
             $endpoint = config('aliyun.endpoint');
 
+            // 检查阿里云配置
             if (empty($accessKeyId) || empty($accessKeySecret)) {
-                // 如果没有配置阿里云API，使用模拟验证（仅用于测试）
-                return $this->mockRealNameVerification($realname, $icNumber);
+                Log::error('实名认证失败 - 阿里云配置缺失', [
+                    'realname'  => $realname,
+                    'ic_number' => substr($icNumber, 0, 6) . '****' . substr($icNumber, -4),
+                    'config'    => [
+                        'access_key_id'     => !empty($accessKeyId),
+                        'access_key_secret' => !empty($accessKeySecret)
+                    ]
+                ]);
+                return [
+                    'success' => false,
+                    'message' => '实名认证服务配置错误'
+                ];
             }
 
             // 创建配置对象 - 修正这里
@@ -702,79 +721,66 @@ class UserController extends AuthController
                 if ($body->code === "200") {
                     // 业务核验结果: 1-校验一致, 2-校验不一致
                     if (isset($body->resultObject->bizCode) && $body->resultObject->bizCode == 1) {
+                        Log::info('实名认证成功', [
+                            'realname'   => $realname,
+                            'ic_number'  => substr($icNumber, 0, 6) . '****' . substr($icNumber, -4),
+                            'request_id' => $body->requestId,
+                            'biz_code'   => $body->resultObject->bizCode
+                        ]);
                         return [
                             'success' => true,
-                            'message' => '验证成功',
-                            'data'    => [
-                                'bizCode'   => $body->resultObject->bizCode,
-                                'requestId' => $body->requestId
-                            ]
+                            'message' => '验证成功'
                         ];
                     } else {
+                        Log::warning('实名认证失败 - 姓名与身份证号不匹配', [
+                            'realname'   => $realname,
+                            'ic_number'  => substr($icNumber, 0, 6) . '****' . substr($icNumber, -4),
+                            'request_id' => $body->requestId,
+                            'biz_code'   => $body->resultObject->bizCode ?? 2
+                        ]);
                         return [
                             'success' => false,
-                            'message' => '姓名与身份证号不匹配',
-                            'data'    => [
-                                'bizCode'   => $body->resultObject->bizCode ?? 2,
-                                'requestId' => $body->requestId
-                            ]
+                            'message' => '姓名与身份证号不匹配'
                         ];
                     }
                 } else {
+                    Log::error('实名认证失败 - 阿里云API返回错误', [
+                        'realname'   => $realname,
+                        'ic_number'  => substr($icNumber, 0, 6) . '****' . substr($icNumber, -4),
+                        'code'       => $body->code,
+                        'message'    => $body->message ?? '未知错误',
+                        'request_id' => $body->requestId ?? ''
+                    ]);
                     return [
                         'success' => false,
-                        'message' => $body->message ?? '实名认证失败',
-                        'data'    => [
-                            'code'      => $body->code,
-                            'requestId' => $body->requestId
-                        ]
+                        'message' => '实名认证服务异常'
                     ];
                 }
             } else {
+                Log::error('实名认证失败 - HTTP错误', [
+                    'realname'    => $realname,
+                    'ic_number'   => substr($icNumber, 0, 6) . '****' . substr($icNumber, -4),
+                    'status_code' => $response->statusCode
+                ]);
                 return [
                     'success' => false,
-                    'message' => 'HTTP错误：' . $response->statusCode
+                    'message' => '实名认证服务异常'
                 ];
             }
 
         } catch (\Exception $e) {
+            // 记录详细的异常信息
+            Log::error('实名认证失败 - 异常详情: ' . $e->getMessage(), [
+                'realname'  => $realname,
+                'ic_number' => substr($icNumber, 0, 6) . '****' . substr($icNumber, -4),
+                'exception' => get_class($e),
+                'trace'     => $e->getTraceAsString()
+            ]);
             return [
                 'success' => false,
-                'message' => '实名认证服务暂时不可用：' . $e->getMessage()
+                'message' => '实名认证服务异常'
             ];
         }
-    }
-
-    /**
-     * 模拟实名认证验证（用于测试或没有阿里云API的情况）
-     */
-    private function mockRealNameVerification($realname, $icNumber)
-    {
-        // 这里可以添加一些基本的验证逻辑
-        if (empty($realname) || empty($icNumber)) {
-            return [
-                'success' => false,
-                'message' => '姓名和身份证号不能为空'
-            ];
-        }
-
-        // 简单的身份证格式验证
-        if (!preg_match('/^\d{17}[\dXx]$/', $icNumber)) {
-            return [
-                'success' => false,
-                'message' => '身份证号格式不正确'
-            ];
-        }
-
-        // 模拟验证通过（实际项目中应该删除这个模拟验证，使用真实的API）
-        return [
-            'success' => true,
-            'message' => '模拟验证成功',
-            'data'    => [
-                'bizCode'   => 1,
-                'requestId' => 'mock_' . uniqid()
-            ]
-        ];
     }
 
     public function changePassword()
