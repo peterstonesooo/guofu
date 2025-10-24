@@ -270,20 +270,36 @@ return [
     '补贴管理' => [
         'icon' => 'fa-money',
         'url'  => [
-            '补贴列表' => [
+            '补贴列表'             => [
                 'icon' => 'fa-circle-o',
                 'url'  => 'admin/Butie/butieList',
             ],
-            '补贴领取记录' => [
+            '补贴领取记录'         => [
                 'icon' => 'fa-circle-o',
                 'url'  => 'admin/ButieRecord/index',
+            ],
+            '申报补贴类型管理'     => [
+                'icon' => 'fa-circle-o',
+                'url'  => 'admin/DeclareSubsidyType/index',
+            ],
+            '申报补贴资金类型管理' => [
+                'icon' => 'fa-circle-o',
+                'url'  => 'admin/DeclareFundType/index',
+            ],
+            '申报补贴配置管理'     => [
+                'icon' => 'fa-circle-o',
+                'url'  => 'admin/DeclareSubsidyConfig/index',
+            ],
+            '申报补贴记录管理'     => [
+                'icon' => 'fa-circle-o',
+                'url'  => 'admin/DeclareRecord/index',
             ],
         ],
     ],
     '会议管理' => [
         'icon' => 'fa-calendar',
         'url'  => [
-            '会议列表' => [
+            '会议列表'     => [
                 'icon' => 'fa-circle-o',
                 'url'  => 'admin/Meeting/meetingList',
             ],

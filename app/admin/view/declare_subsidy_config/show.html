@@ -1,0 +1,304 @@
+<!-- Main content -->
+<section class="content">
+<div class="row">
+<div class="col-xs-12">
+<div class="box box-primary">
+<div class="box-header with-border">
+<h3 class="box-title">{if isset($data.id)}编辑补贴配置{else}添加补贴配置{/if}</h3>
+    <div class="box-tools pull-right">
+        <a href="{:url('admin/DeclareSubsidyConfig/index')}" class="btn btn-sm btn-default">
+            <i class="fa fa-list"></i> 返回列表
+        </a>
+    </div>
+</div>
+    <!-- /.box-header -->
+<form role="form" id="configForm">
+<div class="box-body">
+        <input type="hidden" name="id" value="{$data.id??''}">
+
+<div class="row">
+<div class="col-md-6">
+<div class="form-group">
+    <label for="type_id">补贴类型 <span class="text-red">*</span></label>
+<select class="form-control" id="type_id" name="type_id" required>
+    <option value="">请选择补贴类型</option>
+{foreach $typeList as $type}
+        <option value="{$type.id}" {if isset($data.type_id) &&
+                                                        $data.type_id==$type.id}selected{/if}>
+{$type.name}
+</option>
+{/foreach}
+</select>
+</div>
+</div>
+<div class="col-md-6">
+<div class="form-group">
+    <label for="name">补贴名称 <span class="text-red">*</span></label>
+        <input type="text" class="form-control" id="name" name="name"
+               placeholder="请输入补贴名称" value="{$data.name??''}" required>
+</div>
+</div>
+</div>
+
+<div class="row">
+<div class="col-md-6">
+<div class="form-group">
+    <label for="declare_amount">申报金额 <span class="text-red">*</span></label>
+<div class="input-group">
+    <span class="input-group-addon">¥</span>
+        <input type="number" class="form-control" id="declare_amount"
+               name="declare_amount" placeholder="请输入申报金额"
+        value="{$data.declare_amount??''}" step="0.01" min="0" required>
+</div>
+</div>
+</div>
+<div class="col-md-6">
+<div class="form-group">
+    <label for="declare_cycle">申报周期(天) <span
+            class="text-red">*</span></label>
+        <input type="number" class="form-control" id="declare_cycle"
+               name="declare_cycle" placeholder="请输入申报周期"
+        value="{$data.declare_cycle??''}" min="1" required>
+</div>
+</div>
+</div>
+
+<div class="row">
+<div class="col-md-6">
+<div class="form-group">
+    <label for="sort">排序值 <span class="text-red">*</span></label>
+        <input type="number" class="form-control" id="sort" name="sort"
+               placeholder="请输入排序值" value="{$data.sort??100}" required>
+    <p class="help-block">数字越大越靠前</p>
+</div>
+</div>
+<div class="col-md-6">
+<div class="form-group">
+    <label>状态 <span class="text-red">*</span></label>
+<div>
+    <label class="radio-inline">
+        <input type="radio" name="status" value="1" {if
+               !isset($data.status) || $data.status==1}checked{/if}>
+        启用
+    </label>
+<label class="radio-inline">
+        <input type="radio" name="status" value="0" {if
+                                                            isset($data.status) && $data.status==0}checked{/if}>
+    禁用
+</label>
+</div>
+</div>
+</div>
+</div>
+
+<div class="form-group">
+    <label for="description">补贴描述 <span class="text-red">*</span></label>
+<textarea class="form-control" id="description" name="description" rows="4"
+          placeholder="请输入补贴描述" required>{$data.description??''}</textarea>
+</div>
+
+<div class="form-group">
+    <label>资金配置 <span class="text-red">*</span></label>
+<div id="fundConfigContainer">
+{if isset($data.funds) && !empty($data.funds)}
+{foreach $data.funds as $index => $fund}
+<div class="fund-config-item row" style="margin-bottom: 10px;">
+<div class="col-md-5">
+<select class="form-control fund-type-select"
+        name="funds[{$index}][fund_type_id]" required>
+    <option value="">请选择资金类型</option>
+{foreach $fundTypeList as $fundType}
+        <option value="{$fundType.id}" {if
+                                                            $fund.fund_type_id==$fundType.id}selected{/if}>
+{$fundType.name}
+</option>
+{/foreach}
+</select>
+</div>
+<div class="col-md-5">
+<div class="input-group">
+    <span class="input-group-addon">¥</span>
+        <input type="number" class="form-control"
+               name="funds[{$index}][fund_amount]" placeholder="补贴金额"
+        value="{$fund.fund_amount}" step="0.01" min="0" required>
+</div>
+</div>
+    <div class="col-md-2">
+        <button type="button"
+                class="btn btn-danger btn-remove-fund">删除</button>
+    </div>
+</div>
+{/foreach}
+{else}
+<div class="fund-config-item row" style="margin-bottom: 10px;">
+<div class="col-md-5">
+<select class="form-control fund-type-select"
+        name="funds[0][fund_type_id]" required>
+    <option value="">请选择资金类型</option>
+{foreach $fundTypeList as $fundType}
+        <option value="{$fundType.id}">{$fundType.name}</option>
+{/foreach}
+</select>
+</div>
+    <div class="col-md-5">
+        <div class="input-group">
+            <span class="input-group-addon">¥</span>
+            <input type="number" class="form-control"
+                   name="funds[0][fund_amount]" placeholder="补贴金额" value=""
+                   step="0.01" min="0" required>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <button type="button"
+                class="btn btn-danger btn-remove-fund">删除</button>
+    </div>
+</div>
+{/if}
+</div>
+    <button type="button" id="addFundConfig" class="btn btn-success btn-sm mt-10">
+        <i class="fa fa-plus"></i> 添加资金配置
+    </button>
+</div>
+</div>
+    <!-- /.box-body -->
+
+<div class="box-footer">
+    <button type="submit" class="btn btn-primary">
+        <i class="fa fa-save"></i> 提交
+    </button>
+        <a href="{:url('admin/DeclareSubsidyConfig/index')}" class="btn btn-default">
+    <i class="fa fa-times"></i> 取消
+</a>
+</div>
+</form>
+</div>
+    <!-- /.box -->
+</div>
+    <!-- /.col -->
+</div>
+    <!-- /.row -->
+</section>
+<!-- /.content -->
+
+    <script>
+        var fundTypeList = {: $fundTypeList| json_encode};
+
+        $(document).ready(function () {
+            var fundIndex = { $data.funds ? count($data.funds) : 1 };
+
+            // 添加资金配置
+            $('#addFundConfig').click(function () {
+                var fundItem = `
+                <div class="fund-config-item row" style="margin-bottom: 10px;">
+                    <div class="col-md-5">
+                        <select class="form-control fund-type-select" name="funds[${fundIndex}][fund_type_id]" required>
+                            <option value="">请选择资金类型</option>
+                            ${fundTypeList.map(type => `<option value="${type.id}">${type.name}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="input-group">
+                            <span class="input-group-addon">¥</span>
+                            <input type="number" class="form-control" name="funds[${fundIndex}][fund_amount]"
+                                   placeholder="补贴金额" value="" step="0.01" min="0" required>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-danger btn-remove-fund">删除</button>
+                    </div>
+                </div>
+            `;
+                $('#fundConfigContainer').append(fundItem);
+                fundIndex++;
+            });
+
+            // 删除资金配置
+            $(document).on('click', '.btn-remove-fund', function () {
+                if ($('.fund-config-item').length > 1) {
+                    $(this).closest('.fund-config-item').remove();
+                } else {
+                    layer.msg('至少需要保留一个资金配置', { icon: 2 });
+                }
+            });
+
+            // 表单提交
+            $('#configForm').on('submit', function (e) {
+                e.preventDefault();
+
+                var type_id = $('#type_id').val();
+                var name = $('#name').val();
+                var declare_amount = $('#declare_amount').val();
+                var declare_cycle = $('#declare_cycle').val();
+                var sort = $('#sort').val();
+                var status = $('input[name="status"]:checked').val();
+                var description = $('#description').val();
+
+                if (!type_id) {
+                    layer.msg('请选择补贴类型', { icon: 2 });
+                    return;
+                }
+                if (!name) {
+                    layer.msg('请输入补贴名称', { icon: 2 });
+                    return;
+                }
+                if (!declare_amount || declare_amount <= 0) {
+                    layer.msg('请输入有效的申报金额', { icon: 2 });
+                    return;
+                }
+                if (!declare_cycle || declare_cycle <= 0) {
+                    layer.msg('请输入有效的申报周期', { icon: 2 });
+                    return;
+                }
+                if (!sort || sort < 0) {
+                    layer.msg('请输入有效的排序值', { icon: 2 });
+                    return;
+                }
+                if (!status) {
+                    layer.msg('请选择状态', { icon: 2 });
+                    return;
+                }
+                if (!description) {
+                    layer.msg('请输入补贴描述', { icon: 2 });
+                    return;
+                }
+
+                // 验证资金配置
+                var hasEmptyFund = false;
+                $('.fund-config-item').each(function () {
+                    var fundTypeId = $(this).find('.fund-type-select').val();
+                    var fundAmount = $(this).find('input[name$="[fund_amount]"]').val();
+
+                    if (!fundTypeId || !fundAmount || fundAmount <= 0) {
+                        hasEmptyFund = true;
+                        return false;
+                    }
+                });
+
+                if (hasEmptyFund) {
+                    layer.msg('请完善所有资金配置信息', { icon: 2 });
+                    return;
+                }
+
+                var url = '{:url("admin/DeclareSubsidyConfig/add")}';
+                if ($('input[name="id"]').val()) {
+                    url = '{:url("admin/DeclareSubsidyConfig/edit")}';
+                }
+
+                layer.load(2);
+
+                $.post(url, $(this).serialize(), function (res) {
+                    layer.closeAll();
+                    if (res.code == 200) {
+                        layer.msg(res.msg, { icon: 1 }, function () {
+                            location.href = '{:url("admin/DeclareSubsidyConfig/index")}';
+                        });
+                    } else {
+                        layer.msg(res.msg, { icon: 2 });
+                    }
+                }).fail(function () {
+                    layer.closeAll();
+                    layer.msg('网络错误，请重试', { icon: 2 });
+                });
+            });
+        });
+    </script>
