@@ -64,12 +64,15 @@ class DeclareSubsidyConfigController extends AuthController
 
         if (!empty($req['id'])) {
             $data = DeclareSubsidyConfig::getDetail($req['id']);
+            if ($data) {
+                $data = $data->toArray();
+            }
         }
 
         // 获取补贴类型列表
-        $typeList = DeclareSubsidyType::where('status', 1)->select();
+        $typeList = DeclareSubsidyType::where('status', 1)->select()->toArray();
         // 获取资金类型列表
-        $fundTypeList = DeclareFundType::where('status', 1)->select();
+        $fundTypeList = DeclareFundType::where('status', 1)->order('id', 'desc')->select()->toArray();
 
         $this->assign('data', $data);
         $this->assign('typeList', $typeList);
@@ -97,8 +100,7 @@ class DeclareSubsidyConfigController extends AuthController
         Db::startTrans();
         try {
             // 创建补贴配置
-            $config = new DeclareSubsidyConfig();
-            $config->save([
+            $config = DeclareSubsidyConfig::create([
                 'type_id'        => $req['type_id'],
                 'name'           => $req['name'],
                 'declare_amount' => $req['declare_amount'],
@@ -109,7 +111,7 @@ class DeclareSubsidyConfigController extends AuthController
             ]);
 
             // 保存资金配置
-            if (!empty($req['funds'])) {
+            if (!empty($req['funds']) && is_array($req['funds'])) {
                 $fundData = [];
                 foreach ($req['funds'] as $fund) {
                     if (!empty($fund['fund_type_id']) && !empty($fund['fund_amount'])) {
@@ -129,7 +131,7 @@ class DeclareSubsidyConfigController extends AuthController
 
             Db::commit();
             $this->clearCache();
-            return out();
+            return out('添加成功');
 
         } catch (\Exception $e) {
             Db::rollback();
@@ -176,7 +178,7 @@ class DeclareSubsidyConfigController extends AuthController
             DeclareSubsidyFund::where('subsidy_id', $req['id'])->delete();
 
             // 保存新的资金配置
-            if (!empty($req['funds'])) {
+            if (!empty($req['funds']) && is_array($req['funds'])) {
                 $fundData = [];
                 foreach ($req['funds'] as $fund) {
                     if (!empty($fund['fund_type_id']) && !empty($fund['fund_amount'])) {
@@ -196,7 +198,7 @@ class DeclareSubsidyConfigController extends AuthController
 
             Db::commit();
             $this->clearCache();
-            return out();
+            return out('编辑成功');
 
         } catch (\Exception $e) {
             Db::rollback();
@@ -233,7 +235,7 @@ class DeclareSubsidyConfigController extends AuthController
 
                 Db::commit();
                 $this->clearCache();
-                return out();
+                return out('删除成功');
 
             } catch (\Exception $e) {
                 Db::rollback();

@@ -7,87 +7,78 @@ use think\Model;
 
 class DeclareRecord extends Model
 {
+    // 状态常量
+    const STATUS_FAILED = 0;
+    const STATUS_SUCCESS = 1;
 
-    protected $autoWriteTimestamp = false;
-
+    protected $autoWriteTimestamp = true;
     protected $createTime = 'created_at';
     protected $updateTime = 'updated_at';
 
-    // 字段映射
-    protected $type = [
-        'id'             => 'integer',
-        'user_id'        => 'integer',
-        'subsidy_id'     => 'integer',
-        'declare_amount' => 'float',
-        'declare_cycle'  => 'integer',
-        'status'         => 'integer',
-        'audit_remark'   => 'string',
-        'audit_time'     => 'datetime',
-        'audit_user_id'  => 'integer',
-        'created_at'     => 'datetime',
-        'updated_at'     => 'datetime',
-    ];
-
-    // 状态常量
-    const STATUS_PENDING = 0;   // 待审核
-    const STATUS_APPROVED = 1; // 审核通过
-    const STATUS_REJECTED = 2; // 审核不通过
-
-    // 关联补贴配置
-    public function subsidyConfig()
-    {
-        return $this->belongsTo(DeclareSubsidyConfig::class, 'subsidy_id');
-    }
-
-    // 关联补贴类型
-    public function subsidyType()
-    {
-        return $this->hasOneThrough(
-            DeclareSubsidyType::class,
-            DeclareSubsidyConfig::class,
-            'id', // 补贴配置表主键
-            'id', // 补贴类型表主键
-            'subsidy_id', // 申报记录表的补贴配置ID
-            'type_id' // 补贴配置表的类型ID
-        );
-    }
-
-    // 关联用户
+    /**
+     * 关联用户
+     */
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
-    }
-
-    // 关联审核人
-    public function auditUser()
-    {
-        return $this->belongsTo(User::class, 'audit_user_id');
-    }
-
-    // 关联资金明细
-    public function recordFunds()
-    {
-        return $this->hasMany(DeclareRecordFund::class, 'declare_id');
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     /**
-     * 获取申报记录列表
+     * 关联补贴配置
      */
-    public static function getList($params = [])
+    public function subsidyConfig()
     {
-        $query = self::with(['subsidyConfig', 'subsidyType', 'user'])
-            ->order('created_at', 'desc')
-            ->order('id', 'desc');
+        return $this->belongsTo(DeclareSubsidyConfig::class, 'subsidy_id', 'id');
+    }
 
+    /**
+     * 关联补贴类型
+     */
+    public function subsidyType()
+    {
+        return $this->belongsTo(DeclareSubsidyType::class, 'subsidy_config.type_id', 'id')
+            ->through('subsidyConfig');
+    }
+
+    /**
+     * 关联资金明细
+     */
+    public function funds()
+    {
+        return $this->hasMany(DeclareRecordFund::class, 'declare_id', 'id');
+    }
+
+    /**
+     * 获取状态文本
+     */
+    public function getStatusTextAttr($value, $data)
+    {
+        $status = $data['status'] ?? $value;
+        $map = [
+            self::STATUS_SUCCESS => '成功',
+            self::STATUS_FAILED  => '失败'
+        ];
+        return $map[$status] ?? '未知';
+    }
+
+    /**
+     * 获取列表数据
+     */
+    public static function getList($params)
+    {
+        $query = self::with(['user', 'subsidyConfig', 'subsidyType'])
+            ->order('created_at', 'desc');
+
+        // 搜索条件
         if (!empty($params['subsidy_name'])) {
             $query->whereHas('subsidyConfig', function ($q) use ($params) {
-                $q->where('name', 'like', '%' . trim($params['subsidy_name']) . '%');
+                $q->where('name', 'like', "%{$params['subsidy_name']}%");
             });
         }
 
         if (!empty($params['user_name'])) {
             $query->whereHas('user', function ($q) use ($params) {
-                $q->where('username', 'like', '%' . trim($params['user_name']) . '%');
+                $q->where('username', 'like', "%{$params['user_name']}%");
             });
         }
 
@@ -95,27 +86,35 @@ class DeclareRecord extends Model
             $query->where('status', $params['status']);
         }
 
-        return $query->paginate(['query' => $params]);
+        return $query->paginate(['list_rows' => 15, 'query' => $params]);
     }
 
     /**
-     * 获取申报记录详情
+     * 获取详情
      */
     public static function getDetail($id)
     {
-        return self::with([
-            'subsidyConfig',
-            'subsidyType',
-            'user',
-            'auditUser',
-            'recordFunds' => function ($query) {
-                $query->field('id,declare_id,fund_type_id,fund_amount')
-                    ->withAttr('fund_type_name', function ($value, $data) {
-                        return \think\facade\Db::name('declare_fund_type')
-                            ->where('id', $data['fund_type_id'])
-                            ->value('name');
-                    });
+        $record = self::with([
+            'user'          => function ($query) {
+                $query->field('id,username as user_name');
+            },
+            'subsidyConfig' => function ($query) {
+                $query->field('id,name as subsidy_name,description');
+            },
+            'subsidyType'   => function ($query) {
+                $query->field('id,name as type_name');
+            },
+            'funds'         => function ($query) {
+                $query->with(['fundType' => function ($q) {
+                    $q->field('id,name as fund_type_name');
+                }]);
             }
         ])->find($id);
+
+        if ($record) {
+            return $record->toArray();
+        }
+
+        return [];
     }
 }

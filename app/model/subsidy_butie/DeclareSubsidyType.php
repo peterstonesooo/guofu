@@ -45,6 +45,10 @@ class DeclareSubsidyType extends Model
             $query->where('name', 'like', '%' . trim($params['name']) . '%');
         }
 
+        if (isset($params['status']) && $params['status'] !== '') {
+            $query->where('status', $params['status']);
+        }
+
         return $query->paginate(['query' => $params]);
     }
 

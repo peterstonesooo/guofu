@@ -56,6 +56,10 @@ class DeclareSubsidyConfig extends Model
             $query->where('type_id', $params['type_id']);
         }
 
+        if (isset($params['status']) && $params['status'] !== '') {
+            $query->where('status', $params['status']);
+        }
+
         return $query->paginate(['query' => $params]);
     }
 
@@ -64,14 +68,22 @@ class DeclareSubsidyConfig extends Model
      */
     public static function getDetail($id)
     {
-        return self::with(['subsidyFunds' => function ($query) {
-            $query->field('id,subsidy_id,fund_type_id,fund_amount')
-                ->withAttr('fund_type_name', function ($value, $data) {
-                    return Db::name('declare_fund_type')
-                        ->where('id', $data['fund_type_id'])
-                        ->value('name');
-                });
+        $data = self::with(['subsidyFunds' => function ($query) {
+            $query->field('id,subsidy_id,fund_type_id,fund_amount');
         }])->find($id);
+
+        if ($data && $data->subsidyFunds) {
+            $funds = $data->subsidyFunds->toArray();
+            foreach ($funds as &$fund) {
+                $fundType = Db::name('declare_fund_type')
+                    ->where('id', $fund['fund_type_id'])
+                    ->find();
+                $fund['fund_type_name'] = $fundType ? $fundType['name'] : '';
+            }
+            $data->funds = $funds;
+        }
+
+        return $data;
     }
 
     /**

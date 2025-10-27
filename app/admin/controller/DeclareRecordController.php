@@ -4,6 +4,7 @@ namespace app\admin\controller;
 
 use app\model\subsidy_butie\DeclareRecord;
 use think\facade\Cache;
+use think\facade\View;
 
 class DeclareRecordController extends AuthController
 {
@@ -29,28 +30,24 @@ class DeclareRecordController extends AuthController
                 $redis->setex($cacheKey, 600, serialize($data));
             }
 
-            $this->assign('req', $req);
-            $this->assign('data', $data);
-            $this->assign('statusList', [
-                '0' => '待审核',
-                '1' => '审核通过',
-                '2' => '审核不通过'
+            View::assign([
+                'req'        => $req,
+                'data'       => $data,
+                'statusList' => $this->getStatusList()
             ]);
 
-            return $this->fetch();
+            return View::fetch();
 
         } catch (\Exception $e) {
             $data = DeclareRecord::getList($req);
 
-            $this->assign('req', $req);
-            $this->assign('data', $data);
-            $this->assign('statusList', [
-                '0' => '待审核',
-                '1' => '审核通过',
-                '2' => '审核不通过'
+            View::assign([
+                'req'        => $req,
+                'data'       => $data,
+                'statusList' => $this->getStatusList()
             ]);
 
-            return $this->fetch();
+            return View::fetch();
         }
     }
 
@@ -66,89 +63,8 @@ class DeclareRecordController extends AuthController
             $data = DeclareRecord::getDetail($req['id']);
         }
 
-        $this->assign('data', $data);
-        return $this->fetch();
-    }
-
-    /**
-     * 审核申报记录
-     */
-    public function audit()
-    {
-        $req = $this->validate(request(), [
-            'id'                    => 'require|number',
-            'status|审核状态'       => 'require|in:1,2',
-            'audit_remark|审核备注' => 'max:500'
-        ]);
-
-        try {
-            $record = DeclareRecord::find($req['id']);
-            if (!$record) {
-                return out('申报记录不存在', 400);
-            }
-
-            if ($record->status != DeclareRecord::STATUS_PENDING) {
-                return out('该记录已审核，不能重复审核', 400);
-            }
-
-            $record->save([
-                'status'        => $req['status'],
-                'audit_remark'  => $req['audit_remark'] ?? '',
-                'audit_time'    => date('Y-m-d H:i:s'),
-                'audit_user_id' => session('admin_id'),
-            ]);
-
-            return out();
-
-        } catch (\Exception $e) {
-            return out('审核失败：' . $e->getMessage(), 400);
-        }
-    }
-
-    /**
-     * 批量审核
-     */
-    public function batchAudit()
-    {
-        $req = $this->validate(request(), [
-            'ids'                   => 'require|array',
-            'status|审核状态'       => 'require|in:1,2',
-            'audit_remark|审核备注' => 'max:500'
-        ]);
-
-        Db::startTrans();
-        try {
-            $successCount = 0;
-            $failCount = 0;
-
-            foreach ($req['ids'] as $id) {
-                try {
-                    $record = DeclareRecord::find($id);
-                    if ($record && $record->status == DeclareRecord::STATUS_PENDING) {
-                        $record->save([
-                            'status'        => $req['status'],
-                            'audit_remark'  => $req['audit_remark'] ?? '',
-                            'audit_time'    => date('Y-m-d H:i:s'),
-                            'audit_user_id' => session('admin_id'),
-                        ]);
-                        $successCount++;
-                    } else {
-                        $failCount++;
-                    }
-                } catch (\Exception $e) {
-                    $failCount++;
-                }
-            }
-
-            Db::commit();
-
-            $message = "审核完成：成功 {$successCount} 条，失败 {$failCount} 条";
-            return out($message);
-
-        } catch (\Exception $e) {
-            Db::rollback();
-            return out('批量审核失败：' . $e->getMessage(), 400);
-        }
+        View::assign('data', $data);
+        return View::fetch();
     }
 
     /**
@@ -159,59 +75,53 @@ class DeclareRecordController extends AuthController
         $req = request()->param();
 
         try {
-            $data = DeclareRecord::with(['subsidyConfig', 'subsidyType', 'user'])
+            $data = DeclareRecord::with(['user', 'subsidyConfig', 'subsidyType'])
                 ->order('created_at', 'desc')
                 ->select();
 
-            // 设置响应头
-            header('Content-Type: application/vnd.ms-excel');
-            header('Content-Disposition: attachment;filename="申报记录_' . date('YmdHis') . '.xls"');
-            header('Cache-Control: max-age=0');
-
-            // 输出Excel内容
-            echo "<table border='1'>";
-            echo "<tr>
-                    <th>ID</th>
-                    <th>用户名称</th>
-                    <th>补贴名称</th>
-                    <th>补贴类型</th>
-                    <th>申报金额</th>
-                    <th>申报周期</th>
-                    <th>状态</th>
-                    <th>申报时间</th>
-                  </tr>";
-
+            $exportData = [];
             foreach ($data as $item) {
-                $statusText = '';
-                switch ($item->status) {
-                    case DeclareRecord::STATUS_PENDING:
-                        $statusText = '待审核';
-                        break;
-                    case DeclareRecord::STATUS_APPROVED:
-                        $statusText = '审核通过';
-                        break;
-                    case DeclareRecord::STATUS_REJECTED:
-                        $statusText = '审核不通过';
-                        break;
-                }
-
-                echo "<tr>
-                        <td>{$item->id}</td>
-                        <td>{$item->user->username ?? ''}</td>
-                        <td>{$item->subsidyConfig->name ?? ''}</td>
-                        <td>{$item->subsidyType->name ?? ''}</td>
-                        <td>{$item->declare_amount}</td>
-                        <td>{$item->declare_cycle}天</td>
-                        <td>{$statusText}</td>
-                        <td>{$item->created_at}</td>
-                      </tr>";
+                $exportData[] = [
+                    'id'             => $item->id,
+                    'user_name'      => $item->user->username ?? '',
+                    'subsidy_name'   => $item->subsidyConfig->name ?? '',
+                    'subsidy_type'   => $item->subsidyType->name ?? '',
+                    'declare_amount' => $item->declare_amount,
+                    'declare_cycle'  => $item->declare_cycle . '天',
+                    'status_text'    => $item->status_text,
+                    'created_at'     => $item->created_at,
+                ];
             }
-            echo "</table>";
-            exit;
+
+            // 表头
+            $header = [
+                'id'             => 'ID',
+                'user_name'      => '用户名称',
+                'subsidy_name'   => '补贴名称',
+                'subsidy_type'   => '补贴类型',
+                'declare_amount' => '申报金额',
+                'declare_cycle'  => '申报周期',
+                'status_text'    => '状态',
+                'created_at'     => '申报时间',
+            ];
+
+            $filename = '申报记录_' . date('YmdHis');
+            create_excel($exportData, $header, $filename);
 
         } catch (\Exception $e) {
             return out('导出失败：' . $e->getMessage(), 400);
         }
+    }
+
+    /**
+     * 获取状态列表
+     */
+    private function getStatusList()
+    {
+        return [
+            DeclareRecord::STATUS_SUCCESS => '成功',
+            DeclareRecord::STATUS_FAILED  => '失败'
+        ];
     }
 
     /**

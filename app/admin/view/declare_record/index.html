@@ -1,258 +1,72 @@
-<!-- Main content -->
-<section class="content">
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <!-- /.box-header -->
-                <div class="box-body">
-                    <div class="search">
-                        <form class="form-inline">
-                            <input placeholder="补贴名称" autocomplete="on" value="{$req['subsidy_name']??''}"
-                                   name="subsidy_name" class="form-control">
-                            <input placeholder="用户名称" autocomplete="on" value="{$req['user_name']??''}"
-                                   name="user_name" class="form-control">
-                            <select name="status" class="form-control">
-                                <option value="">全部状态</option>
-                                {foreach $statusList as $key => $status}
-                                    <option value="{$key}" {if isset($req['status']) &&
-                                                $req['status']==$key}selected{/if}>
-                                        {$status}
-                                    </option>
-                                {/foreach}
-                            </select>
-                            <input class="btn btn-flat btn-primary m_10" type="submit" value="搜索">
-                            <div class="btn-group m_10">
-                                <button type="button" class="btn btn-success" id="batchAuditBtn">
-                                    <i class="fa fa-check"></i> 批量审核
-                                </button>
-                                <a class="btn btn-info" href="{:url('admin/DeclareRecord/export')}">
-                                    <i class="fa fa-download"></i> 导出Excel
-                                </a>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover table-striped">
-                            <thead>
-                            <tr>
-                                <th width="30">
-                                    <input type="checkbox" id="checkAll">
-                                </th>
-                                <th>ID</th>
-                                <th>用户名称</th>
-                                <th>补贴名称</th>
-                                <th>补贴类型</th>
-                                <th>申报金额</th>
-                                <th>申报周期</th>
-                                <th>状态</th>
-                                <th>申报时间</th>
-                                <th>操作</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {foreach $data as $v}
-                            <tr>
-                                <td>
-                                    {if $v.status == 0}
-                                        <input type="checkbox" class="check-item" value="{$v.id}">
-                                    {/if}
-                                </td>
-                                <td>{$v.id}</td>
-                                <td>{$v.user.username}</td>
-                                <td>{$v.subsidy_config.name}</td>
-                                <td>{$v.subsidy_type.name}</td>
-                                <td>¥{$v.declare_amount}</td>
-                                <td>{$v.declare_cycle}天</td>
-                            <td>
-                            {if $v.status == 0}
-                                <span class="label label-warning">待审核</span>
-                            {elseif $v.status == 1}
-                                <span class="label label-success">审核通过</span>
-                            {else}
-                                <span class="label label-danger">审核不通过</span>
-                            {/if}
-                            </td>
-                                <td>{$v.created_at}</td>
-                                <td>
-                                    <a class="btn btn-flat btn-info btn-xs"
-                                       href="{:url('admin/DeclareRecord/show', ['id' => $v.id])}">
-                                        <i class="fa fa-eye"></i> 查看
-                                    </a>
-                                    {if $v.status == 0}
-                                        <a class="btn btn-flat btn-success btn-xs audit-record-btn"
-                                           data-id="{$v.id}" href="#">
-                                            <i class="fa fa-check"></i> 审核
-                                        </a>
-                                    {/if}
-                                </td>
-                            </tr>
+<div class="row">
+    <div class="col-xs-12">
+        <div class="box">
+            <!-- /.box-header -->
+            <div class="box-body">
+                <div class="search">
+                    <form class="form-inline">
+                        <input placeholder="补贴名称" autocomplete="on" value="{$req['subsidy_name']??''}"
+                               name="subsidy_name" class="form-control">
+                        <input placeholder="用户名称" autocomplete="on" value="{$req['user_name']??''}"
+                               name="user_name" class="form-control">
+                        <select name="status" class="form-control">
+                            <option value="">全部状态</option>
+                            {foreach $statusList as $key => $status}
+                                <option value="{$key}" {if isset($req['status']) && $req['status']==$key}selected{/if}>
+                                    {$status}
+                                </option>
                             {/foreach}
-                            </tbody>
-                        </table>
-                    </div>
+                        </select>
+                        <input class="btn btn-flat btn-primary m_10" type="submit" value="搜索">
+                        <a class="btn btn-info" href="{:url('admin/DeclareRecord/export')}">
+                            <i class="fa fa-download"></i> 导出Excel
+                        </a>
+                    </form>
                 </div>
-                <!-- /.box-body -->
-                <div class="box-footer clearfix">
-                    {$data|raw}
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-striped">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>用户名称</th>
+                            <th>补贴名称</th>
+                            <th>补贴类型</th>
+                            <th>申报金额</th>
+                            <th>申报周期</th>
+                            <th>状态</th>
+                            <th>申报时间</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {foreach $data as $v}
+                        <tr>
+                            <td>{$v.id}</td>
+                            <td>{$v.user.username}</td>
+                            <td>{$v.subsidy_config.name}</td>
+                            <td>{$v.subsidy_type.name}</td>
+                            <td>¥{$v.declare_amount}</td>
+                            <td>{$v.declare_cycle}天</td>
+                        <td>
+                        {if $v.status == 1}
+                            <span class="label label-success">成功</span>
+                        {else}
+                            <span class="label label-danger">失败</span>
+                        {/if}
+                        </td>
+                            <td>{$v.created_at}</td>
+                        </tr>
+                        {/foreach}
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            <!-- /.box -->
+            <!-- /.box-body -->
+            <div class="box-footer clearfix">
+                {$data|raw}
+            </div>
         </div>
-        <!-- /.col -->
+        <!-- /.box -->
     </div>
-    <!-- /.row -->
-</section>
-<!-- /.content -->
-
-    <script>
-        $(document).ready(function () {
-            // 全选/反选
-            $('#checkAll').click(function () {
-                $('.check-item').prop('checked', this.checked);
-            });
-
-            // 批量审核
-            $('#batchAuditBtn').click(function () {
-                var selectedIds = [];
-                $('.check-item:checked').each(function () {
-                    selectedIds.push($(this).val());
-                });
-
-                if (selectedIds.length === 0) {
-                    layer.msg('请选择要审核的记录', { icon: 2 });
-                    return;
-                }
-
-                layer.prompt({
-                    title: '批量审核选中的 ' + selectedIds.length + ' 条记录',
-                    formType: 2,
-                    area: ['500px', '150px'],
-                    placeholder: '请输入审核备注（可选）',
-                    value: '',
-                    btn: ['通过', '不通过', '取消']
-                }, function (remark, index) {
-                    var status = 1; // 通过
-                    layer.close(index);
-
-                    layer.confirm('确定要通过选中的记录吗？', {
-                        title: '确认批量审核',
-                        icon: 3,
-                        btn: ['确定', '取消']
-                    }, function (confirmIndex) {
-                        layer.close(confirmIndex);
-                        submitBatchAudit(selectedIds, status, remark);
-                    });
-                }, function (remark, index) {
-                    var status = 2; // 不通过
-                    layer.close(index);
-
-                    layer.confirm('确定不通过选中的记录吗？', {
-                        title: '确认批量审核',
-                        icon: 3,
-                        btn: ['确定', '取消']
-                    }, function (confirmIndex) {
-                        layer.close(confirmIndex);
-                        submitBatchAudit(selectedIds, status, remark);
-                    });
-                });
-            });
-
-            // 单个审核
-            $(document).on('click', '.audit-record-btn', function (e) {
-                e.preventDefault();
-                var id = $(this).data('id');
-
-                layer.prompt({
-                    title: '审核申报记录 #' + id,
-                    formType: 2,
-                    area: ['500px', '150px'],
-                    placeholder: '请输入审核备注（可选）',
-                    value: '',
-                    btn: ['通过', '不通过', '取消']
-                }, function (remark, index) {
-                    var status = 1; // 通过
-                    layer.close(index);
-
-                    layer.confirm('确定要通过此申报记录吗？', {
-                        title: '确认审核',
-                        icon: 3,
-                        btn: ['确定', '取消']
-                    }, function (confirmIndex) {
-                        layer.close(confirmIndex);
-                        submitAudit(id, status, remark);
-                    });
-                }, function (remark, index) {
-                    var status = 2; // 不通过
-                    layer.close(index);
-
-                    layer.confirm('确定不通过此申报记录吗？', {
-                        title: '确认审核',
-                        icon: 3,
-                        btn: ['确定', '取消']
-                    }, function (confirmIndex) {
-                        layer.close(confirmIndex);
-                        submitAudit(id, status, remark);
-                    });
-                });
-            });
-
-            function submitAudit(id, status, remark) {
-                var loadIndex = layer.load(2, { time: 10 * 1000 });
-
-                $.ajax({
-                    url: '/admin/DeclareRecord/audit',
-                    type: 'POST',
-                    data: {
-                        id: id,
-                        status: status,
-                        audit_remark: remark
-                    },
-                    dataType: 'json',
-                    success: function (response) {
-                        layer.close(loadIndex);
-                        if (response.code === 200) {
-                            layer.msg('审核成功！', { icon: 1, time: 1500 }, function () {
-                                location.reload();
-                            });
-                        } else {
-                            layer.msg('审核失败：' + response.msg, { icon: 2 });
-                        }
-                    },
-                    error: function () {
-                        layer.close(loadIndex);
-                        layer.msg('网络错误，审核失败！', { icon: 2 });
-                    }
-                });
-            }
-
-            function submitBatchAudit(ids, status, remark) {
-                var loadIndex = layer.load(2, { time: 10 * 1000 });
-
-                $.ajax({
-                    url: '/admin/DeclareRecord/batchAudit',
-                    type: 'POST',
-                    data: {
-                        ids: ids,
-                        status: status,
-                        audit_remark: remark
-                    },
-                    dataType: 'json',
-                    success: function (response) {
-                        layer.close(loadIndex);
-                        if (response.code === 200) {
-                            layer.msg(response.msg, { icon: 1, time: 1500 }, function () {
-                                location.reload();
-                            });
-                        } else {
-                            layer.msg('批量审核失败：' + response.msg, { icon: 2 });
-                        }
-                    },
-                    error: function () {
-                        layer.close(loadIndex);
-                        layer.msg('网络错误，批量审核失败！', { icon: 2 });
-                    }
-                });
-            }
-        });
-    </script>
+    <!-- /.col -->
+</div>
