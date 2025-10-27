@@ -23,7 +23,6 @@
                             <tr>
                                 <th>ID</th>
                                 <th>资金类型名称</th>
-                                <th>排序</th>
                                 <th>状态</th>
                                 <th>创建时间</th>
                                 <th>操作</th>
@@ -34,14 +33,13 @@
                             <tr>
                                 <td>{$v.id}</td>
                                 <td>{$v.name}</td>
-                                <td>{$v.sort}</td>
-                            <td>
-                            {if $v.status == 1}
-                                <span class="label label-success">启用</span>
-                            {else}
-                                <span class="label label-danger">禁用</span>
-                            {/if}
-                            </td>
+                                <td>
+                                {if $v.status == 1}
+                                    <span class="label label-success">启用</span>
+                                {else}
+                                    <span class="label label-danger">禁用</span>
+                                {/if}
+                                </td>
                                 <td>{$v.created_at}</td>
                                 <td>
                                     <a class="btn btn-flat btn-info btn-xs"
@@ -72,48 +70,48 @@
 </section>
 <!-- /.content -->
 
-    <script>
-        $(document).ready(function () {
-            $(document).on('click', '.delete-fund-type-btn', function (e) {
-                e.preventDefault();
-                var id = $(this).data('id');
-                var $tr = $(this).closest('tr');
+<script>
+    $(document).ready(function () {
+        $(document).on('click', '.delete-fund-type-btn', function (e) {
+            e.preventDefault();
+            var id = $(this).data('id');
+            var $tr = $(this).closest('tr');
 
-                layer.confirm('确定要删除这个资金类型吗？', {
-                    title: '确认删除',
-                    icon: 3,
-                    btn: ['确定', '取消']
-                }, function (index) {
-                    layer.close(index);
+            layer.confirm('确定要删除这个资金类型吗？', {
+                title: '确认删除',
+                icon: 3,
+                btn: ['确定', '取消']
+            }, function (index) {
+                layer.close(index);
 
-                    var loadIndex = layer.load(2, { time: 10 * 1000 });
+                var loadIndex = layer.load(2, { time: 10 * 1000 });
 
-                    $.ajax({
-                        url: '{:url("admin/DeclareFundType/delete")}',
-                        type: 'POST',
-                        data: { id: id },
-                        dataType: 'json',
-                        success: function (response) {
-                            layer.close(loadIndex);
-                            if (response.code === 200) {
-                                layer.msg('删除成功！', { icon: 1, time: 1500 }, function () {
-                                    $tr.fadeOut(400, function () {
-                                        $(this).remove();
-                                        if ($('.table tbody tr').length === 0) {
-                                            $('.table tbody').html('<tr><td colspan="6" style="text-align:center;">暂无数据</td></tr>');
-                                        }
-                                    });
+                $.ajax({
+                    url: '{:url("admin/DeclareFundType/delete")}',
+                    type: 'POST',
+                    data: { id: id },
+                    dataType: 'json',
+                    success: function (response) {
+                        layer.close(loadIndex);
+                        if (response.code === 200) {
+                            layer.msg('删除成功！', { icon: 1, time: 1500 }, function () {
+                                $tr.fadeOut(400, function () {
+                                    $(this).remove();
+                                    if ($('.table tbody tr').length === 0) {
+                                        $('.table tbody').html('<tr><td colspan="5" style="text-align:center;">暂无数据</td></tr>');
+                                    }
                                 });
-                            } else {
-                                layer.msg('删除失败：' + response.msg, { icon: 2 });
-                            }
-                        },
-                        error: function () {
-                            layer.close(loadIndex);
-                            layer.msg('网络错误，删除失败！', { icon: 2 });
+                            });
+                        } else {
+                            layer.msg('删除失败：' + response.msg, { icon: 2 });
                         }
-                    });
+                    },
+                    error: function () {
+                        layer.close(loadIndex);
+                        layer.msg('网络错误，删除失败！', { icon: 2 });
+                    }
                 });
             });
         });
-    </script>
+    });
+</script>

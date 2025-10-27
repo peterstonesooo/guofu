@@ -66,10 +66,8 @@ class DeclareFundTypeController extends AuthController
     public function add()
     {
         $req = $this->validate(request(), [
-            'name|资金类型名称'    => 'require',
-            'description|类型描述' => 'require',
-            'sort|排序'            => 'require|integer',
-            'status|状态'          => 'require|number',
+            'name|资金类型名称' => 'require',
+            'status|状态'       => 'require|number',
         ]);
 
         try {
@@ -90,11 +88,9 @@ class DeclareFundTypeController extends AuthController
     public function edit()
     {
         $req = $this->validate(request(), [
-            'id'                   => 'require|number',
-            'name|资金类型名称'    => 'require',
-            'description|类型描述' => 'require',
-            'sort|排序'            => 'require|integer',
-            'status|状态'          => 'require|number',
+            'id'                => 'require|number',
+            'name|资金类型名称' => 'require',
+            'status|状态'       => 'require|number',
         ]);
 
         try {

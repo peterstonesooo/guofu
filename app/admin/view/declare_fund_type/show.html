@@ -24,20 +24,6 @@
                placeholder="请输入资金类型名称" value="{$data.name??''}" required>
 </div>
 </div>
-<div class="col-md-6">
-<div class="form-group">
-    <label for="sort">排序值 <span class="text-red">*</span></label>
-        <input type="number" class="form-control" id="sort" name="sort"
-               placeholder="请输入排序值" value="{$data.sort??100}" required>
-    <p class="help-block">数字越大越靠前</p>
-</div>
-</div>
-</div>
-
-<div class="form-group">
-    <label for="description">类型描述 <span class="text-red">*</span></label>
-<textarea class="form-control" id="description" name="description" rows="4"
-          placeholder="请输入资金类型描述" required>{$data.description??''}</textarea>
 </div>
 
 <div class="form-group">
@@ -76,53 +62,43 @@
 </section>
 <!-- /.content -->
 
-    <script>
-        $(document).ready(function () {
-            $('#fundTypeForm').on('submit', function (e) {
-                e.preventDefault();
+<script>
+    $(document).ready(function () {
+        $('#fundTypeForm').on('submit', function (e) {
+            e.preventDefault();
 
-                var name = $('#name').val();
-                var sort = $('#sort').val();
-                var status = $('input[name="status"]:checked').val();
-                var description = $('#description').val();
+            var name = $('#name').val();
+            var status = $('input[name="status"]:checked').val();
 
-                if (!name) {
-                    layer.msg('请输入资金类型名称', { icon: 2 });
-                    return;
-                }
-                if (!sort || sort < 0) {
-                    layer.msg('请输入有效的排序值', { icon: 2 });
-                    return;
-                }
-                if (!status) {
-                    layer.msg('请选择状态', { icon: 2 });
-                    return;
-                }
-                if (!description) {
-                    layer.msg('请输入类型描述', { icon: 2 });
-                    return;
-                }
+            if (!name) {
+                layer.msg('请输入资金类型名称', { icon: 2 });
+                return;
+            }
+            if (!status) {
+                layer.msg('请选择状态', { icon: 2 });
+                return;
+            }
 
-                var url = '{:url("admin/DeclareFundType/add")}';
-                if ($('input[name="id"]').val()) {
-                    url = '{:url("admin/DeclareFundType/edit")}';
+            var url = '{:url("admin/DeclareFundType/add")}';
+            if ($('input[name="id"]').val()) {
+                url = '{:url("admin/DeclareFundType/edit")}';
+            }
+
+            layer.load(2);
+
+            $.post(url, $(this).serialize(), function (res) {
+                layer.closeAll();
+                if (res.code == 200) {
+                    layer.msg(res.msg, { icon: 1 }, function () {
+                        location.href = '{:url("admin/DeclareFundType/index")}';
+                    });
+                } else {
+                    layer.msg(res.msg, { icon: 2 });
                 }
-
-                layer.load(2);
-
-                $.post(url, $(this).serialize(), function (res) {
-                    layer.closeAll();
-                    if (res.code == 200) {
-                        layer.msg(res.msg, { icon: 1 }, function () {
-                            location.href = '{:url("admin/DeclareFundType/index")}';
-                        });
-                    } else {
-                        layer.msg(res.msg, { icon: 2 });
-                    }
-                }).fail(function () {
-                    layer.closeAll();
-                    layer.msg('网络错误，请重试', { icon: 2 });
-                });
+            }).fail(function () {
+                layer.closeAll();
+                layer.msg('网络错误，请重试', { icon: 2 });
             });
         });
-    </script>
+    });
+</script>

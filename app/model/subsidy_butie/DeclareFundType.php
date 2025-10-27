@@ -15,13 +15,11 @@ class DeclareFundType extends Model
 
     // 字段映射
     protected $type = [
-        'id'          => 'integer',
-        'name'        => 'string',
-        'description' => 'string',
-        'sort'        => 'integer',
-        'status'      => 'integer',
-        'created_at'  => 'datetime',
-        'updated_at'  => 'datetime',
+        'id'         => 'integer',
+        'name'       => 'string',
+        'status'     => 'integer',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -29,7 +27,7 @@ class DeclareFundType extends Model
      */
     public static function getList($params = [])
     {
-        $query = self::order('sort', 'desc')->order('id', 'desc');
+        $query = self::order('id', 'desc');
 
         if (!empty($params['name'])) {
             $query->where('name', 'like', '%' . trim($params['name']) . '%');
