@@ -1,0 +1,126 @@
+<section class="content">
+<div class="row">
+<div class="col-xs-12">
+<div class="box box-primary">
+<div class="box-header with-border">
+<h3 class="box-title">{if isset($data.id)}编辑配置{else}添加配置{/if}</h3>
+    <div class="box-tools pull-right">
+        <a href="{:url('admin/InviteCashConfig/index')}" class="btn btn-sm btn-default">
+            <i class="fa fa-list"></i> 返回列表
+        </a>
+    </div>
+</div>
+
+<form role="form" id="configForm">
+<div class="box-body">
+        <input type="hidden" name="id" value="{$data.id??''}">
+
+<div class="row">
+<div class="col-md-6">
+<div class="form-group">
+    <label for="invite_num">邀请人数 <span class="text-red">*</span></label>
+        <input type="number" class="form-control" id="invite_num" name="invite_num"
+               placeholder="请输入邀请人数" value="{$data.invite_num??''}" min="1" required>
+    <p class="help-block">达到该邀请人数时发放现金红包</p>
+</div>
+</div>
+<div class="col-md-6">
+<div class="form-group">
+    <label for="cash_amount">现金金额 <span class="text-red">*</span></label>
+<div class="input-group">
+    <span class="input-group-addon">¥</span>
+        <input type="number" class="form-control" id="cash_amount" name="cash_amount"
+               placeholder="请输入现金金额" value="{$data.cash_amount??''}" step="0.01" min="0"
+               required>
+</div>
+</div>
+</div>
+</div>
+
+<div class="row">
+<div class="col-md-6">
+<div class="form-group">
+    <label for="remark">备注</label>
+<textarea class="form-control" id="remark" name="remark" placeholder="请输入备注"
+          rows="3">{$data.remark??''}</textarea>
+</div>
+</div>
+<div class="col-md-6">
+<div class="form-group">
+    <label>状态 <span class="text-red">*</span></label>
+<div>
+<label class="radio-inline">
+        <input type="radio" name="status" value="1" {if !isset($data.status) || $data.status==1}checked{/if}>
+    启用
+</label>
+<label class="radio-inline">
+        <input type="radio" name="status" value="0" {if isset($data.status) && $data.status==0}checked{/if}>
+    禁用
+</label>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+    <div class="box-footer">
+        <button type="submit" class="btn btn-primary">
+            <i class="fa fa-save"></i> 提交
+        </button>
+        <a href="{:url('admin/InviteCashConfig/index')}" class="btn btn-default">
+            <i class="fa fa-times"></i> 取消
+        </a>
+    </div>
+</form>
+</div>
+</div>
+</div>
+</section>
+
+<script>
+$(document).ready(function () {
+    // 表单提交
+$('#configForm').on('submit', function (e) {
+    e.preventDefault();
+
+    // 表单验证
+    var invite_num = $('#invite_num').val();
+    var cash_amount = $('#cash_amount').val();
+    var status = $('input[name="status"]:checked').val();
+
+    if (!invite_num || invite_num < 1) {
+        layer.msg('请输入有效的邀请人数', { icon: 2 });
+        return;
+    }
+    if (!cash_amount || cash_amount <= 0) {
+        layer.msg('请输入有效的现金金额', { icon: 2 });
+        return;
+    }
+if (!status) {
+    layer.msg('请选择状态', { icon: 2 });
+    return;
+}
+
+    var url = '{:url("admin/InviteCashConfig/addConfig")}';
+if ($('input[name="id"]').val()) {
+        url = '{:url("admin/InviteCashConfig/editConfig")}';
+}
+
+    layer.load(2);
+
+$.post(url, $(this).serialize(), function (res) {
+    layer.closeAll();
+if (res.code == 200) {
+layer.msg(res.msg, { icon: 1 }, function () {
+    location.href = '{:url("admin/InviteCashConfig/index")}';
+});
+} else {
+layer.msg(res.msg, { icon: 2 });
+}
+}).fail(function() {
+    layer.closeAll();
+    layer.msg('网络错误，请重试', { icon: 2 });
+});
+});
+});
+</script>
