@@ -1,0 +1,78 @@
+<div class="search">
+    <form class="form-inline">
+        <input placeholder="用户手机/姓名" autocomplete="on" value="{$req['user']??''}" name="user" class="form-control">
+        <input placeholder="邀请人数" autocomplete="on" value="{$req['invite_num']??''}" name="invite_num" class="form-control">
+        <select name="status" class="form-control">
+            <option value="">全部状态</option>
+            <option value="1" {if isset($req['status']) && $req['status']=='1'}selected{/if}>成功</option>
+            <option value="2" {if isset($req['status']) && $req['status']=='2'}selected{/if}>失败</option>
+        </select>
+        <input placeholder="开始日期" autocomplete="on" value="{$req['start_date']??''}" name="start_date" class="form-control" id="start_date">
+        <input placeholder="结束日期" autocomplete="on" value="{$req['end_date']??''}" name="end_date" class="form-control" id="end_date">
+        <input class="btn btn-flat btn-primary m_10" type="submit" value="搜索">
+        <a class="btn btn-flat btn-success m_10" href="{:url('admin/InviteCashLog/index', ['export' => 1])}">
+            <i class="fa fa-download"></i> 导出
+        </a>
+    </form>
+</div>
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="box">
+            <div class="box-header">
+                <h3 class="box-title">邀请现金红包发放记录</h3>
+            </div>
+            <div class="box-body table-responsive no-padding">
+                <table class="table table-bordered table-hover table-striped">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>用户手机</th>
+                        <th>用户姓名</th>
+                        <th>邀请人数</th>
+                        <th>现金金额</th>
+                        <th>状态</th>
+                        <th>发放时间</th>
+                        <th>备注</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {foreach $data as $v}
+                    <tr>
+                        <td>{$v.id}</td>
+                        <td>{$v.user.phone}</td>
+                        <td>{$v.user.realname}</td>
+                        <td>{$v.invite_num}人</td>
+                        <td>¥{$v.cash_amount}</td>
+                    <td>
+                    {if $v.status == 1}
+                        <span class="label label-success">{$v.status_text}</span>
+                    {else}
+                        <span class="label label-danger">{$v.status_text}</span>
+                    {/if}
+                    </td>
+                        <td>{$v.created_at}</td>
+                        <td>{$v.remark}</td>
+                    </tr>
+                    {/foreach}
+                    </tbody>
+                </table>
+            </div>
+            <div class="box-footer clearfix">
+                {$data|raw}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 日期选择器
+    laydate.render({
+        elem: '#start_date',
+        type: 'date'
+    });
+    laydate.render({
+        elem: '#end_date',
+        type: 'date'
+    });
+</script>

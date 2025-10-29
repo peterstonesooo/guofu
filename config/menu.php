@@ -11,35 +11,45 @@ return [
             'icon' => 'fa-user',
             'url'  =>
                 [
-                    '会员管理'     =>
+                    '会员管理'             =>
                         [
                             'icon' => 'fa-circle-o',
                             'url'  => 'admin/User/userList',
                         ],
-                    '实名认证'     =>
+                    '实名认证'             =>
                         [
                             'icon' => 'fa-circle-o',
                             'url'  => 'admin/Realname/realnameList',
                         ],
-                    '会员资金明细' =>
+                    '会员资金明细'         =>
                         [
                             'icon' => 'fa-circle-o',
                             'url'  => 'admin/UserBalanceLog/userBalanceLogList',
                         ],
-                    '会员积分记录' =>
+                    '会员积分记录'         =>
                         [
                             'icon' => 'fa-circle-o',
                             'url'  => 'admin/UserBalanceLog/userIntegralLogList',
                         ],
-                    '抽奖次数明细' =>
+                    '抽奖次数明细'         =>
                         [
                             'icon' => 'fa-circle-o',
                             'url'  => 'admin/UserLotteryLog/userLotteryLogList',
                         ],
-                    '收货地址'     =>
+                    '收货地址'             =>
                         [
                             'icon' => 'fa-circle-o',
                             'url'  => 'admin/UserDelivery/userDeliveryList',
+                        ],
+                    '邀请现金红包配置'     =>
+                        [
+                            'icon' => 'fa-circle-o',
+                            'url'  => 'admin/InviteCashConfig/index',
+                        ],
+                    '邀请现金红包发放记录' =>
+                        [
+                            'icon' => 'fa-circle-o',
+                            'url'  => 'admin/InviteCashLog/index',
                         ],
                 ],
         ],

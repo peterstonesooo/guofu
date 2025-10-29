@@ -7,6 +7,8 @@ use AlibabaCloud\SDK\Cloudauth\V20190307\Cloudauth;
 use AlibabaCloud\SDK\Cloudauth\V20190307\Models\Id2MetaVerifyRequest;
 use app\model\Apply;
 use app\model\Certificate;
+use app\model\invite_present\InviteCashConfig;
+use app\model\invite_present\InviteCashLog;
 use app\model\KlineChartNew;
 use app\model\MettingLog;
 use app\model\Order;
@@ -635,6 +637,9 @@ class UserController extends AuthController
 
                 // 给当前用户赠送体验金
                 User::changeInc($userToken['id'], 10, 'topup_balance', 24, $userToken['id'], 1, '帮扶计划体验金', 0, 4, 'ZS');
+
+                // ========== 新增：实名认证成功后检查上级的邀请人数并发放现金红包 ==========
+                $this->checkAndSendInviteCash($userToken['up_user_id']);
             }
 
             // 更新团队实名人数统计
@@ -659,6 +664,90 @@ class UserController extends AuthController
         }
 
         return out(['message' => '实名认证成功']);
+    }
+
+    /**
+     * 检查并发放邀请现金红包
+     */
+    private function checkAndSendInviteCash($upUserId)
+    {
+        try {
+            // 获取上级用户的已实名邀请人数
+            $realInviteCount = User::where('up_user_id', $upUserId)
+                ->where('is_realname', 1)
+                ->count();
+
+            // 获取有效的现金红包配置
+            $cashConfigs = InviteCashConfig::where('status', 1)
+                ->where('invite_num', '<=', $realInviteCount)
+                ->order('invite_num', 'desc')
+                ->select();
+
+            foreach ($cashConfigs as $config) {
+                // 检查是否已经发放过该级别的红包
+                $existsLog = InviteCashLog::where('user_id', $upUserId)
+                    ->where('invite_num', $config['invite_num'])
+                    ->find();
+
+                if (!$existsLog) {
+                    // 发放现金红包
+                    $this->sendInviteCashReward($upUserId, $config);
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('检查邀请现金红包失败: ' . $e->getMessage(), [
+                'up_user_id' => $upUserId
+            ]);
+        }
+    }
+
+    /**
+     * 发放邀请现金红包
+     */
+    private function sendInviteCashReward($userId, $config)
+    {
+        Db::startTrans();
+        try {
+            // 记录发放日志
+            $logData = [
+                'user_id'     => $userId,
+                'invite_num'  => $config['invite_num'],
+                'cash_amount' => $config['cash_amount'],
+                'status'      => 1,
+                'remark'      => "邀请{$config['invite_num']}人实名认证奖励"
+            ];
+
+            $cashLog = InviteCashLog::create($logData);
+
+            // 给用户账户增加现金余额
+            User::changeInc($userId, $config['cash_amount'], 'topup_balance', 102, $cashLog['id'], 1,
+                "邀请{$config['invite_num']}人实名认证现金红包", 0, 2, 'ICR');
+
+            Db::commit();
+
+            Log::info('邀请现金红包发放成功', [
+                'user_id'     => $userId,
+                'invite_num'  => $config['invite_num'],
+                'cash_amount' => $config['cash_amount']
+            ]);
+
+        } catch (\Exception $e) {
+            Db::rollback();
+
+            // 记录失败的发放日志
+            InviteCashLog::create([
+                'user_id'     => $userId,
+                'invite_num'  => $config['invite_num'],
+                'cash_amount' => $config['cash_amount'],
+                'status'      => 2,
+                'remark'      => "发放失败: " . $e->getMessage()
+            ]);
+
+            Log::error('邀请现金红包发放失败: ' . $e->getMessage(), [
+                'user_id' => $userId,
+                'config'  => $config
+            ]);
+        }
     }
 
     /**
