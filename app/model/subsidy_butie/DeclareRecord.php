@@ -32,11 +32,21 @@ class DeclareRecord extends Model
     }
 
     /**
-     * 关联补贴类型
+     * 获取补贴类型名称 - 通过补贴配置间接获取
      */
-    public function subsidyType()
+    public function getSubsidyTypeNameAttr($value, $data)
     {
-        return $this->belongsTo(DeclareSubsidyType::class, 'type_id', 'id');
+        // 如果已经有关联数据，直接返回
+        if (isset($this->subsidyConfig) && $this->subsidyConfig->subsidyType) {
+            return $this->subsidyConfig->subsidyType->name;
+        }
+
+        // 否则查询数据库
+        $config = DeclareSubsidyConfig::with('subsidyType')
+            ->where('id', $data['subsidy_id'])
+            ->find();
+
+        return $config->subsidyType->name ?? '';
     }
 
     /**
@@ -61,12 +71,20 @@ class DeclareRecord extends Model
     }
 
     /**
-     * 获取列表数据
+     * 获取列表数据 - 简化版本
      */
     public static function getList($params)
     {
-        $query = self::with(['user', 'subsidyConfig', 'subsidyType'])
-            ->order('created_at', 'desc');
+        $query = self::with([
+            'user'          => function ($q) {
+                $q->field('id,realname');
+            },
+            'subsidyConfig' => function ($q) {
+                $q->field('id,name,type_id')->with(['subsidyType' => function ($q2) {
+                    $q2->field('id,name');
+                }]);
+            }
+        ])->order('created_at', 'desc');
 
         // 搜索条件
         if (!empty($params['subsidy_name'])) {
@@ -77,7 +95,7 @@ class DeclareRecord extends Model
 
         if (!empty($params['user_name'])) {
             $query->whereHas('user', function ($q) use ($params) {
-                $q->where('username', 'like', "%{$params['user_name']}%");
+                $q->where('realname', 'like', "%{$params['user_name']}%");
             });
         }
 
@@ -95,13 +113,13 @@ class DeclareRecord extends Model
     {
         $record = self::with([
             'user'          => function ($query) {
-                $query->field('id,username as user_name');
+                $query->field('id,realname as user_name');
             },
             'subsidyConfig' => function ($query) {
-                $query->field('id,name as subsidy_name,description');
-            },
-            'subsidyType'   => function ($query) {
-                $query->field('id,name as type_name');
+                $query->field('id,name as subsidy_name,description,type_id')
+                    ->with(['subsidyType' => function ($q) {
+                        $q->field('id,name as type_name');
+                    }]);
             },
             'funds'         => function ($query) {
                 $query->with(['fundType' => function ($q) {
