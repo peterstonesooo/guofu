@@ -2,25 +2,24 @@
 
 namespace app\admin\controller;
 
-
 use app\model\subsidy_butie\DeclareSubsidyType;
 use think\facade\Cache;
+use think\facade\Log;
 
-class DeclareSubsidyTypeController extends AuthController
+class GuardTypeController extends AuthController
 {
     // 缓存键名
-    const CACHE_KEY = 'declare_subsidy_type_list';
+    const CACHE_KEY = 'guard_type_list';
 
-    // 补贴申报类型值（type=1）
-    const SUBSIDY_TYPE = 1;
+    // 守护类型值
+    const GUARD_TYPE = 2;
 
     /**
-     * 补贴类型列表（只处理type=1的数据）
+     * 守护类型列表
      */
     public function index()
     {
         $req = request()->param();
-        $req['type'] = self::SUBSIDY_TYPE; // 传递type参数，确保只查询type=1
 
         try {
             $cacheKey = self::CACHE_KEY . ':admin:' . md5(serialize($req));
@@ -30,8 +29,11 @@ class DeclareSubsidyTypeController extends AuthController
             if ($cachedData !== false) {
                 $data = unserialize($cachedData);
             } else {
+                // 只查询守护类型的数据
+                $req['type'] = self::GUARD_TYPE;
                 $data = DeclareSubsidyType::getList($req)->each(function ($item) {
                     $item->img_url = $item->img_url;
+                    $item->type_text = $item->type_text;
                     return $item;
                 });
                 $redis->setex($cacheKey, 600, serialize($data));
@@ -43,8 +45,10 @@ class DeclareSubsidyTypeController extends AuthController
             return $this->fetch();
 
         } catch (\Exception $e) {
+            $req['type'] = self::GUARD_TYPE;
             $data = DeclareSubsidyType::getList($req)->each(function ($item) {
                 $item->img_url = $item->img_url;
+                $item->type_text = $item->type_text;
                 return $item;
             });
 
@@ -64,9 +68,12 @@ class DeclareSubsidyTypeController extends AuthController
         $data = [];
 
         if (!empty($req['id'])) {
-            $data = DeclareSubsidyType::find($req['id']);
+            $data = DeclareSubsidyType::where('id', $req['id'])
+                ->where('type', self::GUARD_TYPE)
+                ->find();
             if ($data) {
                 $data->img_url = $data->img_url;
+                $data->type_text = $data->type_text;
             }
         }
 
@@ -75,7 +82,7 @@ class DeclareSubsidyTypeController extends AuthController
     }
 
     /**
-     * 添加补贴类型（添加时默认type=1？但用户可能允许添加其他类型，但查询时只过滤type=1）
+     * 添加守护类型
      */
     public function add()
     {
@@ -89,6 +96,9 @@ class DeclareSubsidyTypeController extends AuthController
         ]);
 
         try {
+            // 强制设置为守护类型
+            $req['type'] = self::GUARD_TYPE;
+
             $type = new DeclareSubsidyType();
             $type->save($req);
 
@@ -101,7 +111,7 @@ class DeclareSubsidyTypeController extends AuthController
     }
 
     /**
-     * 编辑补贴类型
+     * 编辑守护类型
      */
     public function edit()
     {
@@ -116,9 +126,12 @@ class DeclareSubsidyTypeController extends AuthController
         ]);
 
         try {
-            $type = DeclareSubsidyType::find($req['id']);
+            $type = DeclareSubsidyType::where('id', $req['id'])
+                ->where('type', self::GUARD_TYPE)
+                ->find();
+
             if (!$type) {
-                return out('类型不存在', 400);
+                return out('类型不存在或不属于守护类型', 400);
             }
 
             $type->save($req);
@@ -131,7 +144,7 @@ class DeclareSubsidyTypeController extends AuthController
     }
 
     /**
-     * 删除补贴类型
+     * 删除守护类型
      */
     public function delete()
     {
@@ -140,14 +153,17 @@ class DeclareSubsidyTypeController extends AuthController
         ]);
 
         try {
-//            // 检查是否被使用
-//            if (DeclareSubsidyType::checkUsed($req['id'])) {
-//                return out('该类型下存在补贴配置，无法删除', 400);
-//            }
+            $type = DeclareSubsidyType::where('id', $req['id'])
+                ->where('type', self::GUARD_TYPE)
+                ->find();
 
-            $type = DeclareSubsidyType::find($req['id']);
             if (!$type) {
-                return out('类型不存在', 400);
+                return out('类型不存在或不属于守护类型', 400);
+            }
+
+            // 检查是否被使用
+            if (DeclareSubsidyType::checkUsed($req['id'])) {
+                return out('该类型下存在守护配置，无法删除', 400);
             }
 
             $type->delete();
@@ -177,7 +193,7 @@ class DeclareSubsidyTypeController extends AuthController
             } while ($iterator > 0);
 
         } catch (\Exception $e) {
-            \think\facade\Log::error('清除补贴类型缓存失败: ' . $e->getMessage());
+            Log::error('清除守护类型缓存失败: ' . $e->getMessage());
         }
     }
 }
