@@ -75,17 +75,22 @@ class DeclareRecordController extends AuthController
         $req = request()->param();
 
         try {
-            $data = DeclareRecord::with(['user', 'subsidyConfig', 'subsidyType'])
-                ->order('created_at', 'desc')
+            $data = DeclareRecord::with([
+                'user' => function ($q) {
+                    $q->field('id,realname'); // 使用 realname
+                },
+                'subsidyConfig',
+                'subsidyType'
+            ])->order('created_at', 'desc')
                 ->select();
 
             $exportData = [];
             foreach ($data as $item) {
                 $exportData[] = [
                     'id'             => $item->id,
-                    'user_name'      => $item->user->username ?? '',
+                    'user_name'      => $item->user->realname ?? '', // 修改为 realname
                     'subsidy_name'   => $item->subsidyConfig->name ?? '',
-                    'subsidy_type'   => $item->subsidyType->name ?? '',
+                    'subsidy_type'   => $item->subsidyType->name ?? '', // 通过关联获取补贴类型
                     'declare_amount' => $item->declare_amount,
                     'declare_cycle'  => $item->declare_cycle . '天',
                     'status_text'    => $item->status_text,

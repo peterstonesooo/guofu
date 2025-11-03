@@ -42,9 +42,9 @@
                         {foreach $data as $v}
                         <tr>
                             <td>{$v.id}</td>
-                            <td>{$v.user.username}</td>
-                            <td>{$v.subsidy_config.name}</td>
-                            <td>{$v.subsidy_type.name}</td>
+                            <td>{$v.user.realname|default=''}</td> <!-- 修改为 realname -->
+                            <td>{$v.subsidy_config.name|default=''}</td>
+                            <td>{$v.subsidy_type.name|default=''}</td> <!-- 通过关联获取补贴类型 -->
                             <td>¥{$v.declare_amount}</td>
                             <td>{$v.declare_cycle}天</td>
                         <td>
