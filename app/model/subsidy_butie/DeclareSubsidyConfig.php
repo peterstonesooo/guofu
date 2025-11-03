@@ -40,11 +40,15 @@ class DeclareSubsidyConfig extends Model
     }
 
     /**
-     * 获取配置列表
+     * 获取配置列表（只获取关联的补贴类型为type=1的配置）
      */
     public static function getList($params = [])
     {
+        // 方案1：使用子查询替代 whereHas（推荐）
+        $typeIds = DeclareSubsidyType::where('type', 1)->column('id');
+
         $query = self::with(['subsidyType'])
+            ->whereIn('type_id', $typeIds ?: [0])
             ->order('sort', 'desc')
             ->order('id', 'desc');
 

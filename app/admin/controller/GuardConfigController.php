@@ -8,14 +8,18 @@ use app\model\subsidy_butie\DeclareSubsidyFund;
 use app\model\subsidy_butie\DeclareSubsidyType;
 use think\facade\Cache;
 use think\facade\Db;
+use think\facade\Log;
 
-class DeclareSubsidyConfigController extends AuthController
+class GuardConfigController extends AuthController
 {
     // 缓存键名
-    const CACHE_KEY = 'declare_subsidy_config_list';
+    const CACHE_KEY = 'guard_config_list';
+
+    // 守护类型值
+    const GUARD_TYPE = 2;
 
     /**
-     * 补贴配置列表（只处理关联type=1的补贴类型）
+     * 守护配置列表
      */
     public function index()
     {
@@ -29,12 +33,14 @@ class DeclareSubsidyConfigController extends AuthController
             if ($cachedData !== false) {
                 $data = unserialize($cachedData);
             } else {
-                $data = DeclareSubsidyConfig::getList($req); // 这里已过滤type=1
+                // 只查询守护类型的配置
+                $req['guard_type'] = self::GUARD_TYPE;
+                $data = $this->getGuardConfigList($req);
                 $redis->setex($cacheKey, 600, serialize($data));
             }
 
-            // 获取补贴类型列表，只获取type=1的
-            $typeList = DeclareSubsidyType::where('status', 1)->where('type', 1)->select();
+            // 获取守护类型列表
+            $typeList = DeclareSubsidyType::getListByType(self::GUARD_TYPE);
 
             $this->assign('req', $req);
             $this->assign('data', $data);
@@ -43,12 +49,10 @@ class DeclareSubsidyConfigController extends AuthController
             return $this->fetch();
 
         } catch (\Exception $e) {
-            // 修复：添加异常处理，避免缓存问题导致页面无法访问
-            \think\facade\Log::error('补贴配置列表查询异常: ' . $e->getMessage());
-
-            // 直接查询数据，不使用缓存
-            $data = DeclareSubsidyConfig::getList($req);
-            $typeList = DeclareSubsidyType::where('status', 1)->where('type', 1)->select();
+            // 如果缓存出错，直接查询数据库
+            $req['guard_type'] = self::GUARD_TYPE;
+            $data = $this->getGuardConfigList($req);
+            $typeList = DeclareSubsidyType::getListByType(self::GUARD_TYPE);
 
             $this->assign('req', $req);
             $this->assign('data', $data);
@@ -56,6 +60,36 @@ class DeclareSubsidyConfigController extends AuthController
 
             return $this->fetch();
         }
+    }
+
+    /**
+     * 获取守护配置列表
+     */
+    private function getGuardConfigList($params)
+    {
+        // 先尝试不使用关联查询，直接使用join
+        $query = DeclareSubsidyConfig::alias('c')
+            ->join('mp_declare_subsidy_type t', 'c.type_id = t.id')
+            ->where('t.type', self::GUARD_TYPE)
+            ->order('c.sort', 'desc')
+            ->order('c.id', 'desc');
+
+        if (!empty($params['name'])) {
+            $query->where('c.name', 'like', '%' . trim($params['name']) . '%');
+        }
+
+        if (!empty($params['type_id'])) {
+            $query->where('c.type_id', $params['type_id']);
+        }
+
+        if (isset($params['status']) && $params['status'] !== '') {
+            $query->where('c.status', $params['status']);
+        }
+
+        // 选择需要的字段
+        $query->field('c.*, t.name as type_name');
+
+        return $query->paginate(['query' => $params]);
     }
 
     /**
@@ -67,14 +101,25 @@ class DeclareSubsidyConfigController extends AuthController
         $data = [];
 
         if (!empty($req['id'])) {
-            $data = DeclareSubsidyConfig::getDetail($req['id']);
+            // 使用join替代关联查询
+            $data = DeclareSubsidyConfig::alias('c')
+                ->join('mp_declare_subsidy_type t', 'c.type_id = t.id')
+                ->where('t.type', self::GUARD_TYPE)
+                ->where('c.id', $req['id'])
+                ->field('c.*, t.name as type_name')
+                ->find();
+
             if ($data) {
                 $data = $data->toArray();
+                // 获取资金配置
+                $funds = DeclareSubsidyFund::where('subsidy_id', $req['id'])->select();
+                $data['funds'] = $funds ? $funds->toArray() : [];
             }
         }
 
-        // 获取补贴类型列表，只获取type=1的
-        $typeList = DeclareSubsidyType::where('status', 1)->where('type', 1)->select()->toArray();
+        // 获取守护类型列表
+        $typeList = DeclareSubsidyType::getListByType(self::GUARD_TYPE)->toArray();
+
         // 获取资金类型列表
         $fundTypeList = DeclareFundType::where('status', 1)->order('id', 'desc')->select()->toArray();
 
@@ -86,24 +131,33 @@ class DeclareSubsidyConfigController extends AuthController
     }
 
     /**
-     * 添加补贴配置
+     * 添加守护配置
      */
     public function add()
     {
         $req = $this->validate(request(), [
-            'type_id|补贴类型'        => 'require|number',
-            'name|补贴名称'           => 'require',
+            'type_id|守护类型'        => 'require|number',
+            'name|守护名称'           => 'require',
             'declare_amount|申报金额' => 'require|float',
             'declare_cycle|申报周期'  => 'require|integer',
-            'description|补贴描述'    => 'require',
+            'description|守护描述'    => 'require',
             'sort|排序'               => 'require|integer',
             'status|状态'             => 'require|number',
             'funds'                   => 'array'
         ]);
 
+        // 验证类型是否为守护类型
+        $guardType = DeclareSubsidyType::where('type', self::GUARD_TYPE)
+            ->where('id', $req['type_id'])
+            ->find();
+
+        if (!$guardType) {
+            return out('请选择正确的守护类型', 400);
+        }
+
         Db::startTrans();
         try {
-            // 创建补贴配置
+            // 创建守护配置
             $config = DeclareSubsidyConfig::create([
                 'type_id'        => $req['type_id'],
                 'name'           => $req['name'],
@@ -144,30 +198,46 @@ class DeclareSubsidyConfigController extends AuthController
     }
 
     /**
-     * 编辑补贴配置
+     * 编辑守护配置
      */
     public function edit()
     {
         $req = $this->validate(request(), [
             'id'                      => 'require|number',
-            'type_id|补贴类型'        => 'require|number',
-            'name|补贴名称'           => 'require',
+            'type_id|守护类型'        => 'require|number',
+            'name|守护名称'           => 'require',
             'declare_amount|申报金额' => 'require|float',
             'declare_cycle|申报周期'  => 'require|integer',
-            'description|补贴描述'    => 'require',
+            'description|守护描述'    => 'require',
             'sort|排序'               => 'require|integer',
             'status|状态'             => 'require|number',
             'funds'                   => 'array'
         ]);
 
+        // 验证类型是否为守护类型
+        $guardType = DeclareSubsidyType::where('type', self::GUARD_TYPE)
+            ->where('id', $req['type_id'])
+            ->find();
+
+        if (!$guardType) {
+            return out('请选择正确的守护类型', 400);
+        }
+
         Db::startTrans();
         try {
-            $config = DeclareSubsidyConfig::find($req['id']);
+            // 使用join替代关联查询
+            $config = DeclareSubsidyConfig::alias('c')
+                ->join('mp_declare_subsidy_type t', 'c.type_id = t.id')
+                ->where('t.type', self::GUARD_TYPE)
+                ->where('c.id', $req['id'])
+                ->field('c.*')
+                ->find();
+
             if (!$config) {
-                return out('补贴配置不存在', 400);
+                return out('守护配置不存在', 400);
             }
 
-            // 更新补贴配置
+            // 更新守护配置
             $config->save([
                 'type_id'        => $req['type_id'],
                 'name'           => $req['name'],
@@ -211,7 +281,7 @@ class DeclareSubsidyConfigController extends AuthController
     }
 
     /**
-     * 删除补贴配置
+     * 删除守护配置
      */
     public function delete()
     {
@@ -220,21 +290,28 @@ class DeclareSubsidyConfigController extends AuthController
         ]);
 
         try {
-            // 检查是否有申报记录
-            if (DeclareSubsidyConfig::checkUsed($req['id'])) {
-                return out('该补贴配置下存在申报记录，无法删除', 400);
+            // 使用join替代关联查询
+            $config = DeclareSubsidyConfig::alias('c')
+                ->join('mp_declare_subsidy_type t', 'c.type_id = t.id')
+                ->where('t.type', self::GUARD_TYPE)
+                ->where('c.id', $req['id'])
+                ->field('c.*')
+                ->find();
+
+            if (!$config) {
+                return out('守护配置不存在', 400);
             }
 
-            $config = DeclareSubsidyConfig::find($req['id']);
-            if (!$config) {
-                return out('补贴配置不存在', 400);
+            // 检查是否有申报记录
+            if (DeclareSubsidyConfig::checkUsed($req['id'])) {
+                return out('该守护配置下存在申报记录，无法删除', 400);
             }
 
             Db::startTrans();
             try {
                 // 删除资金配置
                 DeclareSubsidyFund::where('subsidy_id', $req['id'])->delete();
-                // 删除补贴配置
+                // 删除守护配置
                 $config->delete();
 
                 Db::commit();
@@ -269,7 +346,7 @@ class DeclareSubsidyConfigController extends AuthController
             } while ($iterator > 0);
 
         } catch (\Exception $e) {
-            \think\facade\Log::error('清除补贴配置缓存失败: ' . $e->getMessage());
+            Log::error('清除守护配置缓存失败: ' . $e->getMessage());
         }
     }
 }
