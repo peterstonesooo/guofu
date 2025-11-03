@@ -36,8 +36,7 @@ class DeclareRecord extends Model
      */
     public function subsidyType()
     {
-        return $this->belongsTo(DeclareSubsidyType::class, 'subsidy_config.type_id', 'id')
-            ->through('subsidyConfig');
+        return $this->belongsTo(DeclareSubsidyType::class, 'type_id', 'id');
     }
 
     /**
