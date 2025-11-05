@@ -32,42 +32,11 @@ class DeclareRecord extends Model
     }
 
     /**
-     * 获取补贴类型名称 - 通过补贴配置间接获取
-     */
-    public function getSubsidyTypeNameAttr($value, $data)
-    {
-        // 如果已经有关联数据，直接返回
-        if (isset($this->subsidyConfig) && $this->subsidyConfig->subsidyType) {
-            return $this->subsidyConfig->subsidyType->name;
-        }
-
-        // 否则查询数据库
-        $config = DeclareSubsidyConfig::with('subsidyType')
-            ->where('id', $data['subsidy_id'])
-            ->find();
-
-        return $config->subsidyType->name ?? '';
-    }
-
-    /**
      * 关联资金明细
      */
     public function funds()
     {
         return $this->hasMany(DeclareRecordFund::class, 'declare_id', 'id');
-    }
-
-    /**
-     * 获取状态文本
-     */
-    public function getStatusTextAttr($value, $data)
-    {
-        $status = $data['status'] ?? $value;
-        $map = [
-            self::STATUS_SUCCESS => '成功',
-            self::STATUS_FAILED  => '失败'
-        ];
-        return $map[$status] ?? '未知';
     }
 
     /**
@@ -81,6 +50,11 @@ class DeclareRecord extends Model
             },
             'subsidyConfig' => function ($q) {
                 $q->field('id,name,type_id')->with(['subsidyType' => function ($q2) {
+                    $q2->field('id,name');
+                }]);
+            },
+            'funds'         => function ($q) {
+                $q->with(['fundType' => function ($q2) {
                     $q2->field('id,name');
                 }]);
             }
@@ -133,5 +107,104 @@ class DeclareRecord extends Model
         }
 
         return [];
+    }
+
+    /**
+     * 获取用户购买记录列表（API使用）- 修复对象访问问题
+     */
+    public static function getUserPurchaseList($user_id, $type = 0, $page = 1, $limit = 10)
+    {
+        // 使用简单的JOIN查询，避免复杂的关联查询
+        $query = self::alias('r')
+            ->leftJoin('mp_declare_subsidy_config c', 'r.subsidy_id = c.id')
+            ->leftJoin('mp_declare_subsidy_type t', 'c.type_id = t.id')
+            ->field('r.*, c.name as subsidy_name, c.declare_amount, c.declare_cycle, t.type, t.name as type_name')
+            ->where('r.user_id', $user_id)
+            ->order('r.id', 'desc');
+
+        // 根据类型筛选
+        if ($type > 0) {
+            $query->where('t.type', $type);
+        }
+
+        // 获取总数
+        $total = $query->count();
+
+        // 获取分页数据
+        $list = $query->page($page, $limit)->select();
+
+        // 处理数据格式
+        $result = [];
+        if ($list) {
+            $list = $list->toArray();
+
+            foreach ($list as $item) {
+                // 确保所有字段都有默认值
+                $item['type'] = $item['type'] ?? 1;
+                $item['subsidy_name'] = $item['subsidy_name'] ?? '';
+                $item['declare_amount'] = $item['declare_amount'] ?? 0;
+                $item['declare_cycle'] = $item['declare_cycle'] ?? 0;
+                $item['type_name'] = $item['type_name'] ?? '';
+
+                // 添加类型文本
+                $typeMap = [
+                    1 => '申报补贴',
+                    2 => '守护'
+                ];
+                $item['type_text'] = $typeMap[$item['type']] ?? '未知类型';
+
+                // 添加状态文本
+                $statusMap = [
+                    0 => '审核失败',
+                    1 => '审核成功'
+                ];
+                $item['status_text'] = $statusMap[$item['status']] ?? '未知状态';
+
+                // 获取资金明细数据
+                $item['subsidyFunds'] = self::getRecordFunds($item['id']);
+
+                $result[] = $item;
+            }
+        }
+
+        return [
+            'list'         => $result,
+            'total'        => $total,
+            'current_page' => $page,
+            'total_page'   => $limit > 0 ? ceil($total / $limit) : 1
+        ];
+    }
+
+    /**
+     * 获取记录的资金明细
+     */
+    private static function getRecordFunds($declare_id)
+    {
+        if (!$declare_id) {
+            return [];
+        }
+
+        $funds = DeclareRecordFund::alias('rf')
+            ->leftJoin('mp_declare_fund_type ft', 'rf.fund_type_id = ft.id')
+            ->field('rf.*, ft.name as fund_type_name')
+            ->where('rf.declare_id', $declare_id)
+            ->select();
+
+        $fundsData = [];
+        if ($funds) {
+            $funds = $funds->toArray();
+
+            foreach ($funds as $fund) {
+                $fundsData[] = [
+                    'id'             => $fund['id'] ?? 0,
+                    'fund_type_id'   => $fund['fund_type_id'] ?? 0,
+                    'fund_amount'    => $fund['fund_amount'] ?? 0,
+                    'fund_type_name' => $fund['fund_type_name'] ?? '',
+                    'created_at'     => $fund['created_at'] ?? ''
+                ];
+            }
+        }
+
+        return $fundsData;
     }
 }
