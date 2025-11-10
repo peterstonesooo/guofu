@@ -304,18 +304,18 @@ return [
                 'icon' => 'fa-circle-o',
                 'url'  => 'admin/DeclareRecord/index',
             ],
-            '守护类型管理'         => [
-                'icon' => 'fa-circle-o',
-                'url'  => 'admin/GuardType/index',
-            ],
-            '守护配置管理'         => [
-                'icon' => 'fa-circle-o',
-                'url'  => 'admin/GuardConfig/index',
-            ],
-            '守护记录管理'         => [
-                'icon' => 'fa-circle-o',
-                'url'  => 'admin/GuardRecord/index',
-            ],
+//            '守护类型管理'         => [
+//                'icon' => 'fa-circle-o',
+//                'url'  => 'admin/GuardType/index',
+//            ],
+//            '守护配置管理'         => [
+//                'icon' => 'fa-circle-o',
+//                'url'  => 'admin/GuardConfig/index',
+//            ],
+//            '守护记录管理'         => [
+//                'icon' => 'fa-circle-o',
+//                'url'  => 'admin/GuardRecord/index',
+//            ],
         ],
     ],
     '会议管理' => [
