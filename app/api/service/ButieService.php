@@ -57,7 +57,7 @@ class ButieService
             }
 
             // 增加用户的国补钱包余额
-            User::changeInc($user_id, $butie->price, 'national_subsidy_balance', 99, $record->id, 14, "领取补贴:{$butie->title}");
+            User::changeInc($user_id, $butie->price, 'integral', 99, $record->id, 14, "领取补贴:{$butie->title}");
 
             Db::commit();
             return true;
