@@ -79,9 +79,13 @@ class ButieController extends AuthController
                 }
             }
 
-            // 获取用户已领取的补贴ID列表
+            // 获取用户今天已领取的补贴ID列表
+            $todayStart = date('Y-m-d 00:00:00');
+            $todayEnd = date('Y-m-d 23:59:59');
             $receivedButieIds = StockButieRecords::where('user_id', $user_id)
                 ->where('status', StockButieRecords::STATUS_SUCCESS)
+                ->where('created_at', '>=', $todayStart)
+                ->where('created_at', '<=', $todayEnd)
                 ->column('butie_id');
 
             // 为每个补贴项添加领取状态

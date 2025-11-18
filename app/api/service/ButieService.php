@@ -30,13 +30,17 @@ class ButieService
                 throw new Exception('补贴不存在或已下架');
             }
 
-            // 检查用户是否已经领取过该补贴
+            // 检查用户今天是否已经领取过该补贴
+            $todayStart = date('Y-m-d 00:00:00');
+            $todayEnd = date('Y-m-d 23:59:59');
             $exists = StockButieRecords::where('user_id', $user_id)
                 ->where('butie_id', $butie_id)
+                ->where('created_at', '>=', $todayStart)
+                ->where('created_at', '<=', $todayEnd)
                 ->find();
 
             if ($exists) {
-                throw new Exception('您已经领取过该补贴');
+                throw new Exception('您今天已经领取过该补贴');
             }
 
             // 使用Model创建领取记录
