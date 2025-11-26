@@ -196,87 +196,87 @@ return [
                         ],
                 ],
         ],
-    '商城管理' =>
-        [
-            'icon' => 'fa-gears',
-            'url'  =>
-                [
-                    '商品分类' =>
-                        [
-                            'icon' => 'fa-circle-o',
-                            'url'  => 'admin/Cate/cateList',
-                        ],
-                    '商品管理' =>
-                        [
-                            'icon' => 'fa-circle-o',
-                            'url'  => 'admin/ShopGoods/goodsList',
-                        ],
-                    '订单管理' =>
-                        [
-                            'icon' => 'fa-circle-o',
-                            'url'  => 'admin/ShopOrder/orderList',
-                        ],
-                ],
-
-        ],
-    '股权管理' => [
-        'icon' => 'fa-pie-chart',  // 使用图表图标表示股权数据
-        'url'  => [
-            '股权配置'         => [
-                'icon' => 'fa-cog',  // 使用齿轮图标表示配置
-                'url'  => 'admin/Stock/index',
-            ],
-            '股权方案'         => [
-                'icon' => 'fa-line-chart',
-                'url'  => 'admin/StockPackage/index',
-            ],
-            '股权购买记录'     => [
-                'icon' => 'fa-exchange',  // 使用交换图标表示交易
-                'url'  => 'admin/StockTransaction/index',
-            ],
-            '股权方案购买记录' => [
-                'icon' => 'fa-exchange',  // 使用交换图标表示交易
-                'url'  => 'admin/PackagePurchase/index',
-            ],
-            '股权公告管理'     => [
-                'icon' => 'fa-bullhorn',  // 使用喇叭图标表示公告
-                'url'  => 'admin/StockAnnouncements/announcementList',
-            ],
-            '活动领取记录'     => [
-                'icon' => 'fa-gift',  // 使用礼物图标表示活动领取
-                'url'  => 'admin/StockActivityClaim/index',
-            ],
-            '产品管理'         => [
-                'icon' => 'fa-cube',  // 使用立方体图标表示产品
-                'url'  => 'admin/StockProduct/productList',
-            ],
-            '产品购买记录'     => [
-                'icon' => 'fa-shopping-cart',  // 使用购物车图标表示购买记录
-                'url'  => 'admin/StockProductPurchase/index',
-            ],
-        ],
-    ],
-    '财政管理' => [
-        'icon' => 'fa-pie-chart',
-        'url'  => [
-            '财政调整'         => [
-                'icon' => 'fa-pie-chart',
-                'url'  => 'admin/FinanceApprovalConfig/approvalConfigList',
-            ],
-            '财政审核'         => [
-                'icon' => 'fa-line-chart',
-                'url'  => 'admin/FinanceApproval/applyList',
-            ],
-            '优先方案管理'     => [
-                'icon' => 'fa-leaf',
-                'url'  => 'admin/GreenConfig/greenConfigList',
-            ],
-            '优先通道购买记录' => [
-                'icon' => 'fa-shopping-cart',
-                'url'  => 'admin/GreenChannelOrder/greenChannelList',
-            ],
-        ],
-    ],
+//    '商城管理' =>
+//        [
+//            'icon' => 'fa-gears',
+//            'url'  =>
+//                [
+//                    '商品分类' =>
+//                        [
+//                            'icon' => 'fa-circle-o',
+//                            'url'  => 'admin/Cate/cateList',
+//                        ],
+//                    '商品管理' =>
+//                        [
+//                            'icon' => 'fa-circle-o',
+//                            'url'  => 'admin/ShopGoods/goodsList',
+//                        ],
+//                    '订单管理' =>
+//                        [
+//                            'icon' => 'fa-circle-o',
+//                            'url'  => 'admin/ShopOrder/orderList',
+//                        ],
+//                ],
+//
+//        ],
+//    '股权管理' => [
+//        'icon' => 'fa-pie-chart',  // 使用图表图标表示股权数据
+//        'url'  => [
+//            '股权配置'         => [
+//                'icon' => 'fa-cog',  // 使用齿轮图标表示配置
+//                'url'  => 'admin/Stock/index',
+//            ],
+//            '股权方案'         => [
+//                'icon' => 'fa-line-chart',
+//                'url'  => 'admin/StockPackage/index',
+//            ],
+//            '股权购买记录'     => [
+//                'icon' => 'fa-exchange',  // 使用交换图标表示交易
+//                'url'  => 'admin/StockTransaction/index',
+//            ],
+//            '股权方案购买记录' => [
+//                'icon' => 'fa-exchange',  // 使用交换图标表示交易
+//                'url'  => 'admin/PackagePurchase/index',
+//            ],
+//            '股权公告管理'     => [
+//                'icon' => 'fa-bullhorn',  // 使用喇叭图标表示公告
+//                'url'  => 'admin/StockAnnouncements/announcementList',
+//            ],
+//            '活动领取记录'     => [
+//                'icon' => 'fa-gift',  // 使用礼物图标表示活动领取
+//                'url'  => 'admin/StockActivityClaim/index',
+//            ],
+//            '产品管理'         => [
+//                'icon' => 'fa-cube',  // 使用立方体图标表示产品
+//                'url'  => 'admin/StockProduct/productList',
+//            ],
+//            '产品购买记录'     => [
+//                'icon' => 'fa-shopping-cart',  // 使用购物车图标表示购买记录
+//                'url'  => 'admin/StockProductPurchase/index',
+//            ],
+//        ],
+//    ],
+//    '财政管理' => [
+//        'icon' => 'fa-pie-chart',
+//        'url'  => [
+//            '财政调整'         => [
+//                'icon' => 'fa-pie-chart',
+//                'url'  => 'admin/FinanceApprovalConfig/approvalConfigList',
+//            ],
+//            '财政审核'         => [
+//                'icon' => 'fa-line-chart',
+//                'url'  => 'admin/FinanceApproval/applyList',
+//            ],
+//            '优先方案管理'     => [
+//                'icon' => 'fa-leaf',
+//                'url'  => 'admin/GreenConfig/greenConfigList',
+//            ],
+//            '优先通道购买记录' => [
+//                'icon' => 'fa-shopping-cart',
+//                'url'  => 'admin/GreenChannelOrder/greenChannelList',
+//            ],
+//        ],
+//    ],
     '补贴管理' => [
         'icon' => 'fa-money',
         'url'  => [
