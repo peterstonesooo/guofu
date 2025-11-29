@@ -1327,5 +1327,31 @@ class UserController extends AuthController
 
     }
 
+    public function inviteRewardProgress()
+    {
+        $user = $this->user;
+        
+        // 获取用户直推人数 (level 1)
+        $directInviteCount = \app\model\UserRelation::where('user_id', $user['id'])
+            ->where('level', 1)
+            ->count();
+
+        // 获取所有启用的邀请现金红包配置
+        $configs = \app\model\invite_present\InviteCashConfig::getEnabledConfigs();
+        
+        $result = [];
+        foreach ($configs as $config) {
+            $result[] = [
+                'invite_num' => $config['invite_num'],
+                'cash_amount' => $config['cash_amount'],
+                'current_progress' => min($directInviteCount, $config['invite_num']),
+                'is_completed' => $directInviteCount >= $config['invite_num'],
+                'progress_text' => $directInviteCount . '/' . $config['invite_num']
+            ];
+        }
+
+        return out($result);
+    }
+
 
 }
