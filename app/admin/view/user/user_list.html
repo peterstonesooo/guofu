@@ -57,9 +57,9 @@
                             {if(session('admin_user')['auth_group_id']!=3)}
                             <th>现金</th>
                             {/if}
-                            <th>基本保险</th>
-                            <th>积分</th>
-                            <th>团队奖励</th>
+                            <th>国补钱包</th>
+                            <th>充值余额</th>
+                            <th>现金钱包</th>
                            <th>会议钱包</th>
                            <th>邀请码</th>
                            <th>实名</th>
@@ -84,9 +84,9 @@
                                 {if(session('admin_user')['auth_group_id']!=3)}
                                 <td>{$v['topup_balance']}</td>
                                 {/if}
-                                 <td>{$v['insurance_balance']}</td>
                                  <td>{$v['integral']}</td>
-                                <td>{$v['team_bonus_balance']}</td>
+                                 <td>{$v['topup_balance']}</td>
+                                 <td>{$v['team_bonus_balance']}</td>
                                <td>{$v['meeting_wallet']}</td>
                                <td>{$v['invite_code']}</td>
                                <td>{$v['realname']}</td>

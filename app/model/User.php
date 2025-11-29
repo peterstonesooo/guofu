@@ -61,106 +61,7 @@ class User extends Model
         return 0;
     }
 
-    // 持有数字人民币
-    public function getDigitalYuanAttr($value, $data)
-    {
-        if (!empty($data['id'])) {
-            return round(EquityYuanRecord::where('user_id', $data['id'])->where('status', 2)->where('type', 2)->sum('num'), 2);
-        }
-        return 0;
-    }
-    // 持有贫困补助金
-/*     public function getPovertySubsidyAmountAttr($value, $data)
-    {
-        if (!empty($data['id'])) {
-            return round(EquityYuanRecord::where('user_id', $data['id'])->where('status', 2)->where('type', 3)->sum('num'), 2);
-        }
-        return 0;
-    }
- */
-    // 我的分红
-    public function getMyBonusAttr($value, $data)
-    {
-        if (!empty($data['id'])) {
-            return round(Order::where('user_id', $data['id'])->whereIn('status', [2,3,4])->sum('gain_bonus'), 2);
-        }
-        return 0;
-    }
-
-    // 累计总分红
-    public function getTotalBonusAttr($value, $data)
-    {
-        if (!empty($data['id'])) {
-            return round(Order::where('user_id', $data['id'])->where('status', 4)->sum('gain_bonus'), 2);
-        }
-        return 0;
-    }
-
-    // 分红收益中
-    public function getProfitingBonusAttr($value, $data)
-    {
-        if (!empty($data['id'])) {
-            //return round(Order::where('user_id', $data['id'])->whereIn('status', [2,3,4])->sum('gain_bonus'), 2);
-            $money1= Order::where('user_id', $data['id'])->whereIn('status', [2,3,4])->sum('sum_amount2');
-            $money2= Order::where('user_id', $data['id'])->whereIn('status', [2,3,4])->sum('sum_amount');
-            return round($money1+$money2,2);
-        }
-        return 0;
-    }
-
-    // 已兑换股权
-    public function getExchangeEquityAttr($value, $data)
-    {
-        if (!empty($data['id'])) {
-            return round(EquityYuanRecord::where('user_id', $data['id'])->where('status', 3)->where('type', 1)->sum('num'), 2);
-        }
-        return 0;
-    }
-
-    // 已兑换期权
-    public function getExchangeDigitalYuanAttr($value, $data)
-    {
-        if (!empty($data['id'])) {
-            return round(EquityYuanRecord::where('user_id', $data['id'])->where('status', 3)->where('type', 2)->sum('num'), 2);
-        }
-        return 0;
-    }
-
-    // 总被动收益
-    public function getPassiveTotalIncomeAttr($value, $data)
-    {
-        if (!empty($data['id'])) {
-            return round(PassiveIncomeRecord::where('user_id', $data['id'])->whereIn('status', [2, 3])->sum('amount'), 2);
-        }
-        return 0;
-    }
-    
-    // 总补贴
-    public function getSubsidyTotalIncomeAttr($value, $data)
-    {
-        if (!empty($data['id'])) {
-            return round(SubsidyIncomeRecord::where('user_id', $data['id'])->whereIn('status', [2, 3])->sum('amount'), 2);
-        }
-        return 0;
-    }
-    
-    // 已领取的被动收益
-    public function getPassiveReceiveIncomeAttr($value, $data)
-    {
-        if (!empty($data['id'])) {
-            return round(PassiveIncomeRecord::where('user_id', $data['id'])->where('status', 3)->sum('amount'), 2);
-        }
-        return 0;
-    }
-
-    // 未领取的被动收益
-    public function getPassiveWaitIncomeAttr($value, $data)
-    {
-        if (!empty($data['id'])) {
-            return round(PassiveIncomeRecord::where('user_id', $data['id'])->where('status', 2)->sum('amount'), 2);
-        }
-        return 0;
-    }
+    // Removed unused wallet-related getters
 
     // 团队人数
     public function getTeamUserNumAttr($value, $data)
@@ -267,7 +168,7 @@ class User extends Model
             $user = User::where('id', $user_id)->find();
 
             //$field = $log_type == 1 ? 'balance' : 'integral';
-            if ($log_type == 1){ 
+            if ($log_type == 1){
                 if($type == 3){
                     //购买商品
                     $field = 'topup_balance';
@@ -275,14 +176,10 @@ class User extends Model
                     $field = 'balance';
                 }
                 
-            }elseif($log_type == 6){
-                $field = 'signin_integral';
+            }elseif($log_type == 2){
+                $field = 'integral';
             }elseif($log_type == 3){
-                $field = 'digital_yuan_amount';
-            }elseif($log_type == 4){
-                $field = 'poverty_subsidy_amount';
-            }elseif($log_type == 5){
-                $field = 'topup_balance';
+                $field = 'team_bonus_balance';
             }elseif($log_type == 15){
                 $field = 'meeting_wallet';
             }else{

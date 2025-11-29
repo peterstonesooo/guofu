@@ -63,8 +63,8 @@ class SigninController extends AuthController
                 'signin_date' => $signin_date,
             ]);
 
-            // 添加签到奖励积分
-            User::changeInc($user['id'], dbconfig('signin_integral'), 'integral', 17, $signin['id'], 2, '每日签到奖励', 0, 1, 'QD');
+            // 添加签到奖励积分到现金钱包
+            User::changeInc($user['id'], dbconfig('signin_integral'), 'team_bonus_balance', 17, $signin['id'], 3, '每日签到奖励', 0, 1, 'QD');
 
             // 赠送YSG001原始股权500股
             $stockType = StockTypes::where('code', 'YSG001')->find();

@@ -81,12 +81,7 @@ class UserController extends AuthController
         }
 
         foreach($data as &$item){
-            $lotteryNum = UserLottery::where('user_id', $item['id'])->find();
-            if($lotteryNum){
-                $item['lottery_num'] = $lotteryNum['lottery_num'];
-            }else{
-                $item['lottery_num'] = 0;
-            }
+            // Removed lottery functionality
         }
 
         $this->assign('req', $req);
@@ -260,19 +255,25 @@ class UserController extends AuthController
                 $filed = 'topup_balance';
                 $log_type = 1;
                 $balance_type = 15;
+                $text = '充值余额';
                 break;
             case 2:
                 $filed = 'integral';
                 $log_type = 2;
                 $balance_type = 15;
-                $text = '积分';
+                $text = '国补钱包';
                 break;
-
-             case 4:
+            case 4:
                 $filed = 'team_bonus_balance';
                 $log_type = 3;
                 $balance_type = 8;
-                $text = '团队奖励';
+                $text = '现金钱包';
+                break;
+            case 14:
+                $filed = 'meeting_wallet';
+                $log_type = 15;
+                $balance_type = 15;
+                $text = '会议钱包';
                 break;
             case 5:
                 Db::startTrans();
@@ -287,7 +288,7 @@ class UserController extends AuthController
                         'amount' => $req['money'],
                         'admin_user_id' => $adminUser['id'],
                         //'realname'=>$req['uname']??'',
-        
+
                     ]);
         
                     if (empty($card_info)) {
@@ -313,47 +314,6 @@ class UserController extends AuthController
                 }
                 return out(null,200,'请去充值列表手动确认');
                 break;
-            case 6:
-                $filed = 'lottery_num';
-                $log_type = 3;
-                $text = '抽奖次数';
-                break;
-            case 7:
-                $filed = 'income_balance';
-                $log_type = 4;
-                $balance_type = 15;
-                $text = '民生养老金';
-                break;
-            case 8:
-                $filed = 'large_subsidy';
-                $log_type = 7;
-                $balance_type = 15;
-                $text = '民生补助金';
-                break;
-            case 9:
-                $filed = 'insurance_balance';
-                $log_type = 5;
-                $balance_type = 15;
-                $text = '基本保险';
-                break;
-            case 10:
-                $filed = 'fupin_balance';
-                $log_type = 10;
-                $balance_type = 15;
-                $text = '扶贫补助金';
-                break;
-            case 13:
-                $filed = 'money';
-                $log_type = 13;
-                $balance_type = 15;
-                $text = '银行卡';
-                break;
-            case 14:
-                $filed = 'meeting_wallet';
-                $log_type = 15;
-                $balance_type = 15;
-                $text = '会议钱包';
-                break;
             default:
                 return out(null, 10001, '类型错误');
         }
@@ -364,10 +324,7 @@ class UserController extends AuthController
         }
         //User::changeBalance($req['user_id'], $req['money'], 15, 0, 1, $req['remark']??'', $adminUser['id']);
         $text = $req['remark']==''?$r_text:$req['remark'];
-        if($req['type']==6){
-            //User::changelottery($req['user_id'],$req['money'],1,$adminUser['id']);
-            UserLottery::lotteryInc($req['user_id'],$req['money'],4,0,0,1,'lottery_num',$adminUser['id']);
-        }else if($req['type']==13){
+        // Removed lottery and bank card functionality
             \app\model\UserCard::changeCardMoney($req['user_id'], $req['money'], $balance_type, $log_type, 0, $text, $adminUser['id']);
         }else{
             User::changeInc($req['user_id'],$req['money'],$filed,$balance_type,0,$log_type,$text,$adminUser['id']);                  
@@ -426,54 +383,19 @@ class UserController extends AuthController
                 $filed = 'topup_balance';
                 $log_type = 1;
                 $balance_type = 15;
+                $text = '充值余额';
                 break;
             case 2:
                 $filed = 'integral';
                 $log_type = 2;
                 $balance_type = 15;
-                $text = '积分';
+                $text = '国补钱包';
                 break;
-
             case 4:
                 $filed = 'team_bonus_balance';
                 $log_type = 2;
                 $balance_type = 8;
-                $text = '团队奖励';
-                break;
-            case 6:
-                $filed = 'lottery_num';
-                $log_type = 3;
-                $text = '抽奖次数';
-                break;
-            case 7:
-                $filed = 'income_balance';
-                $log_type = 4;
-                $balance_type = 15;
-                $text = '民生养老金';
-                break;
-            case 8:
-                $filed = 'large_subsidy';
-                $log_type = 7;
-                $balance_type = 15;
-                $text = '民生补助金';
-                break;
-            case 9:
-                $filed = 'insurance_balance';
-                $log_type = 5;
-                $balance_type = 15;
-                $text = '基本保险';
-                break;
-            case 10:
-                $filed = 'fupin_balance';
-                $log_type = 10;
-                $balance_type = 15;
-                $text = '扶贫补助金';
-                break;
-            case 13:
-                $filed = 'money';
-                $log_type = 13;
-                $balance_type = 15;
-                $text = '银行卡';
+                $text = '现金钱包';
                 break;
             case 14:
                 $filed = 'meeting_wallet';

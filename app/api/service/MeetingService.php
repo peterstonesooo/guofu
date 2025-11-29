@@ -61,7 +61,8 @@ class MeetingService
             }
 
             // 增加用户的团队奖励余额（team_bonus_balance）
-            User::changeInc($user_id, $config['sign_bonus'], 'team_bonus_balance', 99, $record->id, 3, "日常签到");
+            User::changeInc($user_id, $config['sign_bonus'], 'meeting_wallet
+', 99, $record->id, 15, "会议签到");
 
             Db::commit();
             return true;
