@@ -121,44 +121,6 @@ class CommonController extends BaseController
         return out(['url' => $url]);
     }
 
-    public function uploadShop()
-    {
-        $url = upload_shop('file', true, false, 'shop', 'png,jpg,webp,avif,jpeg');
-        $ids = [];
-        if (is_array($url)) {
-            foreach ($url as $v) {
-                $insertId = Db::table('shop_picture')->insertGetId(['imgurl' => $v, 'status' => 1]);
-                $ids[] = $insertId;
-            }
-            $id = implode(',', $ids);
-        } else {
-            $id = Db::table('shop_picture')->insertGetId(['imgurl' => $url, 'status' => 1]);
-        }
-        return out(['url' => $url, 'id' => $id]);
-    }
-
-
-    public function uploadStockProduct()
-    {
-        $file = Request::file('file');
-        $result = UploadService::upload($file, 'product');
-        return json($result);
-    }
-
-    public function uploadStockButie()
-    {
-        $file = Request::file('file');
-        $result = UploadService::upload($file, 'butie');
-        return json($result);
-    }
-
-    public function uploadMeeting()
-    {
-        $file = Request::file('file');
-        $result = UploadService::upload($file, 'meeting');
-        return json($result);
-    }
-
     public function upload()
     {
         $type = request()->param('type', '');

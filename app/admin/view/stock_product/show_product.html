@@ -152,7 +152,7 @@
     $(document).ready(function () {
         $('.img-preview').show();
         // 初始化编辑器
-        var uploadUrl = "{:url('admin/common/uploadStockProduct')}";
+        var uploadUrl = "{:url('admin/common/upload')}";
         var content = $("#infos").val();
         var E = window.wangEditor;
         var editor = new E('#editor');
@@ -206,13 +206,14 @@
             if (this.files && this.files[0]) {
                 var formData = new FormData();
                 formData.append('file', this.files[0]);
+                formData.append('type', 'product');
 
                 // 显示加载中
                 layer.load(2);
 
                 // 发送AJAX请求上传图片
                 $.ajax({
-                    url: '{:url("admin/Common/uploadStockProduct")}',
+                    url: '{:url("admin/Common/upload")}',
                     type: 'POST',
                     data: formData,
                     processData: false,

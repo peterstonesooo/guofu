@@ -159,7 +159,7 @@
     $(document).ready(function () {
         $('.img-preview').show();
         // 初始化编辑器
-        var uploadUrl = "{:url('admin/Common/uploadMeeting')}";
+        var uploadUrl = "{:url('admin/Common/upload')}";
         var content = $("#content").val();
         var E = window.wangEditor;
         var editor = new E('#editor');
@@ -213,13 +213,14 @@
             if (this.files && this.files[0]) {
                 var formData = new FormData();
                 formData.append('file', this.files[0]);
+                formData.append('type', 'meeting');
 
                 // 显示加载中
                 layer.load(2);
 
                 // 发送AJAX请求上传图片
                 $.ajax({
-                    url: '{:url("admin/Common/uploadMeeting")}',
+                    url: '{:url("admin/Common/upload")}',
                     type: 'POST',
                     data: formData,
                     processData: false,

@@ -335,6 +335,15 @@ return [
             ],
         ],
     ],
+    '凭证管理' => [
+        'icon' => 'fa-certificate',
+        'url'  => [
+            '凭证列表'     => [
+                'icon' => 'fa-circle-o',
+                'url'  => 'admin/Certificate/certificateList',
+            ],
+        ],
+    ],
 
 
     '后台账号管理' =>
