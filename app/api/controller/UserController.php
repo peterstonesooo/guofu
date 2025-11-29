@@ -974,12 +974,27 @@ class UserController extends AuthController
         $list = UserRelation::where('user_id', $user['id'])->where('level', $req['level'])->field('sub_user_id')->paginate(100);
         if ($list) {
             foreach ($list as $k => $v) {
-                $user = User::field('id,avatar,phone,realname,invite_bonus,invest_amount,equity_amount,level,is_active,created_at')->where('id', $v['sub_user_id'])->find();
-                $user['phone'] = substr_replace($user['phone'], '****', 3, 4);
-                if ($user['realname'] != '') {
-                    $user['realname'] = mb_substr($user['realname'], 0, 1) . "*" . mb_substr($user['realname'], 2);
+                $subUser = User::field('id,avatar,phone,realname,invite_bonus,invest_amount,equity_amount,level,is_active,created_at')->where('id', $v['sub_user_id'])->find();
+                if ($subUser) {
+                    $subUser['phone'] = substr_replace($subUser['phone'], '****', 3, 4);
+                    if ($subUser['realname'] != '') {
+                        $subUser['realname'] = mb_substr($subUser['realname'], 0, 1) . "*" . mb_substr($subUser['realname'], 2);
+                    }
+                    $list[$k] = $subUser;
+                } else {
+                    $list[$k] = [
+                        'id' => $v['sub_user_id'],
+                        'avatar' => '',
+                        'phone' => '',
+                        'realname' => '',
+                        'invite_bonus' => 0,
+                        'invest_amount' => 0,
+                        'equity_amount' => 0,
+                        'level' => 0,
+                        'is_active' => 0,
+                        'created_at' => ''
+                    ];
                 }
-                $list[$k] = $user;
             }
         }
 
