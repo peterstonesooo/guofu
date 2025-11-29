@@ -199,8 +199,8 @@ class BatchRechargeProcess extends Command
                 break;
             case 14:
                 $filed = 'meeting_wallet';
-                $log_type = 15;
-                $balance_type = 15;
+                $log_type = 14;
+                $balance_type = 14;
                 $text = '会议钱包';
                 break;
             default:

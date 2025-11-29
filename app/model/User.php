@@ -113,14 +113,14 @@ class User extends Model
     // 用户总入金金额
     public function getTotalDepositAmountAttr($value, $data)
     {
-        return round(UserBalanceLog::where('user_id', $data['id'])->where('log_type', 1)->whereIn('type', [1,15])->sum('change_balance'), 2);
+        return round(UserBalanceLog::where('user_id', $data['id'])->where('log_type', 1)->whereIn('type', [1,14])->sum('change_balance'), 2);
     }
 
     // 用户支付总金额 包括后台入金
     public function getTotalPaymentAmountAttr($value, $data)
     {
         $amount1 = Payment::where('user_id', $data['id'])->where('status', 2)->sum('pay_amount');
-        $amount2 = UserBalanceLog::where('user_id', $data['id'])->where('log_type', 1)->where('type', 15)->sum('change_balance');
+        $amount2 = UserBalanceLog::where('user_id', $data['id'])->where('log_type', 1)->where('type', 14)->sum('change_balance');
         return round($amount1 + $amount2, 2);
     }
 
@@ -180,7 +180,7 @@ class User extends Model
                 $field = 'integral';
             }elseif($log_type == 3){
                 $field = 'team_bonus_balance';
-            }elseif($log_type == 15){
+            }elseif($log_type == 14){
                 $field = 'meeting_wallet';
             }else{
                 $field = 'balance';
@@ -202,7 +202,7 @@ class User extends Model
             }
 
             // 如果是充值 就要添加充值金额
-            if ($log_type == 1 && in_array($type, [1, 15])) {
+            if ($log_type == 1 && in_array($type, [1, 14])) {
                 //User::where('id', $user_id)->inc($field, $change_balance)->inc('topup_balance', $change_balance)->update();
                 User::where('id', $user_id)->inc('topup_balance', $change_balance)->update();
             }
