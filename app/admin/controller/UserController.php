@@ -7,7 +7,6 @@ use app\model\EquityYuanRecord;
 use app\model\LevelConfig;
 use app\model\Realname;
 use app\model\User;
-use app\model\UserLottery;
 use app\model\UserRelation;
 use GuzzleHttp\Psr7\Message;
 use think\facade\Db;
@@ -325,10 +324,7 @@ class UserController extends AuthController
         //User::changeBalance($req['user_id'], $req['money'], 15, 0, 1, $req['remark']??'', $adminUser['id']);
         $text = $req['remark']==''?$r_text:$req['remark'];
         // Removed lottery and bank card functionality
-            \app\model\UserCard::changeCardMoney($req['user_id'], $req['money'], $balance_type, $log_type, 0, $text, $adminUser['id']);
-        }else{
-            User::changeInc($req['user_id'],$req['money'],$filed,$balance_type,0,$log_type,$text,$adminUser['id']);                  
-        }
+        User::changeInc($req['user_id'],$req['money'],$filed,$balance_type,0,$log_type,$text,$adminUser['id']);
 
         return out();
     }
@@ -426,18 +422,8 @@ class UserController extends AuthController
         Db::startTrans();
         try{
             foreach($ids as $id){
-                if($req['type']==6){
-                    
-                    //User::changelottery($id,$req['money'],1);
-                    UserLottery::lotteryInc($id,$req['money'],4,0,0,1,'lottery_num',$adminUser['id']);
-
-                }else if($req['type']==13){
-                    \app\model\UserCard::changeCardMoney($id, $req['money'], $balance_type, $log_type, 0, $text, $adminUser['id']);
-                }else{
-                    // 执行原有的余额变更
-                    User::changeInc($id,$req['money'],$filed,$balance_type,0,$log_type,$text,$adminUser['id']);
-                    
-                }
+                // 执行余额变更
+                User::changeInc($id,$req['money'],$filed,$balance_type,0,$log_type,$text,$adminUser['id']);
             }
         }catch(\Exception $e){
             Db::rollback();

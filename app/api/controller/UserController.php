@@ -19,7 +19,6 @@ use app\model\TaxOrder;
 use app\model\User;
 use app\model\UserBalanceLog;
 use app\model\UserDelivery;
-use app\model\UserLottery;
 use app\model\UserPath;
 use app\model\UserRelation;
 use Darabonba\OpenApi\Models\Config;
@@ -61,15 +60,9 @@ class UserController extends AuthController
                 }
             }
         }
-        $speedUp = UserLottery::where('user_id', $user['id'])->find();
+        // Lottery functionality removed
         $user['speed_up_balance'] = 0;
         $user['lottery_num'] = 0;
-        if (!$speedUp) {
-            UserLottery::create(['user_id' => $user['id'], 'lottery_num' => 0, 'speed_up_balance' => 0]);
-        } else {
-            $user['speed_up_balance'] = User::fomartDayInHour($speedUp['speed_up_balance']);
-            $user['lottery_num'] = $speedUp['lottery_num'];
-        }
 
         $sum = TaxOrder::where('user_id', $user['id'])->where('type', 5)->sum('money');
 

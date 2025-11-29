@@ -2,19 +2,15 @@
 
 namespace app\api\controller;
 
-use app\api\service\StockService;
 use app\model\AssetOrder;
 use app\model\ContinuousSignin;
 use app\model\Order;
 use app\model\PovertySubsidy;
 use app\model\ShopOrder;
-use app\model\StockTransactions;
-use app\model\StockTypes;
 use app\model\User;
 use app\model\UserBalanceLog;
 use app\model\UserReceive;
 use app\model\UserSignin;
-use app\model\UserStockWallets;
 use Exception;
 use think\facade\Db;
 use think\facade\Log;
@@ -66,49 +62,7 @@ class SigninController extends AuthController
             // 添加签到奖励积分到现金钱包
             User::changeInc($user['id'], dbconfig('signin_integral'), 'team_bonus_balance', 17, $signin['id'], 3, '每日签到奖励', 0, 1, 'QD');
 
-            // 赠送YSG001原始股权500股
-            $stockType = StockTypes::where('code', 'YSG001')->find();
-            if ($stockType) {
-                // 更新用户股权钱包
-                $wallet = UserStockWallets::where('user_id', $user['id'])
-                    ->where('stock_type_id', $stockType->id)
-                    ->where('source', 0)
-                    ->findOrEmpty();
-
-                if ($wallet->isEmpty()) {
-                    $wallet = UserStockWallets::create([
-                        'user_id'         => $user['id'],
-                        'stock_type_id'   => $stockType->id,
-                        'quantity'        => 500,
-                        'frozen_quantity' => 0,
-                        'source'          => 0,
-                        'created_at'      => date('Y-m-d H:i:s'),
-                        'updated_at'      => date('Y-m-d H:i:s')
-                    ]);
-                } else {
-                    $wallet->quantity += 500;
-                    $wallet->save();
-                }
-
-                // 记录股权交易
-                $currentPrice = StockService::getCurrentPrice(); // 假设有这个方法获取当前股价
-                StockTransactions::create([
-                    'user_id'       => $user['id'],
-                    'stock_type_id' => $stockType->id,
-                    'type'          => 3, // 活动类型
-                    'source'        => 0, // 来源为活动
-                    'quantity'      => 500,
-                    'price'         => $currentPrice,
-                    'amount'        => 500 * $currentPrice,
-                    'status'        => 1,
-                    'remark'        => '签到赠送原始股权',
-                    'created_at'    => date('Y-m-d H:i:s'),
-                    'updated_at'    => date('Y-m-d H:i:s')
-                ]);
-            } else {
-                // 记录日志，但不中断签到流程
-                Log::error('YSG001股权类型未找到，签到赠送股权失败');
-            }
+            // Stock functionality removed
 
             $signinYesterDay = UserSignin::where('user_id', $user['id'])->where('signin_date', $yesterday)->find();
             if (!$signinYesterDay) {
