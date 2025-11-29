@@ -1,0 +1,12 @@
+This is a template for batch deposit. Please fill in the following format:
+
+Column A: Phone Number (手机号)
+Column B: Amount (金额) 
+Column C: Type (类型) - Use numbers: 1=充值余额, 2=国补钱包, 4=现金钱包, 14=会议钱包
+Column D: Remark (备注) - Optional
+
+Example:
+13800138000	100	1	测试充值
+13800138001	50	2	国补钱包入金
+13800138002	200	4	现金钱包奖励
+13800138003	300	14	会议钱包入金
