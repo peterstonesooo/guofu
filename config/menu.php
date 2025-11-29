@@ -31,11 +31,11 @@ return [
                             'icon' => 'fa-circle-o',
                             'url'  => 'admin/UserBalanceLog/userIntegralLogList',
                         ],
-                    '抽奖次数明细'         =>
-                        [
-                            'icon' => 'fa-circle-o',
-                            'url'  => 'admin/UserLotteryLog/userLotteryLogList',
-                        ],
+//                    '抽奖次数明细'         =>
+//                        [
+//                            'icon' => 'fa-circle-o',
+//                            'url'  => 'admin/UserLotteryLog/userLotteryLogList',
+//                        ],
                     '收货地址'             =>
                         [
                             'icon' => 'fa-circle-o',
@@ -97,21 +97,21 @@ return [
                             'icon' => 'fa-circle-o',
                             'url'  => 'admin/Capital/withdrawList?log_type=0',
                         ],
-                    '纳税管理'     =>
-                        [
-                            'icon' => 'fa-circle-o',
-                            'url'  => 'admin/TaxOrder/taxList',
-                        ],
+//                    '纳税管理'     =>
+//                        [
+//                            'icon' => 'fa-circle-o',
+//                            'url'  => 'admin/TaxOrder/taxList',
+//                        ],
                     '公证管理'     =>
                         [
                             'icon' => 'fa-circle-o',
                             'url'  => 'admin/Notarization/index',
                         ],
-                    '保证金管理'   =>
-                        [
-                            'icon' => 'fa-circle-o',
-                            'url'  => 'admin/Bail/index',
-                        ],
+//                    '保证金管理'   =>
+//                        [
+//                            'icon' => 'fa-circle-o',
+//                            'url'  => 'admin/Bail/index',
+//                        ],
                     '银行卡管理'   =>
                         [
                             'icon' => 'fa-circle-o',
@@ -189,11 +189,11 @@ return [
                             'icon' => 'fa-circle-o',
                             'url'  => 'admin/ActiveRank/index',
                         ],
-                    '抽奖设置'     =>
-                        [
-                            'icon' => 'fa-circle-o',
-                            'url'  => 'admin/LotteryConfig/index',
-                        ],
+//                    '抽奖设置'     =>
+//                        [
+//                            'icon' => 'fa-circle-o',
+//                            'url'  => 'admin/LotteryConfig/index',
+//                        ],
                 ],
         ],
 //    '商城管理' =>
@@ -338,7 +338,7 @@ return [
     '凭证管理' => [
         'icon' => 'fa-certificate',
         'url'  => [
-            '凭证列表'     => [
+            '凭证列表' => [
                 'icon' => 'fa-circle-o',
                 'url'  => 'admin/Certificate/certificateList',
             ],
