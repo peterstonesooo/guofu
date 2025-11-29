@@ -54,9 +54,6 @@
                             <th>ID</th>
                             <th>上级会员</th>
                             <th>手机号</th>
-                            {if(session('admin_user')['auth_group_id']!=3)}
-                            <th>现金</th>
-                            {/if}
                             <th>国补钱包</th>
                             <th>充值余额</th>
                             <th>现金钱包</th>
@@ -81,9 +78,6 @@
                                 <td>{$v['id']}</td>
                                 <td>{$v['upUser']['phone']??''}</td>
                                 <td>{$v['phone']}</td>
-                                {if(session('admin_user')['auth_group_id']!=3)}
-                                <td>{$v['topup_balance']}</td>
-                                {/if}
                                  <td>{$v['integral']}</td>
                                  <td>{$v['topup_balance']}</td>
                                  <td>{$v['team_bonus_balance']}</td>

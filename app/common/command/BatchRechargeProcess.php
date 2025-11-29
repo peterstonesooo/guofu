@@ -7,8 +7,6 @@ use think\console\Output;
 use think\facade\Db;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use app\model\User;
-use app\model\UserLottery;
-use app\model\UserCard;
 
 class BatchRechargeProcess extends Command
 {
@@ -34,7 +32,7 @@ class BatchRechargeProcess extends Command
             // 每次最多处理5个批次
             $batches = Db::name('batch_recharge')
                 ->where('status', 0)
-                ->limit(1)
+                ->limit(5)
                 ->order('id asc')
                 ->select();
                 
@@ -70,7 +68,6 @@ class BatchRechargeProcess extends Command
                         ->where('id', $batch['id'])
                         ->update(['rows' => $total]);
                         
-                   
                     
                     try {
                         foreach($rows as $index => $row) {
@@ -86,17 +83,15 @@ class BatchRechargeProcess extends Command
                                 if (!preg_match('/^\d{11}$/', $phone)) {
                                     throw new \Exception('手机号格式错误');
                                 }
-                                //检测$type是否1,2,4
-                                if (!in_array($type, [1, 2, 4,6,7,8,9,10,11,12,13])) {
+                                //检测$type是否1,2,4,14
+                                if (!in_array($type, [1, 2, 4, 14])) {
                                     throw new \Exception('类型错误: ' . $type);
                                 }
                                 //检测$amount是否大于0
-/*                                 if ($amount <= 0) {
+                                if ($amount <= 0) {
                                     throw new \Exception('金额必须大于0');
-                                } */
-
-
-
+                                }
+                                
                                 $user = User::where('phone', $phone)->find();
                                 if(!$user) {
                                     throw new \Exception('用户不存在');
@@ -105,89 +100,30 @@ class BatchRechargeProcess extends Command
                                 if($user['status'] != 1) {
                                     throw new \Exception('用户状态已禁用');
                                 }
-/*                                 if($user['is_realname'] != 1) {
-                                    throw new \Exception('用户未实名');
-                                } */
-                                if($type==6){
-                                    
-                                    //User::changelottery($user['id'],$amount,1);
-                                    UserLottery::lotteryInc($user['id'],$amount,4,0,0,1,'lottery_num',$batch['admin_id']);
-
-                                    $success++;
-                                    
-                                    // 记录成功日志
-                                    Db::name('batch_log')->insert([
-                                        'batch_id' => $batch['id'],
-                                        'data' => json_encode($row),
-                                        'status' => 1,
-                                        'log' => json_encode(['status' => 'success'])
-                                    ]);
-                                    Db::commit();
-                                }elseif($type==13){
-                                     $field = $this->getField($type,$amount,$remark);
-
-                                    UserCard::changeCardMoney(
-                                        $user['id'],
-                                        $amount,
-                                        $field['balance_type'],
-                                        $field['log_type'],
-                                        $batch['id'],
-                                        $field['text'],
-                                        $batch['admin_id']
-                                    );
-
-                                    $success++;
-                                    
-                                    // 记录成功日志
-                                    Db::name('batch_log')->insert([
-                                        'batch_id' => $batch['id'],
-                                        'data' => json_encode($row),
-                                        'status' => 1,
-                                        'log' => json_encode(['status' => 'success'])
-                                    ]);
-                                    //一百行更新一次batch_recharge success_rows
-                                    if($success % 100 == 0){
-                                        Db::name('batch_recharge')
-                                            ->where('id', $batch['id'])
-                                            ->update(['success_rows' => $success]);
-                                    }
-                                    Db::commit();
-                                }
                                 
-                                else{
-                                    
-                                    $field = $this->getField($type,$amount,$remark);
-                                    // 处理入金
-                                    User::changeInc(
-                                        $user['id'],
-                                        $amount,
-                                        $field['filed'],
-                                        $field['balance_type'],
-                                        $batch['id'],
-                                        $field['log_type'],
-                                        $field['text'],
-                                        $batch['admin_id']
-                                    );
-                                    
-
-                                    
-                                    $success++;
-                                    
-                                    // 记录成功日志
-                                    Db::name('batch_log')->insert([
-                                        'batch_id' => $batch['id'],
-                                        'data' => json_encode($row),
-                                        'status' => 1,
-                                        'log' => json_encode(['status' => 'success'])
-                                    ]);
-                                    //一百行更新一次batch_recharge success_rows
-                                    if($success % 100 == 0){
-                                        Db::name('batch_recharge')
-                                            ->where('id', $batch['id'])
-                                            ->update(['success_rows' => $success]);
-                                    }
-                                    Db::commit();
-                                }
+                                $field = $this->getField($type,$amount,$remark);
+                                // 处理入金
+                                User::changeInc(
+                                    $user['id'],
+                                    $amount,
+                                    $field['filed'],
+                                    $field['balance_type'],
+                                    $batch['id'],
+                                    $field['log_type'],
+                                    $field['text'],
+                                    $batch['admin_id']
+                                );
+                                
+                                $success++;
+                                
+                                // 记录成功日志
+                                Db::name('batch_log')->insert([
+                                    'batch_id' => $batch['id'],
+                                    'data' => json_encode($row),
+                                    'status' => 1,
+                                    'log' => json_encode(['status' => 'success'])
+                                ]);
+                                Db::commit();
                             } catch(\Exception $e) {
                                 $fail++;
                                 Db::rollback();
@@ -204,8 +140,6 @@ class BatchRechargeProcess extends Command
                             }
                         }
                         
-                        
-                        
                         // 更新完成状态
                         Db::name('batch_recharge')
                             ->where('id', $batch['id'])
@@ -216,10 +150,8 @@ class BatchRechargeProcess extends Command
                             ]);
                             
                     } catch(\Exception $e) {
-                      
                         throw $e;
                     }
-                    
                 } catch(\Exception $e) {
                     // 更新失败状态
                     Db::name('batch_recharge')
@@ -230,7 +162,6 @@ class BatchRechargeProcess extends Command
                         ]);
                 }
             }
-            
         } catch(\Exception $e) {
             $output->writeln("Error: " . $e->getMessage());
         } finally {
@@ -243,7 +174,6 @@ class BatchRechargeProcess extends Command
     
     private function getField($type,$amount,$remark='')
     {
-        
         $filed = 'balance';
         $log_type = 0;
         $balance_type = 1;
@@ -253,59 +183,29 @@ class BatchRechargeProcess extends Command
                 $filed = 'topup_balance';
                 $log_type = 1;
                 $balance_type = 15;
+                $text = '充值余额';
                 break;
             case 2:
                 $filed = 'integral';
-                $log_type = 4;
+                $log_type = 2;
                 $balance_type = 15;
-                $text = '积分';
+                $text = '国补钱包';
                 break;
-
             case 4:
                 $filed = 'team_bonus_balance';
                 $log_type = 3;
                 $balance_type = 8;
-                $text = '团队奖励';
+                $text = '现金钱包';
                 break;
-            case 7:
-                $filed = 'income_balance';
-                $log_type = 4;
+            case 14:
+                $filed = 'meeting_wallet';
+                $log_type = 15;
                 $balance_type = 15;
-                $text = '民生养老金';
+                $text = '会议钱包';
                 break;
-            case 8:
-                $filed = 'large_subsidy';
-                $log_type = 7;
-                $balance_type = 15;
-                $text = '民生补助金';
-                break;
-            case 9:
-                $filed = 'insurance_balance';
-                $log_type = 5;
-                $balance_type = 15;
-                $text = '基本保险';
-                break;
-            case 10:
-                $filed = 'fupin_balance';
-                $log_type = 10;
-                $balance_type = 15;
-                $text = '扶贫补助金';
-                break;
-            case 13:
-                $filed = 'money';
-                $log_type = 13;
-                $balance_type = 15;
-                $text = '银行卡';
-                break; 
+            default:
+                throw new \Exception('类型错误');
         }
-        //User::changeBalance($req['user_id'], $req['money'], 15, 0, 1, $req['remark']??'', $adminUser['id']);
-        if($amount > 0){
-            $r_text = '财务部入金' . $text;
-        } else {
-            $r_text = '财务部扣款' . $text;
-        }
-        $text = empty($remark) ? $r_text : $remark;
         return ['filed'=>$filed,'log_type'=>$log_type,'balance_type'=>$balance_type,'text'=>$text];
     }
-
 }
