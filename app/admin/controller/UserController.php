@@ -348,6 +348,12 @@ class UserController extends AuthController
                 $balance_type = 15;
                 $text = '银行卡';
                 break;
+            case 14:
+                $filed = 'meeting_wallet';
+                $log_type = 15;
+                $balance_type = 15;
+                $text = '会议钱包';
+                break;
             default:
                 return out(null, 10001, '类型错误');
         }
@@ -468,6 +474,12 @@ class UserController extends AuthController
                 $log_type = 13;
                 $balance_type = 15;
                 $text = '银行卡';
+                break;
+            case 14:
+                $filed = 'meeting_wallet';
+                $log_type = 15;
+                $balance_type = 15;
+                $text = '会议钱包';
                 break;
             default:
                 return out(null, 10001, '类型错误');
