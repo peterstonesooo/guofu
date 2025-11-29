@@ -283,6 +283,8 @@ class User extends Model
                 $field = 'poverty_subsidy_amount';
             }elseif($log_type == 5){
                 $field = 'topup_balance';
+            }elseif($log_type == 15){
+                $field = 'meeting_wallet';
             }else{
                 $field = 'balance';
             }
