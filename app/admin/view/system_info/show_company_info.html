@@ -119,11 +119,12 @@
     function sendFile(files, key)
     {
         var formdata = new FormData();
-        formdata.append("img_url", $('.' + key + '_div .note-image-input')[0].files[0]);
+        formdata.append("file", $('.' + key + '_div .note-image-input')[0].files[0]);
+        formdata.append("type", "company_info");
         $.ajax({
             data : formdata,
             type : "POST",
-            url  : '{:url("admin/Home/uploadSummernoteImg")}',
+            url  : '{:url("admin/Common/upload")}',
             async: false,
             cache: false,
             contentType: false,
