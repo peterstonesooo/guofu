@@ -156,7 +156,7 @@ class DeclareRecord extends Model
                 // 添加状态文本
                 $statusMap = [
                     0 => '审核失败',
-                    1 => '审核成功'
+                    1 => '申报成功'
                 ];
                 $item['status_text'] = $statusMap[$item['status']] ?? '未知状态';
 
