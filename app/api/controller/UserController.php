@@ -1354,4 +1354,28 @@ class UserController extends AuthController
     }
 
 
+    /**
+     * 更新用户头像
+     */
+    public function updateAvatar()
+    {
+        $req = $this->validate(request(), [
+            'avatar|头像URL' => 'require|url',
+        ]);
+        
+        $user = $this->user;
+        
+        try {
+            // 更新用户头像
+            User::where('id', $user['id'])->update(['avatar' => $req['avatar']]);
+            
+            return out(['avatar' => $req['avatar']]);
+        } catch (\Exception $e) {
+            Log::error('更新头像失败: ' . $e->getMessage(), [
+                'user_id' => $user['id'],
+                'avatar' => $req['avatar']
+            ]);
+            return out(null, 10001, '更新头像失败');
+        }
+    }
 }
