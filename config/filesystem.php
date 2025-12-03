@@ -19,16 +19,16 @@ return [
             // 可见性
             'visibility' => 'public',
         ],
-        
+
         // 更多的磁盘配置信息
-        'qiniu' =>[									//完全可以自定义的名称
-            'type'=>'qiniu',						//可以自定义,实际上是类名小写
-            'accessKey' =>'HOWbLrlxYAxuPx0WCHdjLyS5qYkgxUqyFbzqeuAj',		//七牛云的配置,accessKey
-            'secretKey'=>'LUafaV40f27dIlYk18wTgT8pw0J4ckiA5k4AjjUl',//七牛云的配置,secretKey
-            'bucket'=>'oooimg1',					//七牛云的配置,bucket空间名
+        'qiniu'  => [                                    //完全可以自定义的名称
+            'type'      => 'qiniu',                        //可以自定义,实际上是类名小写
+            'accessKey' => 'qMO6QVc2CXXPQrNmZJvYE1PIGu4Z1v2Gopt7WNUm',        //七牛云的配置,accessKey
+            'secretKey' => 'gw_p9IDj6lQPQV_YkOdrzE0jVRmMu5CQ8wa_2Bez',//七牛云的配置,secretKey
+            'bucket'    => 'xinfei1111',                    //七牛云的配置,bucket空间名
             //'domain'=>'s2dgpwe6t.hn-bkt.clouddn.com'					//七牛云的配置,domain,域名
-            'domain'=>'cod.ehairy.com',				//七牛云的配置,domain,域名
-            'region'=>'SCN',
+            'domain'    => 'cod.huo999.com',                //七牛云的配置,domain,域名
+            'region'    => 'SCN',
         ],
     ],
 ];
