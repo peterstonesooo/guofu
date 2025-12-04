@@ -61,7 +61,7 @@ class MeetingService
             }
 
             // 增加用户的会议钱包余额（meeting_wallet）
-            User::changeInc($user_id, $config['sign_bonus'], 'meeting_wallet', 99, $record->id, 14, "会议签到");
+            User::changeInc($user_id, $config['sign_bonus'], 'meeting_wallet', 100, $record->id, 14, "会议签到");
 
             Db::commit();
             return true;
