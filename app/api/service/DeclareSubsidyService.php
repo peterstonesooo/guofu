@@ -64,7 +64,7 @@ class DeclareSubsidyService
                     $fundData[] = [
                         'declare_id'   => $record->id,
                         'fund_type_id' => $fund->fund_type_id,
-                        'fund_amount'  => $fund->fund_amount,
+                        'fund_amount' => $fund->fund_amount,
                         'created_at'   => date('Y-m-d H:i:s')
                     ];
                 }
@@ -74,6 +74,9 @@ class DeclareSubsidyService
                     $declareRecordFund->saveAll($fundData);
                 }
             }
+
+            // 5. 激活用户状态
+            User::where('id', $user_id)->update(['is_active' => 1]);
 
             Db::commit();
             return true;
