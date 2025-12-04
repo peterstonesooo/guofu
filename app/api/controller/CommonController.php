@@ -185,6 +185,7 @@ class CommonController extends BaseController
         if (User::where('phone', $req['phone'])->count()) {
             return out(null, 10000, '该手机号已注册，请登录');
         }
+        $parentUser = null; // Initialize parentUser variable
         if (!empty(trim($req['invite_code']))){
             $parentUser = User::field('id')->where('invite_code', trim($req['invite_code']))->where('status',1)->find();
             if (empty($parentUser)) {
