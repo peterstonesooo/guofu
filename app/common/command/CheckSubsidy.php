@@ -405,14 +405,7 @@ class CheckSubsidy extends Command
             foreach ($list as $item) {
                 $text = "{$item['project_name']}";
                 $user = User::where('id', $item['user_id'])->find();
-                if($user['income_balance'] >= $item['sum_amount']){
-                    User::changeInc($item['user_id'], -$item['sum_amount'],'income_balance',29,$item['id'],4,$text.'释放民生养老金');
-                    User::changeInc($item['user_id'],$item['sum_amount'],'team_bonus_balance',6,$item['id'],3,$text.'释放民生养老金');
-                    Order::where('id',$item['id'])->update(['is_subsidy'=>1]);
-                }else if($user['income_balance'] > 0){
-                    User::changeInc($item['user_id'], -$user['income_balance'],'income_balance',29,$item['id'],4,'释放民生养老金');
-                    User::changeInc($item['user_id'],$user['income_balance'],'team_bonus_balance',6,$item['id'],3,$text.'释放民生养老金');
-                }
+                // Minsheng pension release functionality has been removed
             }
         });
     } */

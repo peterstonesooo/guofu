@@ -223,17 +223,7 @@ class Order extends Model
         $order = Order::where('id', $order_id)->find();
         $is_subsidy = 0;
         if($order['project_group_id']==10){
-            $user = User::where('id', $order['user_id'])->field('id,income_balance')->find();
-            $text = $order['project_name'].'-';
-            if($user['income_balance']>=$order['sum_amount']){
-                User::changeInc($order['user_id'], -$order['sum_amount'],'income_balance',29,$order['id'],4,'释放民生养老金');
-                User::changeInc($order['user_id'],$order['sum_amount'],'team_bonus_balance',6,$order['id'],3,$text.'释放民生养老金');
-                $is_subsidy = 1;
-            }else if($user['income_balance']>0){
-                User::changeInc($order['user_id'], -$user['income_balance'],'income_balance',29,$order['id'],4,'释放民生养老金');
-                User::changeInc($order['user_id'],$user['income_balance'],'team_bonus_balance',6,$order['id'],3,$text.'释放民生养老金');
-                $is_subsidy = 1;
-            }
+            // Minsheng pension release functionality has been removed
         }
 
         if($order['project_group_id']==12){

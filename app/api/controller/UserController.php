@@ -553,10 +553,7 @@ class UserController extends AuthController
 
                //注册赠送100万数字人民币
                if($user['is_realname']==0){
-                   //User::changeInc($user['id'], 1000000,'income_balance',24,0,4,'实名赠送民生养老金',0,4,'ZS');
                    User::changeInc($user['up_user_id'], 5,'integral',24,0,2,'直推实名赠送普惠信用点',0,4,'ZS');
-
-                   //User::changeInc($user['id'], 3000000,'poverty_subsidy_amount',24,0,5,'注册赠送养老金',0,5,'ZS');
                }
                Db::commit();
 
