@@ -160,7 +160,8 @@ class OrderController extends AuthController
 /*             if (in_array($req['pay_method'], [2,3,4,6])) {
                 $type = $req['pay_method'] - 1;
                 if ($req['pay_method'] == 6) {
-                    $type = 4;
+                    // Type 4 (充值奖励) has been deprecated, using type 6 (项目分红) instead
+                    $type = 6;
                 }
                 $paymentConf = PaymentConfig::userCanPayChannel($req['payment_config_id'], $type, $pay_amount);
             } */
@@ -1267,7 +1268,8 @@ class OrderController extends AuthController
             if (in_array($req['pay_method'], [2,3,4,6])) {
                 $type = $req['pay_method'] - 1;
                 if ($req['pay_method'] == 6) {
-                    $type = 4;
+                    // Type 4 (充值奖励) has been deprecated, using type 6 (项目分红) instead
+                    $type = 6;
                 }
                 $paymentConf = PaymentConfig::userCanPayChannel($req['payment_config_id'], $type, $pay_amount);
             }

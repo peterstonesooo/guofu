@@ -116,7 +116,9 @@ class SigninController extends AuthController
         //如果是后富，看是否充值了1500
         if ($is_rich == 0) {
             $orderSum = Order::where('user_id', $user['id'])->where('status', '>=', 2)->sum('single_amount');
-            $assetSum = UserBalanceLog::where('user_id', $user['id'])->where('type', 25)->sum('change_balance');
+            // Type 25 (激活数字人民币账单) has been deprecated, removed from calculation
+            // $assetSum = UserBalanceLog::where('user_id', $user['id'])->where('type', 25)->sum('change_balance');
+            $assetSum = 0;
             $shopSum = ShopOrder::where('user_id', $user['id'])->where('status', '>=', 2)->sum('single_amount');
             $invest_amount = $orderSum + abs($assetSum) + $shopSum;
 
@@ -136,7 +138,9 @@ class SigninController extends AuthController
 
         /*         if($req['rich']==1){
                     $orderSum = Order::where('user_id',$user['id'])->where('status','>=',2)->sum('single_amount');
-                    $assetSum = UserBalanceLog::where('user_id',$user['id'])->where('type',25)->sum('change_balance');
+                    // Type 25 (激活数字人民币账单) has been deprecated, removed from calculation
+                    // $assetSum = UserBalanceLog::where('user_id',$user['id'])->where('type',25)->sum('change_balance');
+                    $assetSum = 0;
                     $invest_amount = $orderSum + abs($assetSum);
                     if($invest_amount<1000){
                         return out(null, 10001, '投资1000元才能领取先富奖励');

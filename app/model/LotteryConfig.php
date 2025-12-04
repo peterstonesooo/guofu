@@ -1,4 +1,9 @@
 <?php
+
+// This model has been disabled as it manages deprecated fund type 28 (抽奖奖励)
+// which has been removed from the system according to requirements
+
+/*
 declare (strict_types = 1);
 
 namespace app\model;
@@ -8,6 +13,7 @@ use think\Model;
 use think\facade\Db;
 
 /**
+ * Class LotteryConfig
  * @mixin \think\Model
  */
 class LotteryConfig extends Model
@@ -30,16 +36,17 @@ class LotteryConfig extends Model
                 break;
             }
         }
-            $conf = $this->where('id', $result['id'])->lock(true)->find();
-            if($conf['num'] > 0){
-                $this->where('id', $result['id'])->dec('num')->inc('active_num')->update();
-                $result = $conf;
-            }else{
-                $result = $configs[0];
-                $this->where('id', $result['id'])->inc('active_num')->update();
-            }
+        $conf = $this->where('id', $result['id'])->lock(true)->find();
+        if($conf['num'] > 0){
+            $this->where('id', $result['id'])->dec('num')->inc('active_num')->update();
+            $result = $conf;
+        }else{
+            $result = $configs[0];
+            $this->where('id', $result['id'])->inc('active_num')->update();
+        }
 
 
         return $result;
     }
 }
+*/
