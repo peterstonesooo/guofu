@@ -261,39 +261,36 @@ class User extends Model
             throw new Exception('余额不足');
         }
 
+        // 只对四种钱包字段进行log_type验证和修正
+        $walletFields = [
+            'integral' => 2,           // 国补钱包
+            'topup_balance' => 1,      // 充值余额
+            'team_bonus_balance' => 3, // 现金钱包
+            'meeting_wallet' => 14,    // 会议钱包
+        ];
+        
+        // 如果是四种钱包字段之一，确保使用正确的log_type
+        if (isset($walletFields[$field])) {
+            $log_type = $walletFields[$field];
+        }
         
         Db::startTrans();
         try {
             $ret = User::where('id',$user_id)->inc($field,$amount)->update();
             $sn = build_order_sn($user_id,$sn_prefix);
-            if($user[$field] >0) {
-                UserBalanceLog::create([
-                    'user_id' => $user_id,
-                    'type' => $type,
-                    'log_type' => $log_type,
-                    'relation_id' => $relation_id,
-                    'before_balance' => $user[$field],
-                    'change_balance' => $amount,
-                    'after_balance' => $after_balance,
-                    'remark' => $remark,
-                    'admin_user_id' =>$admin_user_id,
-                    'status' => $status,
-                    'order_sn'=>$sn,
-                ]);
-            } else {
-                UserBalanceLog::create([
-                    'user_id' => $user_id,
-                    'type' => $type,
-                    'log_type' => $log_type,
-                    'relation_id' => $relation_id,
-                    'change_balance' => $amount,
-                    'after_balance' => $after_balance,
-                    'remark' => $remark,
-                    'admin_user_id' =>$admin_user_id,
-                    'status' => $status,
-                    'order_sn'=>$sn,
-                ]);
-            }
+            UserBalanceLog::create([
+                'user_id' => $user_id,
+                'type' => $type,
+                'log_type' => $log_type,
+                'relation_id' => $relation_id,
+                'before_balance' => $user[$field],
+                'change_balance' => $amount,
+                'after_balance' => $after_balance,
+                'remark' => $remark,
+                'admin_user_id' =>$admin_user_id,
+                'status' => $status,
+                'order_sn'=>$sn,
+            ]);
 
             Db::commit();
             return 'success';
