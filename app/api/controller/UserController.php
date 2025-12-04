@@ -625,9 +625,6 @@ class UserController extends AuthController
                 // 给上级用户赠送积分
                 User::changeInc($userToken['up_user_id'], 5, 'integral', 24, $userToken['id'], 2, '直推实名赠送积分', 0, 4, 'ZS');
 
-                // 给当前用户赠送体验金
-                User::changeInc($userToken['id'], 10, 'topup_balance', 24, $userToken['id'], 1, '帮扶计划体验金', 0, 4, 'ZS');
-
                 // ========== 新增：实名认证成功后检查上级的邀请人数并发放现金红包 ==========
                 $this->checkAndSendInviteCash($userToken['up_user_id']);
             }
