@@ -356,13 +356,17 @@ class User extends Model
         $user = User::field('id,up_user_id')->where('id', $user_id)->find();
         if (!empty($user['up_user_id'])) {
             $upUser1 = User::field('id,up_user_id')->where('id', $user['up_user_id'])->find();
-            $level[1] = $upUser1['id'];
-            if (!empty($upUser1['up_user_id'])) {
-                $level[2] = $upUser1['up_user_id'];
-                $upUser2 = User::field('id,up_user_id')->where('id', $upUser1['up_user_id'])->find();
-                if (!empty($upUser2['up_user_id'])) {
-                    $level[3] = $upUser2['up_user_id'];
-                } 
+            if (!empty($upUser1)) {
+                $level[1] = $upUser1['id'];
+                if (!empty($upUser1['up_user_id'])) {
+                    $upUser2 = User::field('id,up_user_id')->where('id', $upUser1['up_user_id'])->find();
+                    if (!empty($upUser2)) {
+                        $level[2] = $upUser2['id'];
+                        if (!empty($upUser2['up_user_id'])) {
+                            $level[3] = $upUser2['up_user_id'];
+                        }
+                    }
+                }
             }
         }
 
