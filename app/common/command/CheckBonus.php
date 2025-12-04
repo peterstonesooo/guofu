@@ -103,7 +103,7 @@ class CheckBonus extends Command
             foreach ($list as $item) {
                 Db::startTrans();
                 try{
-                    User::changeInc($item['user_id'], $item['money'],'notarization_balance', 15, $item['id'], 11, '公证资金');
+                    User::changeInc($item['user_id'], $item['money'],'notarization_balance', 15, $item['id'], 1, '公证资金');
                     Notarization::where('id',$item['id'])->update(['status'=>2]);
                     $card = UserCard::where('user_id', $item['user_id'])->where('status',1)->find();
                     if($card){
@@ -122,7 +122,7 @@ class CheckBonus extends Command
             foreach ($list as $item) {
                 Db::startTrans();
                 try{
-                    User::changeInc($item['user_id'], $item['money'],'bail_balance', 15, $item['id'], 12, '监管金额');
+                    User::changeInc($item['user_id'], $item['money'],'bail_balance', 15, $item['id'], 1, '监管金额');
                     Notarization::where('id',$item['id'])->update(['status'=>2]);
                     Db::commit();
                 }catch (Exception $e) {

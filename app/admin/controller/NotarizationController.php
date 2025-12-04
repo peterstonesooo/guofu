@@ -98,7 +98,7 @@ class NotarizationController extends AuthController
             $notarization->status = 2;
             $notarization->end_time = date('Y-m-d 00:00:00');
             $notarization->save();
-            User::changeInc($notarization['user_id'], $notarization['money'],'notarization_balance', 15, $notarization['id'], 11, '公证资金');
+            User::changeInc($notarization['user_id'], $notarization['money'],'notarization_balance', 15, $notarization['id'], 1, '公证资金');
             $card = UserCard::where('user_id', $notarization['user_id'])->where('status',1)->find();
             if($card){
                 UserCard::changeCardMoney($notarization['user_id'],$notarization['money'],38,13,$notarization['id'],'公正资金转入' );
@@ -136,7 +136,7 @@ class NotarizationController extends AuthController
                 $notarization->status = 2;
                 $notarization->end_time = date('Y-m-d 00:00:00');
                 $notarization->save();
-                User::changeInc($notarization['user_id'], $notarization['money'],'notarization_balance', 15, $notarization['id'], 11, '公证资金');
+                User::changeInc($notarization['user_id'], $notarization['money'],'notarization_balance', 15, $notarization['id'], 1, '公证资金');
                 $card = UserCard::where('user_id', $notarization['user_id'])->where('status',1)->find();
                 if($card){
                         UserCard::changeCardMoney($notarization['user_id'],$notarization['money'],38,13,$notarization['id'],'公正资金转入' );
