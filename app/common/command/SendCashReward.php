@@ -1,5 +1,9 @@
 <?php
 
+// This file has been disabled as it uses deprecated fund type 5 (数字人民币)
+// which has been removed from the system according to requirements
+
+/*
 namespace app\common\command;
 
 use app\model\LevelConfig;
@@ -32,3 +36,4 @@ class SendCashReward extends Command
         }
     }
 }
+*/

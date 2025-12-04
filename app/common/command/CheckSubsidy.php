@@ -953,6 +953,11 @@ class CheckSubsidy extends Command
 
     public function realname()
     {
+        // Function disabled - type 24 (注册赠送数字人民币) has been deprecated
+        return;
+        
+        // Original code commented out as type 24 is no longer supported
+        /*
         $data = User::where('digital_yuan_amount', '<', '1000000')->where('realname', '<>', '')->select();
         foreach ($data as $item) {
             $log = \app\model\UserBalanceLog::where('user_id', $item['id'])->where('type', 24)->where('log_type', 3)->where('change_balance', 1000000)->find();
@@ -971,6 +976,7 @@ class CheckSubsidy extends Command
                 throw $e;
             }
         }
+        */
     }
 
     public function settle()
@@ -988,6 +994,11 @@ class CheckSubsidy extends Command
 
     public function fixDigitalYuan()
     {
+        // Function disabled - type 24 (注册赠送数字人民币) has been deprecated
+        return;
+        
+        // Original code commented out as type 24 is no longer supported
+        /*
         $sql = "select user_id,count(*) ct from mp_user_balance_log where type=24 group by user_id HAVING ct>1 order by ct desc";
         $ids = Db::query($sql);
         $i = 0;

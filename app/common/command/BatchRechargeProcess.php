@@ -83,10 +83,10 @@ class BatchRechargeProcess extends Command
                                 if (!preg_match('/^\d{11}$/', $phone)) {
                                     throw new \Exception('手机号格式错误');
                                 }
-                                //检测$type是否1,2,4,14
-                                if (!in_array($type, [1, 2, 4, 14])) {
-                                    throw new \Exception('类型错误: ' . $type);
-                                }
+                               //检测$type是否1,2,14 (type 4 deprecated)
+                               if (!in_array($type, [1, 2, 14])) {
+                                   throw new \Exception('类型错误: ' . $type);
+                               }
                                 //检测$amount是否大于0
                                 if ($amount <= 0) {
                                     throw new \Exception('金额必须大于0');

@@ -100,7 +100,8 @@ class ProjectController extends AuthController
             if (in_array($v, [2,3,4,6])) {
                 $type = $v - 1;
                 if ($v == 6) {
-                    $type = 4;
+                    // Type 4 (充值奖励) has been deprecated, using type 6 (项目分红) instead
+                    $type = 6;
                 }
                 if (!PaymentConfig::where('type', $type)->where('status', 1)->where('start_topup_limit', '<=', $user['total_payment_amount'])->count()) {
                     unset($data['support_pay_methods'][$k]);

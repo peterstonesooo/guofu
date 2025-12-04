@@ -425,7 +425,9 @@ class User extends Model
                 // 检测用户升级
             //User::where('id', $user_id)->inc('invest_amount', $amount)->update();
 /*             $orderSum = Order::where('user_id',$user_id)->where('status','>=',2)->sum('single_amount');
-            $assetOrderSum = UserBalanceLog::where('user_id',$user_id)->where('type',25)->sum('change_balance');
+            // Type 25 (激活数字人民币账单) has been deprecated, removed from calculation
+            // $assetOrderSum = UserBalanceLog::where('user_id',$user_id)->where('type',25)->sum('change_balance');
+            $assetOrderSum = 0;
  */         $user = User::where('id',$user_id)->field('invest_amount')->find();
 
             $new_level = LevelConfig::where('min_topup_amount', '<=', intval($user['invest_amount']))->order('min_topup_amount', 'desc')->value('level');
