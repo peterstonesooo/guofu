@@ -60,9 +60,8 @@ class MeetingService
                 throw new Exception('记录签到记录失败');
             }
 
-            // 增加用户的团队奖励余额（team_bonus_balance）
-            User::changeInc($user_id, $config['sign_bonus'], 'meeting_wallet
-', 99, $record->id, 15, "会议签到");
+            // 增加用户的会议钱包余额（meeting_wallet）
+            User::changeInc($user_id, $config['sign_bonus'], 'meeting_wallet', 99, $record->id, 14, "会议签到");
 
             Db::commit();
             return true;
