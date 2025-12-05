@@ -78,6 +78,10 @@ class DeclareSubsidyService
             // 5. 激活用户状态
             User::where('id', $user_id)->update(['is_active' => 1]);
 
+            // 6. 调用团队奖励方法给上级返奖励
+            $userModel = new User();
+            $userModel->teamBonus($user_id, $declare_amount, $record->id);
+
             Db::commit();
             return true;
 
