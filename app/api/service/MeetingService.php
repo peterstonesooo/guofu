@@ -71,4 +71,22 @@ class MeetingService
             throw $e;
         }
     }
+
+    /**
+     * 检查用户今天是否已签到（每日签到）
+     * @param int $user_id 用户ID
+     * @return bool
+     */
+    public static function checkUserTodaySigned($user_id)
+    {
+        // 检查用户今天是否已经签到
+        $today = date('Y-m-d');
+        $record = MeetingSignRecords::where('user_id', $user_id)
+            ->where('sign_date', $today)
+            ->where('status', MeetingSignRecords::STATUS_SUCCESS)
+            ->find();
+
+        return !empty($record);
+    }
+
 }

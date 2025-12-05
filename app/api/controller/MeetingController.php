@@ -35,8 +35,22 @@ class MeetingController extends AuthController
             $cachedData = $redis->get($cacheKey);
 
             if ($cachedData !== false) {
-                return out(unserialize($cachedData));
+                $result = unserialize($cachedData);
+                // 即使有缓存，也需要重新检查签到状态，因为签到状态会实时变化
+                $user_id = $this->user['id'];
+                $is_signed = MeetingService::checkUserTodaySigned($user_id) ? 1 : 0;
+
+                // 更新列表中的签到状态
+                foreach ($result['list'] as &$item) {
+                    $item['is_signed'] = $is_signed;
+                }
+
+                return out($result);
             }
+
+            // 检查用户今天是否已签到（每日签到，与特定会议无关）
+            $user_id = $this->user['id'];
+            $is_signed = MeetingService::checkUserTodaySigned($user_id) ? 1 : 0;
 
             // 使用Model查询会议列表
             $query = Meeting::where('status', 1)
@@ -49,7 +63,7 @@ class MeetingController extends AuthController
             // 获取分页数据
             $list = $query->page($page, $limit)
                 ->select()
-                ->each(function ($item) {
+                ->each(function ($item) use ($is_signed) {
                     // 添加完整图片URL
                     $item['cover_url'] = env('app.img_host') . '/storage/' . $item['cover_img'];
 
@@ -57,6 +71,9 @@ class MeetingController extends AuthController
                     if (!empty($item['password'])) {
                         $item['password'] = $this->passwordEncrypt($item['password']);
                     }
+
+                    // 设置签到状态
+                    $item['is_signed'] = $is_signed;
 
                     return $item;
                 });
@@ -68,8 +85,8 @@ class MeetingController extends AuthController
                 'total_page'   => ceil($total / $limit)
             ];
 
-            // 将数据存入缓存
-            $redis->setex($cacheKey, self::CACHE_TIME, serialize($result));
+            // 注意：不缓存包含签到状态的数据，因为签到状态会实时变化
+            // 可以考虑缓存基础数据，然后动态添加签到状态
 
             return out($result);
 
@@ -88,7 +105,6 @@ class MeetingController extends AuthController
 
     /**
      * 会议签到（带并发控制）
-     * @param integer meeting_id 会议ID
      */
     public function signMeeting()
     {
