@@ -552,9 +552,6 @@ class UserController extends AuthController
                User::where('id', $user['id'])->update($req);
 
                //注册赠送100万数字人民币
-               if($user['is_realname']==0){
-                   User::changeInc($user['up_user_id'], 5,'integral',24,0,2,'直推实名赠送普惠信用点',0,4,'ZS');
-               }
                Db::commit();
 
            }catch(\Exception $e){
@@ -622,9 +619,6 @@ class UserController extends AuthController
 
             // 实名认证通过后的奖励逻辑
             if (!empty($userToken['up_user_id'])) {
-                // 给上级用户赠送积分
-                User::changeInc($userToken['up_user_id'], 5, 'integral', 24, $userToken['id'], 2, '直推实名赠送积分', 0, 4, 'ZS');
-
                 // ========== 新增：实名认证成功后检查上级的邀请人数并发放现金红包 ==========
                 $this->checkAndSendInviteCash($userToken['up_user_id']);
             }
