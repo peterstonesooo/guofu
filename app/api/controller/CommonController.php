@@ -383,6 +383,14 @@ class CommonController extends BaseController
             $system = $builder->order('sort', 'desc')->order('created_at', 'desc')->select();
             Cache::set('system_1', json_decode(json_encode($system, JSON_UNESCAPED_UNICODE),true), 60);
         }
+        
+        // 处理cover_img字段，添加域名前缀
+        foreach($system as &$item) {
+            if(!empty($item['cover_img'])) {
+                $item['cover_img'] = get_img_api($item['cover_img']);
+            }
+        }
+        
         return out($system);
     }
 
@@ -1715,6 +1723,9 @@ class CommonController extends BaseController
 
         $data = $builder->where('id', $req['id'])->find();
         $data['created_at'] = date("Y-m-d",strtotime($data['created_at']));
+        if(!empty($data['cover_img'])) {
+            $data['cover_img'] = get_img_api($data['cover_img']);
+        }
         return out($data);
     }
 

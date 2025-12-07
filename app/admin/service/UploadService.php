@@ -29,7 +29,7 @@ class UploadService
                     'msg'  => '上传成功',
                     'data' => [
                         'id'  => $savename, // 这里实际应该返回图片ID，但为了简化，使用路径作为ID
-                        'url' => [$savename] // 编辑器需要数组格式
+                        'url' => ['/storage/' . $savename] // 编辑器需要数组格式，添加/storage前缀
                     ]
                 ];
             } else {
