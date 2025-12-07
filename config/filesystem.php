@@ -27,7 +27,7 @@ return [
             'secretKey' => 'gw_p9IDj6lQPQV_YkOdrzE0jVRmMu5CQ8wa_2Bez',//七牛云的配置,secretKey
             'bucket'    => 'xinfei1111',                    //七牛云的配置,bucket空间名
             //'domain'=>'s2dgpwe6t.hn-bkt.clouddn.com'					//七牛云的配置,domain,域名
-            'domain'    => 'cod.huo999.com',                //七牛云的配置,domain,域名
+            'domain'    => 'cod.ehairy.com',                //七牛云的配置,domain,域名
             'region'    => 'SCN',
         ],
     ],
