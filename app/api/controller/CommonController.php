@@ -381,17 +381,59 @@ class CommonController extends BaseController
         if(empty($system) || $system == null){
             $builder =  SystemInfo::where('status', 1)->where('type', 1);
             $system = $builder->order('sort', 'desc')->order('created_at', 'desc')->select();
+            
+            // 处理新数据中的图片URL
+            foreach($system as &$item) {
+                if(!empty($item['cover_img'])) {
+                    $item['cover_img'] = get_img_api($item['cover_img']);
+                }
+                
+                // 处理content字段中的img标签，添加域名前缀
+                if(!empty($item['content'])) {
+                    $item['content'] = $this->processContentImages($item['content']);
+                }
+            }
+            
             Cache::set('system_1', json_decode(json_encode($system, JSON_UNESCAPED_UNICODE),true), 60);
-        }
-        
-        // 处理cover_img字段，添加域名前缀
-        foreach($system as &$item) {
-            if(!empty($item['cover_img'])) {
-                $item['cover_img'] = get_img_api($item['cover_img']);
+        } else {
+            // 处理缓存数据中的图片URL
+            foreach($system as &$item) {
+                if(!empty($item['cover_img']) && strpos($item['cover_img'], 'http') !== 0) {
+                    $item['cover_img'] = get_img_api($item['cover_img']);
+                }
+                
+                // 处理content字段中的img标签，添加域名前缀
+                if(!empty($item['content'])) {
+                    $item['content'] = $this->processContentImages($item['content']);
+                }
             }
         }
         
         return out($system);
+    }
+
+    /**
+     * 处理内容中的图片URL，添加域名前缀
+     * @param string $content HTML内容
+     * @return string 处理后的HTML内容
+     */
+    private function processContentImages($content)
+    {
+        // 使用正则表达式匹配img标签中的src属性
+        $pattern = '/<img([^>]+)src=["\']([^"\']+)["\']([^>]*)>/i';
+        
+        $content = preg_replace_callback($pattern, function($matches) {
+            $src = $matches[2];
+            
+            // 如果src不是完整URL，则添加域名前缀
+            if (strpos($src, 'http') !== 0) {
+                $src = get_img_api($src);
+            }
+            
+            return '<img' . $matches[1] . 'src="' . $src . '"' . $matches[3] . '>';
+        }, $content);
+        
+        return $content;
     }
 
     public function payNotify_hongya()
@@ -1706,8 +1748,21 @@ class CommonController extends BaseController
             foreach($system as $k =>$v){
                  $system[$k]['created_at'] = date("Y-m-d",strtotime($v['created_at']));
                  $system[$k]['cover_img']=get_img_api($v['cover_img']);
+                 
+                 // 处理content字段中的img标签，添加域名前缀
+                 if(!empty($v['content'])) {
+                     $system[$k]['content'] = $this->processContentImages($v['content']);
+                 }
             }
             Cache::set('system_'.$req['type'], json_decode(json_encode($system, JSON_UNESCAPED_UNICODE),true), 10);
+        } else {
+            // 处理缓存数据中的图片URL
+            foreach($system as $k => &$v) {
+                // 处理content字段中的img标签，添加域名前缀
+                if(!empty($v['content'])) {
+                    $v['content'] = $this->processContentImages($v['content']);
+                }
+            }
         }
         return out($system);
     }
@@ -1726,6 +1781,12 @@ class CommonController extends BaseController
         if(!empty($data['cover_img'])) {
             $data['cover_img'] = get_img_api($data['cover_img']);
         }
+        
+        // 处理content字段中的img标签，添加域名前缀
+        if(!empty($data['content'])) {
+            $data['content'] = $this->processContentImages($data['content']);
+        }
+        
         return out($data);
     }
 
