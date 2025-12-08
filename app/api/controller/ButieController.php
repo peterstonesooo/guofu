@@ -52,7 +52,7 @@ class ButieController extends AuthController
                     ->select()
                     ->each(function ($item) {
                         // 添加完整图片URL
-                        $item['img_url'] = env('app.img_host') . '/storage/' . $item['imgurl'];
+                        $item['img_url'] = env('app.img_host') . '/' . $item['imgurl'];
                         return $item;
                     });
 
@@ -175,7 +175,7 @@ class ButieController extends AuthController
                 ->each(function ($item) {
                     // 添加完整图片URL
                     if ($item->butie && !empty($item->butie->imgurl)) {
-                        $item['img_url'] = env('app.img_host') . '/storage/' . $item->butie->imgurl;
+                        $item['img_url'] = env('app.img_host') . '/' . $item->butie->imgurl;
                         $item['butie_name'] = $item->butie->title;
                     }
 
