@@ -162,10 +162,10 @@
 
                             // 如果返回的是完整URL，提取相对路径部分
                             if (relativePath.indexOf('http') === 0) {
-                                // 提取/certificate_files/之后的部分
-                                var storageIndex = relativePath.indexOf('/certificate_files/');
+                                // 提取/storage/certificate_files/之后的部分
+                                var storageIndex = relativePath.indexOf('/storage/certificate_files/');
                                 if (storageIndex !== -1) {
-                                    relativePath = relativePath.substring(storageIndex + '/certificate_files/'.length);
+                                    relativePath = relativePath.substring(storageIndex + '/storage/certificate_files/'.length);
                                 }
                             }
 
