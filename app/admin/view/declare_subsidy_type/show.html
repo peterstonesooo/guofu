@@ -186,7 +186,7 @@
                                 $("#imgurl").val(relativePath);
 
                                 // 显示预览图片
-                                var fullUrl = "{:env('app.img_host')}/storage/" + relativePath;
+                                var fullUrl = "{:env('app.img_host')}/" + relativePath;
                                 $("#previewContainer").show();
                                 $("#previewImg").attr("src", fullUrl);
                                 $("#previewImg").attr("onclick", "seePhoto('" + fullUrl + "')");
