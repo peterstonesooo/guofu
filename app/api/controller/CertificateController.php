@@ -46,8 +46,8 @@ class CertificateController extends AuthController
             $list = $query->page($page, $limit)
                 ->select()
                 ->each(function ($item) {
-                    // 添加完整图片URL
-                    $item['image_url'] = env('app.img_host') . '/storage/' . $item['image'];
+                    // 添加完整图片URL（模型已添加/storage/）
+                    $item['image_url'] = env('app.img_host') . '/' . $item['image'];
 
                     return $item;
                 });
