@@ -701,8 +701,9 @@ class UserController extends AuthController
             $cashLog = InviteCashLog::create($logData);
 
             // 给用户账户增加现金余额
-//            User::changeInc($userId, $config['cash_amount'], 'topup_balance', 102, $cashLog['id'], 1,
-//                "邀请{$config['invite_num']}人实名认证现金红包", 0, 2, 'ICR');
+            User::changeInc($userId, $config['cash_amount'], 'team_bonus_balance
+', 102, $cashLog['id'], 3,
+                "邀请{$config['invite_num']}人实名认证现金红包", 0, 2, 'ICR');
 
             Db::commit();
 
@@ -971,16 +972,16 @@ class UserController extends AuthController
                     $list[$k] = $subUser;
                 } else {
                     $list[$k] = [
-                        'id' => $v['sub_user_id'],
-                        'avatar' => '',
-                        'phone' => '',
-                        'realname' => '',
-                        'invite_bonus' => 0,
+                        'id'            => $v['sub_user_id'],
+                        'avatar'        => '',
+                        'phone'         => '',
+                        'realname'      => '',
+                        'invite_bonus'  => 0,
                         'invest_amount' => 0,
                         'equity_amount' => 0,
-                        'level' => 0,
-                        'is_active' => 0,
-                        'created_at' => ''
+                        'level'         => 0,
+                        'is_active'     => 0,
+                        'created_at'    => ''
                     ];
                 }
             }
@@ -1318,7 +1319,7 @@ class UserController extends AuthController
     public function inviteRewardProgress()
     {
         $user = $this->user;
-        
+
         // 获取用户已实名邀请人数
         $realInviteCount = \app\model\User::where('up_user_id', $user['id'])
             ->where('is_realname', 1)
@@ -1326,25 +1327,25 @@ class UserController extends AuthController
 
         // 获取所有启用的邀请现金红包配置
         $configs = \app\model\invite_present\InviteCashConfig::getEnabledConfigs();
-        
+
         // 获取用户已领取的奖励记录
         $claimedLogs = \app\model\invite_present\InviteCashLog::where('user_id', $user['id'])
             ->where('status', 1)
             ->column('invite_num');
-        
+
         $result = [];
         foreach ($configs as $config) {
             $isClaimed = in_array($config['invite_num'], $claimedLogs);
             $canClaim = !$isClaimed && $realInviteCount >= $config['invite_num'];
-            
+
             $result[] = [
-                'invite_num' => $config['invite_num'],
-                'cash_amount' => $config['cash_amount'],
+                'invite_num'       => $config['invite_num'],
+                'cash_amount'      => $config['cash_amount'],
                 'current_progress' => min($realInviteCount, $config['invite_num']),
-                'is_completed' => $realInviteCount >= $config['invite_num'],
-                'is_claimed' => $isClaimed,
-                'can_claim' => $canClaim,
-                'progress_text' => $realInviteCount . '/' . $config['invite_num']
+                'is_completed'     => $realInviteCount >= $config['invite_num'],
+                'is_claimed'       => $isClaimed,
+                'can_claim'        => $canClaim,
+                'progress_text'    => $realInviteCount . '/' . $config['invite_num']
             ];
         }
 
@@ -1360,18 +1361,18 @@ class UserController extends AuthController
         $req = $this->validate(request(), [
             'avatar|头像URL' => 'require|url',
         ]);
-        
+
         $user = $this->user;
-        
+
         try {
             // 更新用户头像
             User::where('id', $user['id'])->update(['avatar' => $req['avatar']]);
-            
+
             return out(['avatar' => $req['avatar']]);
         } catch (\Exception $e) {
             Log::error('更新头像失败: ' . $e->getMessage(), [
                 'user_id' => $user['id'],
-                'avatar' => $req['avatar']
+                'avatar'  => $req['avatar']
             ]);
             return out(null, 10001, '更新头像失败');
         }
