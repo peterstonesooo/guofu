@@ -8,7 +8,7 @@ use app\model\User;
 use think\facade\Db;
 use think\facade\Log;
 
-class InviteCash extends AuthController
+class InviteCashController extends AuthController
 {
 
     /**
