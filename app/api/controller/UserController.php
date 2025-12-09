@@ -1319,22 +1319,32 @@ class UserController extends AuthController
     {
         $user = $this->user;
         
-        // 获取用户直推人数 (level 1)
-        $directInviteCount = \app\model\UserRelation::where('user_id', $user['id'])
-            ->where('level', 1)
+        // 获取用户已实名邀请人数
+        $realInviteCount = \app\model\User::where('up_user_id', $user['id'])
+            ->where('is_realname', 1)
             ->count();
 
         // 获取所有启用的邀请现金红包配置
         $configs = \app\model\invite_present\InviteCashConfig::getEnabledConfigs();
         
+        // 获取用户已领取的奖励记录
+        $claimedLogs = \app\model\invite_present\InviteCashLog::where('user_id', $user['id'])
+            ->where('status', 1)
+            ->column('invite_num');
+        
         $result = [];
         foreach ($configs as $config) {
+            $isClaimed = in_array($config['invite_num'], $claimedLogs);
+            $canClaim = !$isClaimed && $realInviteCount >= $config['invite_num'];
+            
             $result[] = [
                 'invite_num' => $config['invite_num'],
                 'cash_amount' => $config['cash_amount'],
-                'current_progress' => min($directInviteCount, $config['invite_num']),
-                'is_completed' => $directInviteCount >= $config['invite_num'],
-                'progress_text' => $directInviteCount . '/' . $config['invite_num']
+                'current_progress' => min($realInviteCount, $config['invite_num']),
+                'is_completed' => $realInviteCount >= $config['invite_num'],
+                'is_claimed' => $isClaimed,
+                'can_claim' => $canClaim,
+                'progress_text' => $realInviteCount . '/' . $config['invite_num']
             ];
         }
 
