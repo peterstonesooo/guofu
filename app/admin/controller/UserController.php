@@ -496,14 +496,23 @@ class UserController extends AuthController
         }
         if (strlen(trim($req['user_id'])) == 11) {
             $user = User::where('phone', $req['user_id'])->find();
+            if (!$user) {
+                return out(null, 10002, '用户不存在');
+            }
             $req['user_id'] = $user['id'];
         } else {
             $user = User::where('id', $req['user_id'])->find();
+            if (!$user) {
+                return out(null, 10002, '用户不存在');
+            }
         }
         $path = Db::table('mp_user_path')->where('user_id', $req['user_id'])->find();
         $regCount = 0;
         $regRealCount = 0;
         if ((isset($req['start_date']) && $req['start_date'] != '') || (isset($req['end_date']) && $req['end_date'] != '')) {
+            if (!$path) {
+                return out(null, 10003, '用户路径信息不存在');
+            }
             $query = User::alias('u')
                 ->join('mp_user_path p', 'u.id = p.user_id')
                 ->where('p.path', 'like', $path['path'] . '/' . $user['id'] . '%');
@@ -523,8 +532,13 @@ class UserController extends AuthController
             $regCount = $query->count();
             $regRealCount = $queryReal->count();
         } else {
-            $regCount = $path['team_count'];
-            $regRealCount = $path['team_real_count'];
+            if ($path) {
+                $regCount = $path['team_count'] ?? 0;
+                $regRealCount = $path['team_real_count'] ?? 0;
+            } else {
+                $regCount = 0;
+                $regRealCount = 0;
+            }
         }
 
 
