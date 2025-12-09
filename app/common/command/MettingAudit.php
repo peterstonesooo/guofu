@@ -32,7 +32,7 @@ class MettingAudit extends Command
                 Db::startTrans();
                 try{
                     MettingLog::where('id',$item['id'])->update(['status'=>1]);
-                    User::changeInc($item['user_id'], 100, 'ph_wallet', 30, $item['id'], 9, '会议奖励');
+                    // User::changeInc($item['user_id'], 100, 'ph_wallet', 30, $item['id'], 9, '会议奖励');
                     Db::commit();
                 }catch (Exception $e) {
                     Db::rollback();

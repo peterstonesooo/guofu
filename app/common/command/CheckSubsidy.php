@@ -62,10 +62,10 @@ class CheckSubsidy extends Command
                 $data = User::where('team_bonus_balance','>',0)->chunk(1000, function($list) {
             foreach($list as $item){
                 Db::startTrans();
-                try {
-                    User::changeInc($item['id'], -$item['team_bonus_balance'], 'team_bonus_balance', 18, 0, 3, '转入待入卡余额');
-                    User::changeInc($item['id'], $item['team_bonus_balance'], 'large_subsidy', 19, 0, 7, '转入待入卡余额');
-                    Db::commit();
+               try {
+                   // User::changeInc($item['id'], -$item['team_bonus_balance'], 'team_bonus_balance', 18, 0, 3, '转入待入卡余额');
+                   // User::changeInc($item['id'], $item['team_bonus_balance'], 'large_subsidy', 19, 0, 7, '转入待入卡余额');
+                   Db::commit();
                 } catch (Exception $e) {
                     Db::rollback();
                     throw $e;
@@ -130,8 +130,8 @@ class CheckSubsidy extends Command
             foreach($list as $item){
                 Db::startTrans();
                 try {
-                    User::changeInc($item['id'], -$item['large_subsidy'], 'large_subsidy', 18, 0, 7, '转入团队奖励');
-                    User::changeInc($item['id'], $item['large_subsidy'], 'team_bonus_balance', 19, 0, 3, '转入团队奖励');
+                    // User::changeInc($item['id'], -$item['large_subsidy'], 'large_subsidy', 18, 0, 7, '转入团队奖励');
+                    // User::changeInc($item['id'], $item['large_subsidy'], 'team_bonus_balance', 19, 0, 3, '转入团队奖励');
                     Db::commit();
                 } catch (Exception $e) {
                     Db::rollback();
@@ -144,8 +144,8 @@ class CheckSubsidy extends Command
             foreach($list as $item){
                 Db::startTrans();
                 try {
-                    User::changeInc($item['id'], -$item['insurance_balance'], 'insurance_balance', 18, 0, 5, '转入团队奖励');
-                    User::changeInc($item['id'], $item['insurance_balance'], 'team_bonus_balance', 19, 0, 3, '转入团队奖励');
+                    // User::changeInc($item['id'], -$item['insurance_balance'], 'insurance_balance', 18, 0, 5, '转入团队奖励');
+                    // User::changeInc($item['id'], $item['insurance_balance'], 'team_bonus_balance', 19, 0, 3, '转入团队奖励');
                     Db::commit();
                 } catch (Exception $e) {
                     Db::rollback();
@@ -158,8 +158,8 @@ class CheckSubsidy extends Command
             foreach($list as $item){
                 Db::startTrans();
                 try {
-                    User::changeInc($item['id'], -$item['ph_wallet'], 'ph_wallet', 18, 0, 9, '转入团队奖励');
-                    User::changeInc($item['id'], $item['ph_wallet'], 'team_bonus_balance', 19, 0, 3, '转入团队奖励');
+                    // User::changeInc($item['id'], -$item['ph_wallet'], 'ph_wallet', 18, 0, 9, '转入团队奖励');
+                    // User::changeInc($item['id'], $item['ph_wallet'], 'team_bonus_balance', 19, 0, 3, '转入团队奖励');
                     Db::commit();
                 } catch (Exception $e) {
                     Db::rollback();
@@ -186,7 +186,7 @@ class CheckSubsidy extends Command
                             'mmoney' => $item['suma'],
                         ];
                         $id = Db::table('mp_insurance_apply')->insertGetId($data);
-                        User::changeInc($item['user_id'], $item['suma'], 'insurance_balance',31,$id,5,'领取基本保险金');
+                        // User::changeInc($item['user_id'], $item['suma'], 'insurance_balance',31,$id,5,'领取基本保险金');
                         Db::commit();
                     }catch(\Exception $e){
                         Db::rollback();
@@ -519,7 +519,7 @@ class CheckSubsidy extends Command
     {
         $prizes = Db::table('mp_user_prize')->where('status', 1)->where('lottery_id', 5)->chunk(100, function ($list) {
             foreach ($list as $item) {
-                User::changeInc($item['user_id'], 300, 'team_bonus_balance', 28, $item['id'], 3, '抽奖奖励 财补发');
+                // User::changeInc($item['user_id'], 300, 'team_bonus_balance', 28, $item['id'], 3, '抽奖奖励 财补发');
             }
         });
     }
@@ -638,7 +638,7 @@ class CheckSubsidy extends Command
                 Order::where('id', $order['id'])->delete();
                 foreach ($amouts as $key => $amount) {
                     if ($amount > 0) {
-                        User::changeInc($item['user_id'], $amount, $key, 89, $order['id'], 1, '撤销订单返还' . $cnFields[$key], 0, 1, 'cz');
+                        // User::changeInc($item['user_id'], $amount, $key, 89, $order['id'], 1, '撤销订单返还' . $cnFields[$key], 0, 1, 'cz');
                         echo "用户{$item['user_id']} 订单{$item['id']} 金额{$order['single_amount']}  撤销订单返还 {$key} {$amount}\n";
                         Log::debug("用户{$item['user_id']} 订单{$item['id']} 金额{$order['single_amount']}  撤销订单返还 {$cnFields[$key]} {$amount}\n");
                     }
@@ -846,7 +846,7 @@ class CheckSubsidy extends Command
             foreach ($list as $item) {
                 //$this->bonus($item);
                 echo "正在处理订单{$item['id']}\n";
-                User::changeInc($item['user_id'], $item['single_amount'], 'gf_purse', 42, $item['id'], 9, '项目收益申报返还', 0, 1, 'FX');
+                // User::changeInc($item['user_id'], $item['single_amount'], 'gf_purse', 42, $item['id'], 9, '项目收益申报返还', 0, 1, 'FX');
             }
         });
     }
@@ -966,7 +966,7 @@ class CheckSubsidy extends Command
             }
             Db::startTrans();
             try {
-                User::changeInc($item['id'], 1000000, 'digital_yuan_amount', 24, 0, 3, '注册赠送数字人民币', 0, 1, 'SM');
+                // User::changeInc($item['id'], 1000000, 'digital_yuan_amount', 24, 0, 3, '注册赠送数字人民币', 0, 1, 'SM');
                 User::where('id', $item['id'])->update(['is_realname' => 1]);
                 echo "用户{$item['id']} {$item['realname']} \n";
                 Db::commit();
@@ -1010,7 +1010,7 @@ class CheckSubsidy extends Command
                 $ct = $v['ct'] - 1;
                 $amount = $ct * 1000000;
                 //User::where('id',$v['user_id'])->inc('digital_yuan_amount',-$amount)->updat入e();
-                User::changeInc($v['user_id'], -$amount, 'digital_yuan_amount', 5, 0, 3, '系统扣除错误金额', 0, 1, 'CZ');
+                // User::changeInc($v['user_id'], -$amount, 'digital_yuan_amount', 5, 0, 3, '系统扣除错误金额', 0, 1, 'CZ');
             }
         }
     }
@@ -1150,7 +1150,7 @@ class CheckSubsidy extends Command
             //$digitalYuan = bcmul($order['single_gift_digital_yuan'],$order['period'],2);
             $digitalYuan = $order['single_gift_digital_yuan'];
             User::changeInc($order['user_id'], $order['sum_amount'], 'income_balance', 6, $order['id'], 6);
-            User::changeInc($order['user_id'], $digitalYuan, 'digital_yuan_amount', 5, $order['id'], 3, '国务院津贴');
+            // User::changeInc($order['user_id'], $digitalYuan, 'digital_yuan_amount', 5, $order['id'], 3, '国务院津贴');
 
             //User::changeInc($order['user_id'],$order['single_gift_digital_yuan'],'digital_yuan_amount',5,$order['id'],3);
             Order::where('id', $order->id)->update(['status' => 4]);
@@ -1175,7 +1175,7 @@ class CheckSubsidy extends Command
            
             if($digitalYuan>0){
                 Order::where('id',$order->id)->update(['status'=>4,'gain_bonus'=>$gainBonus]);
-                User::changeInc($order['user_id'],$digitalYuan,'digital_yuan_amount',5,$order['id'],3,'结算');
+                // User::changeInc($order['user_id'],$digitalYuan,'digital_yuan_amount',5,$order['id'],3,'结算');
                 PassiveIncomeRecord::create([
                     'project_group_id'=>$order['project_group_id'],
                     'user_id' => $order['user_id'],

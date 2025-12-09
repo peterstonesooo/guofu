@@ -41,7 +41,7 @@ class CheckAuthBonus extends Command
         Db::startTrans();
         try{
             //User::changeInc($order['user_id'],$order['sum_amount'],'digital_yuan_amount',6,$order['id'],3);
-            User::changeInc($order['user_id'],$order['single_amount'],'gf_purse',41,$order['id'],9);
+            // User::changeInc($order['user_id'],$order['single_amount'],'gf_purse',41,$order['id'],9);
             //User::changeInc($order['user_id'],$order['single_gift_digital_yuan'],'digital_yuan_amount',5,$order['id'],3);
             AuthOrder::where('id',$order->id)->update(['status'=>4]);
             Db::Commit();
