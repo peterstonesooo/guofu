@@ -180,7 +180,7 @@ class CheckEvents extends Command
                 $minCount = 0;
                 $minCount = min($item['lottery_1'], $item['lottery_2'], $item['lottery_3'], $item['lottery_4'], $item['lottery_5']);
                 if($minCount > 0){
-                    User::changeInc($item['user_id'], 5888 * $minCount, 'team_bonus_balance', 28, 0, 3, '集齐五福奖励');
+                    // User::changeInc($item['user_id'], 5888 * $minCount, 'team_bonus_balance', 28, 0, 3, '集齐五福奖励');
                 }
                 Db::name('user_prize_count')->where('user_id', $item['user_id'])->dec('lottery_1', $minCount)->dec('lottery_2', $minCount)->dec('lottery_3', $minCount)->dec('lottery_4', $minCount)->dec('lottery_5', $minCount)->update();
             }
@@ -194,7 +194,7 @@ class CheckEvents extends Command
                     if($v > 0){
                         $key = str_replace('lottery_', '', $k);
                         $name = $RewardsName[$key];
-                        User::changeInc($item['user_id'], $Rewards[$key] * $v, 'team_bonus_balance', 28, $item['id'], 3, '抽奖奖励'.$name.'*'.$v);
+                        // User::changeInc($item['user_id'], $Rewards[$key] * $v, 'team_bonus_balance', 28, $item['id'], 3, '抽奖奖励'.$name.'*'.$v);
                     }
                 }
                 Db::name('user_prize_count')->where('id', $item['id'])->update(['status'=>1]);

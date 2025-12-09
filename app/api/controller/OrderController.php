@@ -627,12 +627,12 @@ class OrderController extends AuthController
             }
             //扣余额
             if($user['topup_balance'] >= $amount) {
-                User::changeInc($user['id'],-$amount,'topup_balance',25,$order['id'],1,'资产交接',0,1,'JJ');
+                // User::changeInc($user['id'],-$amount,'topup_balance',25,$order['id'],1,'资产交接',0,1,'JJ');
             } else {
-                User::changeInc($user['id'],-$user['topup_balance'],'topup_balance',25,$order['id'],1,'资产交接',0,1,'JJ');
+                // User::changeInc($user['id'],-$user['topup_balance'],'topup_balance',25,$order['id'],1,'资产交接',0,1,'JJ');
                 $topup_amount = bcsub($amount, $user['topup_balance'],2);
                 if($user['signin_balance'] >= $topup_amount) {
-                    User::changeInc($user['id'],-$topup_amount,'signin_balance',25,$order['id'],1,'资产交接',0,1,'JJ');
+                    // User::changeInc($user['id'],-$topup_amount,'signin_balance',25,$order['id'],1,'资产交接',0,1,'JJ');
                 } else {
                     User::changeInc($user['id'],-$user['signin_balance'],'signin_balance',35,$order['id'],1,'资产交接',0,1,'JJ');
                     $signin_amount = bcsub($topup_amount, $user['signin_balance'],2);

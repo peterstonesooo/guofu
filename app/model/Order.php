@@ -231,9 +231,9 @@ class Order extends Model
             if($order['daily_bonus_ratio']>0){
                 User::changeInc($order['user_id'],$order['daily_bonus_ratio'],'team_bonus_balance',6,$order['id'],3,$text.'补助资金');
             }
-            if($order['allow_withdraw_money']>0){
-                User::changeInc($order['user_id'],$order['allow_withdraw_money'],'allow_withdraw_money',6,$order['id'],8,$text.'提现额度');
-            }
+            // if($order['allow_withdraw_money']>0){
+            //     User::changeInc($order['user_id'],$order['allow_withdraw_money'],'allow_withdraw_money',6,$order['id'],8,$text.'提现额度');
+            // }
         }
         if(in_array($order['project_group_id'],[13,16,24])){
             $text = $order['project_name'].'-';

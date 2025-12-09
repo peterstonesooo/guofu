@@ -391,7 +391,7 @@ class User extends Model
                     $reward = round($levelConfig['direct_recommend_reward_ratio']/100*$amount, 2);
                     if($reward > 0){
                         //User::changeBalance($up_user_id, $reward, 9, $order_id);
-                        User::changeInc($user['up_user_id'],$reward,'team_bonus_balance',9,$paymentId,2,'推荐奖励',0,2);
+                        //User::changeInc($user['up_user_id'],$reward,'team_bonus_balance',9,$paymentId,2,'推荐奖励',0,2);
                         //User::changeInc($up_user_id,$reward,'balance',9,$order_id,1,'推荐奖励',0,2);
                     }
                 } */

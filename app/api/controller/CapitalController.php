@@ -282,9 +282,9 @@ class CapitalController extends AuthController
         $amount = bcmul($integral,0.01,2);
         Db::startTrans();
         try{
-            User::changeInc($user['id'],-$integral,'integral',26,0,2,'积分兑换',0,1,'SE');
-            User::changeInc($user['id'],-$integral,'income_balance',26,0,4,'积分兑换',0,1,'SE');
-            User::changeInc($user['id'],$integral,'team_bonus_balance',26,0,3,'积分兑换',0,1,'SE');
+            // User::changeInc($user['id'],-$integral,'integral',26,0,2,'积分兑换',0,1,'SE');
+            // User::changeInc($user['id'],-$integral,'income_balance',26,0,4,'积分兑换',0,1,'SE');
+            // User::changeInc($user['id'],$integral,'team_bonus_balance',26,0,3,'积分兑换',0,1,'SE');
 
             //User::changeInc($user['id'],$amount,'balance',22,0,1,'积分兑换');
             Db::commit();
