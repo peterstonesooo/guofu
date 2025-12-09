@@ -1320,9 +1320,11 @@ class UserController extends AuthController
     {
         $user = $this->user;
 
-        // 获取用户已实名邀请人数
-        $realInviteCount = \app\model\User::where('up_user_id', $user['id'])
-            ->where('is_realname', 1)
+        // 获取用户三级以内的实名邀请总人数（与后台会员团队人数界面的三级总人数保持一致）
+        $realInviteCount = \app\model\UserRelation::alias('r')
+            ->join('mp_user u', 'r.sub_user_id = u.id')
+            ->where('r.user_id', $user['id'])
+            ->where('u.is_realname', 1)
             ->count();
 
         // 获取所有启用的邀请现金红包配置
