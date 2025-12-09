@@ -39,7 +39,7 @@ class DeclareSubsidyType extends Model
     public function getImgUrlAttr($value, $data)
     {
         if (!empty($data['imgurl'])) {
-            return env('app.img_host') . '/storage/' . $data['imgurl'];
+            return env('app.img_host') . '/' . $data['imgurl'];
         }
         return '';
     }

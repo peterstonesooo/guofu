@@ -20,7 +20,7 @@ class Meeting extends Model
     public function getCoverUrlAttr($value, $data)
     {
         if (!empty($data['cover_img'])) {
-            return env('app.img_host') . '/storage/' . $data['cover_img'];
+            return env('app.img_host') . '/' . $data['cover_img'];
         }
         return '';
     }

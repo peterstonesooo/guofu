@@ -23,7 +23,7 @@ class CertificateFiles extends Model
     public function getImageUrlAttr($value, $data)
     {
         if (!empty($data['image'])) {
-            return env('app.img_host') . '/storage/' . $data['image'];
+            return env('app.img_host') . $data['image'];
         }
         return '';
     }

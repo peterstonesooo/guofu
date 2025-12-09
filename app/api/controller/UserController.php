@@ -701,8 +701,8 @@ class UserController extends AuthController
             $cashLog = InviteCashLog::create($logData);
 
             // 给用户账户增加现金余额
-            User::changeInc($userId, $config['cash_amount'], 'topup_balance', 102, $cashLog['id'], 1,
-                "邀请{$config['invite_num']}人实名认证现金红包", 0, 2, 'ICR');
+//            User::changeInc($userId, $config['cash_amount'], 'topup_balance', 102, $cashLog['id'], 1,
+//                "邀请{$config['invite_num']}人实名认证现金红包", 0, 2, 'ICR');
 
             Db::commit();
 
@@ -1018,7 +1018,7 @@ class UserController extends AuthController
         $data = PaymentConfig::Where('status', 1)->where('start_topup_limit', '<=', $toupTotal)->order('sort desc')->select();
         $img = [1 => 'wechat.png', 2 => 'alipay.png', 3 => 'unionpay.png', 4 => 'unionpay.png', 5 => 'unionpay.png', 6 => 'unionpay.png', 7 => 'unionpay.png', 8 => 'unionpay.png',];
         foreach ($data as &$item) {
-            $item['img'] = env('app.img_host') . '/storage/pay_img/' . $img[$item['type']];
+            $item['img'] = env('app.img_host') . '/pay_img/' . $img[$item['type']];
             if ($item['type'] == 4) {
                 $item['type'] = 6;
             } else {

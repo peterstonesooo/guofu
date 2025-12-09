@@ -35,7 +35,7 @@ class ButieController extends AuthController
                 }
 
                 $data = $builder->paginate(['query' => $req])->each(function ($item) {
-                    $item['img_url'] = env('app.img_host') . '/storage/' . $item['imgurl'];
+                    $item['img_url'] = env('app.img_host') . '/' . $item['imgurl'];
                     return $item;
                 });
 
@@ -57,7 +57,7 @@ class ButieController extends AuthController
             }
 
             $data = $builder->paginate(['query' => $req])->each(function ($item) {
-                $item['img_url'] = env('app.img_host') . '/storage/' . $item['imgurl'];
+                $item['img_url'] = env('app.img_host') . '/' . $item['imgurl'];
                 return $item;
             });
 
@@ -76,7 +76,7 @@ class ButieController extends AuthController
         if (!empty($req['id'])) {
             $data = Db::name('stock_butie')->where('id', $req['id'])->find();
             if ($data) {
-                $data['img_url'] = env('app.img_host') . '/storage/' . $data['imgurl'];
+                $data['img_url'] = env('app.img_host') . '/' . $data['imgurl'];
             }
         }
 

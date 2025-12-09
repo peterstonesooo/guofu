@@ -245,7 +245,7 @@
                             $("#cover_img").val(relativePath);
 
                             // 显示预览图片
-                            var fullUrl = "{:env('app.img_host')}/storage/" + relativePath;
+                            var fullUrl = "{:env('app.img_host')}/" + relativePath;
                             $("#previewContainer").show();
                             $("#previewImg").attr("src", fullUrl);
                             $("#previewImg").attr("onclick", "seePhoto('" + fullUrl + "')");
@@ -288,10 +288,10 @@
             var cover_img = $('#cover_img').val();
             // 如果返回的是完整URL，提取相对路径部分
             if (cover_img.indexOf('http') === 0) {
-                // 提取/storage/之后的部分
-                var storageIndex = cover_img.indexOf('/storage/');
+                // 提取/meeting/之后的部分
+                var storageIndex = cover_img.indexOf('/meeting/');
                 if (storageIndex !== -1) {
-                    cover_img = cover_img.substring(storageIndex + '/storage/'.length);
+                    cover_img = cover_img.substring(storageIndex + '/meeting/'.length);
                 }
             }
 

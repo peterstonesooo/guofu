@@ -65,12 +65,12 @@ class MeetingController extends AuthController
                 ->select()
                 ->each(function ($item) use ($is_signed) {
                     // 添加完整图片URL
-                    $item['cover_url'] = env('app.img_host') . '/storage/' . $item['cover_img'];
+                    $item['cover_url'] = env('app.img_host') . '/' . $item['cover_img'];
 
-                    // 密码使用支付密码加密方式返回
-                    if (!empty($item['password'])) {
-                        $item['password'] = $this->passwordEncrypt($item['password']);
-                    }
+                    // 密码按原值返回，不再加密
+                    // if (!empty($item['password'])) {
+                    //     $item['password'] = $this->passwordEncrypt($item['password']);
+                    // }
 
                     // 设置签到状态
                     $item['is_signed'] = $is_signed;

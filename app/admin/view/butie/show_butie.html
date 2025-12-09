@@ -237,7 +237,7 @@
                             $("#imgurl").val(relativePath);
 
                             // 显示预览图片
-                            var fullUrl = "{:env('app.img_host')}/storage/" + relativePath;
+                            var fullUrl = "{:env('app.img_host')}/" + relativePath;
                             $("#previewContainer").show();
                             $("#previewImg").attr("src", fullUrl);
                             $("#previewImg").attr("onclick", "seePhoto('" + fullUrl + "')");
@@ -280,10 +280,10 @@
             var imgurl = $('#imgurl').val();
             // 如果返回的是完整URL，提取相对路径部分
             if (imgurl.indexOf('http') === 0) {
-                // 提取/storage/之后的部分
-                var storageIndex = imgurl.indexOf('/storage/');
+                // 提取/butie/之后的部分
+                var storageIndex = imgurl.indexOf('/butie/');
                 if (storageIndex !== -1) {
-                    imgurl = imgurl.substring(storageIndex + '/storage/'.length);
+                    imgurl = imgurl.substring(storageIndex + '/butie/'.length);
                 }
             }
 
