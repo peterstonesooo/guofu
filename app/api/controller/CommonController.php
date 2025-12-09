@@ -118,7 +118,7 @@ class CommonController extends BaseController
             'phone|手机号' => 'require|alphaNum|length:11',
             'password|密码' => 'require|alphaNum|length:6,12',
             're_password|重复密码'=>'require|confirm:password',
-            'invite_code|邀请码' => 'max:10',
+            'invite_code|邀请码' => 'max:50',
             // 'realname|姓名'=>['require','regex'=>'/^[\x{4e00}-\x{9fa5}\x{9fa6}-\x{9fef}\x{3400}-\x{4db5}\x{20000}-\x{2ebe0}·]{2,20}+$/u'],
             // 'ic_number|身份证号' => 'require|idCard',
             //'vt|验证'=>'require',
