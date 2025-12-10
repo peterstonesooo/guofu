@@ -606,12 +606,16 @@ class UserController extends AuthController
 
             if (!$verifyResult['success']) {
                 // 记录验证失败的详细信息
-                Log::error('实名认证验证失败', [
+                $errorDetails = [
                     'user_id'   => $userToken['id'],
                     'realname'  => $req['realname'],
                     'ic_number' => substr($req['ic_number'], 0, 6) . '****' . substr($req['ic_number'], -4),
                     'api_result' => $verifyResult
-                ]);
+                ];
+                
+                Log::error('实名认证验证失败: ' . json_encode($errorDetails, JSON_UNESCAPED_UNICODE));
+                // 直接输出详细信息到错误日志
+                error_log('实名认证验证失败: ' . json_encode($errorDetails, JSON_UNESCAPED_UNICODE));
                 
                 return out(null, 10002, '实名认证失败: ' . $verifyResult['message']);
             }
@@ -643,12 +647,12 @@ class UserController extends AuthController
         } catch (\Exception $e) {
             Db::rollback();
             // 记录详细的错误日志
-            Log::error('实名认证失败 - 系统异常: ' . $e->getMessage(), [
+            Log::error('实名认证失败 - 系统异常: ' . $e->getMessage() . ' - ' . json_encode([
                 'user_id'   => $userToken['id'],
                 'realname'  => $req['realname'],
                 'ic_number' => substr($req['ic_number'], 0, 6) . '****' . substr($req['ic_number'], -4),
                 'trace'     => $e->getTraceAsString()
-            ]);
+            ], JSON_UNESCAPED_UNICODE));
             return out(null, 10012, '实名认证失败');
         }
 
@@ -733,10 +737,10 @@ class UserController extends AuthController
                 'remark'      => "发放失败: " . $e->getMessage()
             ]);
 
-            Log::error('邀请现金红包发放失败: ' . $e->getMessage(), [
+            Log::error('邀请现金红包发放失败: ' . $e->getMessage() . ' - ' . json_encode([
                 'user_id' => $userId,
                 'config'  => $config
-            ]);
+            ], JSON_UNESCAPED_UNICODE));
         }
     }
 
@@ -753,7 +757,6 @@ class UserController extends AuthController
 
             // 检查阿里云配置
             if (empty($accessKeyId) || empty($accessKeySecret)) {
-                $errorMessage = '实名认证失败 - 阿里云配置缺失';
                 $errorDetails = [
                     'realname'  => $realname,
                     'ic_number' => substr($icNumber, 0, 6) . '****' . substr($icNumber, -4),
@@ -765,9 +768,9 @@ class UserController extends AuthController
                     ]
                 ];
                 
-                Log::error($errorMessage, $errorDetails);
-                // 同时输出到标准错误输出，确保日志能被看到
-                error_log($errorMessage . ': ' . json_encode($errorDetails, JSON_UNESCAPED_UNICODE));
+                Log::error('实名认证失败 - 阿里云配置缺失: ' . json_encode($errorDetails, JSON_UNESCAPED_UNICODE));
+                // 直接输出详细信息到错误日志
+                error_log('实名认证失败 - 阿里云配置缺失: ' . json_encode($errorDetails, JSON_UNESCAPED_UNICODE));
                 
                 return [
                     'success' => false,
@@ -819,7 +822,6 @@ class UserController extends AuthController
                             'message' => '验证成功'
                         ];
                     } else {
-                        $errorMessage = '实名认证失败 - 姓名与身份证号不匹配';
                         $errorDetails = [
                             'realname'   => $realname,
                             'ic_number'  => substr($icNumber, 0, 6) . '****' . substr($icNumber, -4),
@@ -828,9 +830,9 @@ class UserController extends AuthController
                             'response_body' => json_encode($body, JSON_UNESCAPED_UNICODE)
                         ];
                         
-                        Log::error($errorMessage, $errorDetails);
-                        // 同时输出到标准错误输出，确保日志能被看到
-                        error_log($errorMessage . ': ' . json_encode($errorDetails, JSON_UNESCAPED_UNICODE));
+                        Log::error('实名认证失败 - 姓名与身份证号不匹配: ' . json_encode($errorDetails, JSON_UNESCAPED_UNICODE));
+                        // 直接输出详细信息到错误日志
+                        error_log('实名认证失败 - 姓名与身份证号不匹配: ' . json_encode($errorDetails, JSON_UNESCAPED_UNICODE));
                         
                         return [
                             'success' => false,
@@ -838,7 +840,6 @@ class UserController extends AuthController
                         ];
                     }
                 } else {
-                    $errorMessage = '实名认证失败 - 阿里云API返回错误';
                     $errorDetails = [
                         'realname'   => $realname,
                         'ic_number'  => substr($icNumber, 0, 6) . '****' . substr($icNumber, -4),
@@ -848,9 +849,9 @@ class UserController extends AuthController
                         'response_body' => json_encode($body, JSON_UNESCAPED_UNICODE)
                     ];
                     
-                    Log::error($errorMessage, $errorDetails);
-                    // 同时输出到标准错误输出，确保日志能被看到
-                    error_log($errorMessage . ': ' . json_encode($errorDetails, JSON_UNESCAPED_UNICODE));
+                    Log::error('实名认证失败 - 阿里云API返回错误: ' . json_encode($errorDetails, JSON_UNESCAPED_UNICODE));
+                    // 直接输出详细信息到错误日志
+                    error_log('实名认证失败 - 阿里云API返回错误: ' . json_encode($errorDetails, JSON_UNESCAPED_UNICODE));
                     
                     return [
                         'success' => false,
@@ -858,7 +859,6 @@ class UserController extends AuthController
                     ];
                 }
             } else {
-                $errorMessage = '实名认证失败 - HTTP错误';
                 $errorDetails = [
                     'realname'    => $realname,
                     'ic_number'   => substr($icNumber, 0, 6) . '****' . substr($icNumber, -4),
@@ -867,9 +867,9 @@ class UserController extends AuthController
                     'response_body' => json_encode($response->body ?? [], JSON_UNESCAPED_UNICODE)
                 ];
                 
-                Log::error($errorMessage, $errorDetails);
-                // 同时输出到标准错误输出，确保日志能被看到
-                error_log($errorMessage . ': ' . json_encode($errorDetails, JSON_UNESCAPED_UNICODE));
+                Log::error('实名认证失败 - HTTP错误: ' . json_encode($errorDetails, JSON_UNESCAPED_UNICODE));
+                // 直接输出详细信息到错误日志
+                error_log('实名认证失败 - HTTP错误: ' . json_encode($errorDetails, JSON_UNESCAPED_UNICODE));
                 
                 return [
                     'success' => false,
@@ -890,8 +890,9 @@ class UserController extends AuthController
             ];
             
             Log::error($errorMessage, $errorDetails);
-            // 同时输出到标准错误输出，确保日志能被看到
-            error_log($errorMessage . ': ' . json_encode($errorDetails, JSON_UNESCAPED_UNICODE));
+            // 直接输出详细信息到错误日志
+            error_log($errorMessage);
+            error_log('详细信息: ' . json_encode($errorDetails, JSON_UNESCAPED_UNICODE));
             
             return [
                 'success' => false,
