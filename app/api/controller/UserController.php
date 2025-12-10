@@ -1320,10 +1320,11 @@ class UserController extends AuthController
     {
         $user = $this->user;
 
-        // 获取用户三级以内的实名邀请总人数（与后台会员团队人数界面的三级总人数保持一致）
+        // 获取用户一级实名邀请总人数
         $realInviteCount = \app\model\UserRelation::alias('r')
             ->join('mp_user u', 'r.sub_user_id = u.id')
             ->where('r.user_id', $user['id'])
+            ->where('r.level', 1)
             ->where('u.is_realname', 1)
             ->count();
 
