@@ -590,14 +590,25 @@ class UserController extends AuthController
         $userToken = $this->user;
 
         // 检查用户是否已经实名认证
-//        if (!empty($userToken['ic_number']) || !empty($userToken['realname'])) {
-//            return out(null, 10001, '您已经实名认证了');
-//        }
-//
-//        // 检查身份证号是否已被使用
-//        if (User::where('ic_number', $req['ic_number'])->count()) {
-//            return out(null, 10001, '该身份证号已经实名过了');
-//        }
+        if (!empty($userToken['ic_number']) || !empty($userToken['realname'])) {
+            return out(null, 10001, '您已经实名认证了');
+        }
+
+        // 检查身份证号是否已被使用
+        $existingUser = User::where('ic_number', $req['ic_number'])->find();
+        if ($existingUser) {
+            // 记录重复身份证号的尝试
+            Log::warning('用户尝试使用已实名身份证号', [
+                'user_id' => $userToken['id'],
+                'phone' => $userToken['phone'],
+                'attempted_ic_number' => substr($req['ic_number'], 0, 6) . '****' . substr($req['ic_number'], -4),
+                'existing_user_id' => $existingUser['id'],
+                'existing_user_phone' => $existingUser['phone'],
+                'existing_realname' => $existingUser['realname']
+            ]);
+            
+            return out(null, 10001, '该身份证号已经实名过了');
+        }
 
         Db::startTrans();
         try {
