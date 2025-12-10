@@ -6,6 +6,7 @@
         <input type="text" value="{$req['phone']??''}" name="phone" placeholder="搜索手机号" class="form-control">
         <input type="text" value="{$req['realname']??''}" name="realname" placeholder="搜索实名姓名" class="form-control">
         <input type="text" value="{$req['ic_number']??''}" name="ic_number" placeholder="搜索身份证" class="form-control">
+        <input type="text" value="{$req['ip']??''}" name="ip" placeholder="搜索IP地址" class="form-control">
 <!--         <select name="level" class="form-control">
             <option value="">搜索等级</option>
             <?php foreach (config('map.user')['level_map'] as $k => $v) { ?>
@@ -65,6 +66,8 @@
  -->                            <th>激活</th>
 <!--                             <th>激活时间</th>
  -->                            <th>直属实名</th>
+                            <th>注册IP</th>
+                            <th>登录IP</th>
                              {if(session('admin_user')['auth_group_id']!=3)}
                             <th>总投资</th>
                             {/if}
@@ -84,11 +87,13 @@
                                <td>{$v['meeting_wallet']}</td>
                                <td>{$v['invite_code']}</td>
                                <td>{$v['realname']}</td>
-<!--                                 <td>{$v['ic_number']}</td>-->  
+<!--                                 <td>{$v['ic_number']}</td>-->
 <!--                                 <td>{$v['level']}</td>
  -->                               <td>{$v['is_active_text']}</td>
 <!--                                 <td>{$v['active_date']}</td>
  -->                                <td><a href="{:url('admin/User/userList', ['up_user' => $v['id'], 'is_realname' => 1])}">{$v['real_sub_user_num']}</a></td>
+                                <td>{$v['ip_info']['register_ip']??''}</td>
+                                <td>{$v['ip_info']['login_ip']??''}</td>
                                 {if(session('admin_user')['auth_group_id']!=3)}
 
                                 <td>{$v['invest_amount']}</td>

@@ -53,6 +53,18 @@ class UserController extends AuthController
                 $builder->where('is_realname', 1);
             }
         }
+        if (isset($req['ip']) && $req['ip'] !== '') {
+            // 搜索IP地址，支持模糊匹配
+            $userIds = \app\model\UserIpLog::where('login_ip', 'like', '%' . $req['ip'] . '%')
+                ->whereOr('register_ip', 'like', '%' . $req['ip'] . '%')
+                ->column('user_id');
+            if (!empty($userIds)) {
+                $builder->whereIn('id', $userIds);
+            } else {
+                // 如果没有找到匹配的IP，返回空结果
+                $builder->where('id', 0);
+            }
+        }
         $builder1 = clone $builder;
         $data = $builder->paginate(['query' => $req]);
         if (session('admin_user')['auth_group_id'] == 3) {
@@ -77,6 +89,8 @@ class UserController extends AuthController
         }
 
         foreach ($data as &$item) {
+            // 获取用户IP信息
+            $item['ip_info'] = \app\model\UserIpLog::getUserIpInfo($item['id']);
             // Removed lottery functionality
         }
 
