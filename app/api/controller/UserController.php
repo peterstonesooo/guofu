@@ -853,9 +853,19 @@ class UserController extends AuthController
                     // 直接输出详细信息到错误日志
                     error_log('实名认证失败 - 阿里云API返回错误: ' . json_encode($errorDetails, JSON_UNESCAPED_UNICODE));
                     
+                    // 根据具体错误信息返回不同的错误提示
+                    $errorMessage = '实名认证服务异常';
+                    if (isset($body->message)) {
+                        if (strpos($body->message, 'userName') !== false) {
+                            $errorMessage = '姓名格式错误，请检查输入的姓名';
+                        } elseif (strpos($body->message, 'identifyNum') !== false) {
+                            $errorMessage = '身份证号格式错误，请检查输入的身份证号';
+                        }
+                    }
+                    
                     return [
                         'success' => false,
-                        'message' => '实名认证服务异常'
+                        'message' => $errorMessage
                     ];
                 }
             } else {
