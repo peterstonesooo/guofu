@@ -104,6 +104,10 @@ class CommonController extends BaseController
             return out(null, 10001, '账号或密码错误');
         }
 
+        // 记录登录IP
+        $ip = request()->ip();
+        \app\model\UserIpLog::recordLoginIp($user['id'], $ip);
+
         $token = aes_encrypt(['id' => $user['id'], 'time' => time()]);
 
         return out(['token' => $token]);
@@ -199,6 +203,10 @@ class CommonController extends BaseController
         Db::startTrans();
         try {
             $user = User::create($req);
+
+            // 记录注册IP
+            $ip = request()->ip();
+            \app\model\UserIpLog::recordRegisterIp($user['id'], $ip);
 
             //保存层级关系
             if (!empty($parentUser)) {

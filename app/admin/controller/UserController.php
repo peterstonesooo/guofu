@@ -77,6 +77,8 @@ class UserController extends AuthController
         }
 
         foreach ($data as &$item) {
+            // 获取用户IP信息
+            $item['ip_info'] = \app\model\UserIpLog::getUserIpInfo($item['id']);
             // Removed lottery functionality
         }
 
