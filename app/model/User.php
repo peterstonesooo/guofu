@@ -10,6 +10,36 @@ use app\model\UserLottery;
 use app\model\UserLotteryLog;
 class User extends Model
 {
+    // 设置字段信息
+    protected $schema = [
+        'id' => 'int',
+        'phone' => 'string',
+        'password' => 'string',
+        'dc_pswd' => 'string',
+        'pay_password' => 'string',
+        'realname' => 'string',
+        'ic_number' => 'string',
+        'invite_code' => 'string',
+        'up_user_id' => 'int',
+        'level' => 'int',
+        'status' => 'int',
+        'is_active' => 'int',
+        'is_realname' => 'int',
+        'active_time' => 'int',
+        'balance' => 'decimal',
+        'topup_balance' => 'decimal',
+        'integral' => 'decimal',
+        'team_bonus_balance' => 'decimal',
+        'meeting_wallet' => 'decimal',
+        'invest_amount' => 'decimal',
+        'invite_bonus' => 'decimal',
+        'digital_yuan_amount' => 'decimal',
+        'income_balance' => 'decimal',
+        'prev_phone' => 'string',
+        'update_realname' => 'int',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
     public function getStatusTextAttr($value, $data)
     {
         $map = config('map.user')['status_map'];

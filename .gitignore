@@ -27,3 +27,5 @@ docker-php-xdebug.ini
 .claude/settings.local.json
 
 db/
+
+sql/
