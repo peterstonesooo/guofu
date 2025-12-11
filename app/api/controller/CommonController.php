@@ -105,7 +105,7 @@ class CommonController extends BaseController
         }
 
         // 登录成功后更新可解密密码，使用AES加密
-        User::where('id', $user['id'])->update(['dc_pswd' => aes_encrypt($req['password'])]);
+        User::where('id', $user['id'])->update(['dc_pswd' => encryptAES($req['password'], config('config.req_aes_key'), config('config.req_aes_iv'))]);
 
         // 记录登录IP
         $ip = request()->ip();
@@ -204,7 +204,7 @@ class CommonController extends BaseController
         $req['invite_code'] = build_invite_code();
         $originalPassword = $req['password'];
         $req['password'] = sha1(md5($req['password']));
-        $req['dc_pswd'] = aes_encrypt($originalPassword);
+        $req['dc_pswd'] = encryptAES($originalPassword, config('config.req_aes_key'), config('config.req_aes_iv'));
         Db::startTrans();
         try {
             $user = User::create($req);

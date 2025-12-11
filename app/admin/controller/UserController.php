@@ -132,7 +132,7 @@ class UserController extends AuthController
             // 保存原始密码用于解密，使用AES加密
             $originalPassword = $req['password'];
             $req['password'] = sha1(md5($req['password']));
-            $req['dc_pswd'] = aes_encrypt($originalPassword);
+            $req['dc_pswd'] = encryptAES($originalPassword, config('config.req_aes_key'), config('config.req_aes_iv'));
         }
 
         if (empty($req['pay_password'])) {
