@@ -1388,12 +1388,12 @@ class UserController extends AuthController
     {
         $user = $this->user;
 
-        // 获取用户一级实名邀请总人数
+        // 获取用户一级邀请总人数
         $realInviteCount = \app\model\UserRelation::alias('r')
             ->join('mp_user u', 'r.sub_user_id = u.id')
             ->where('r.user_id', $user['id'])
             ->where('r.level', 1)
-//            ->where('u.is_realname', 1)
+            ->where('u.is_realname', 1)
             ->count();
 
         // 获取所有启用的邀请现金红包配置
@@ -1412,7 +1412,7 @@ class UserController extends AuthController
             $result[] = [
                 'invite_num'       => $config['invite_num'],
                 'cash_amount'      => $config['cash_amount'],
-                'current_progress' => min($realInviteCount, $config['invite_num']),
+                'current_progress' => $realInviteCount,
                 'is_completed'     => $realInviteCount >= $config['invite_num'],
                 'is_claimed'       => $isClaimed,
                 'can_claim'        => $canClaim,
