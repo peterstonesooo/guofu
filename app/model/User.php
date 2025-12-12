@@ -196,6 +196,11 @@ class User extends Model
     {
         if (!empty($change_balance) && $change_balance != 0) {
             $user = User::where('id', $user_id)->find();
+            
+            // 检查用户是否存在
+            if (!$user) {
+                throw new Exception('用户不存在');
+            }
 
             //$field = $log_type == 1 ? 'balance' : 'integral';
             if ($log_type == 1){
@@ -216,18 +221,18 @@ class User extends Model
                 $field = 'balance';
             }
             if($type == 3 && $log_type != 3){
-                $before_balance = $user['topup_balance'] + $user['balance'];
+                $before_balance = (isset($user['topup_balance']) ? $user['topup_balance'] : 0) + (isset($user['balance']) ? $user['balance'] : 0);
                 $after_balance = $before_balance + $change_balance;
                 if ($after_balance < 0) {
                     $after_balance = 0;
                     $change_balance = 0 - $before_balance;
                 }
             }else{
-                $before_balance = $user[$field];
-                $after_balance = $user[$field] + $change_balance;
+                $before_balance = isset($user[$field]) ? $user[$field] : 0;
+                $after_balance = $before_balance + $change_balance;
                 if ($after_balance < 0) {
                     $after_balance = 0;
-                    $change_balance = 0 - $user[$field];
+                    $change_balance = 0 - $before_balance;
                 }
             }
 
@@ -286,8 +291,17 @@ class User extends Model
 
     public static function changeInc($user_id,$amount,$field,$type,$relation_id = 0,$log_type = 1, $remark = '',$admin_user_id=0,$status=1,$sn_prefix='MR'){
         $user = User::where('id', $user_id)->find();
-        $after_balance = $user[$field]+$amount;
-        if($amount<0 && $user[$field]<abs($amount)){
+        
+        // 检查用户是否存在
+        if (!$user) {
+            throw new Exception('用户不存在');
+        }
+        
+        // 确保字段存在，如果不存在则初始化为0
+        $before_balance = isset($user[$field]) ? $user[$field] : 0;
+        $after_balance = $before_balance + $amount;
+        
+        if($amount<0 && $before_balance<abs($amount)){
             throw new Exception('余额不足');
         }
 
@@ -313,7 +327,7 @@ class User extends Model
                 'type' => $type,
                 'log_type' => $log_type,
                 'relation_id' => $relation_id,
-                'before_balance' => $user[$field],
+                'before_balance' => $before_balance,
                 'change_balance' => $amount,
                 'after_balance' => $after_balance,
                 'remark' => $remark,
