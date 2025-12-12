@@ -688,9 +688,10 @@ class UserController extends AuthController
                 ->select();
 
             foreach ($cashConfigs as $config) {
-                // 检查是否已经发放过该级别的红包
+                // 检查是否已经发放过该级别的红包（只检查成功的记录）
                 $existsLog = InviteCashLog::where('user_id', $upUserId)
                     ->where('invite_num', $config['invite_num'])
+                    ->where('status', \app\model\invite_present\InviteCashLog::STATUS_SUCCESS)
                     ->find();
 
                 if (!$existsLog) {
