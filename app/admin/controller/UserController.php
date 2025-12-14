@@ -76,6 +76,14 @@ class UserController extends AuthController
 
         if (!empty($req['export'])) {
             $list = $builder1->select();
+            
+            // 为导出数据添加IP信息
+            foreach ($list as &$item) {
+                $ipInfo = \app\model\UserIpLog::getUserIpInfo($item['id']);
+                $item['register_ip'] = $ipInfo ? $ipInfo['register_ip'] : '';
+                $item['login_ip'] = $ipInfo ? $ipInfo['login_ip'] : '';
+            }
+            
             create_excel($list, [
                 'id'                => '序号',
                 // 'account_type' => '用户',
@@ -84,6 +92,8 @@ class UserController extends AuthController
                 // 'pay_channel_text' => '支付渠道',
                 'phone'             => '电话',
                 'real_sub_user_num' => '实名下级人数',
+                'register_ip'       => '注册IP',
+                'login_ip'          => '登录IP',
 
             ], '用户-' . date('YmdHis'));
         }

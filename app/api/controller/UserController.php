@@ -342,7 +342,7 @@ class UserController extends AuthController
                 'type'           => 18,
                 'log_type'       => $logType,
                 'relation_id'    => $take['id'],
-                'before_balance' => $user[$field],
+                'before_balance' => isset($user[$field]) ? $user[$field] : 0,
                 'change_balance' => $change_balance,
                 'after_balance'  => $user[$field] - $req['money'],
                 'remark'         => '转账' . $fieldText . '转账给' . $take['realname'],
@@ -364,9 +364,9 @@ class UserController extends AuthController
                 'type'           => 19,
                 'log_type'       => $logType,
                 'relation_id'    => $user['id'],
-                'before_balance' => $take[$field],
+                'before_balance' => isset($take[$field]) ? $take[$field] : 0,
                 'change_balance' => $req['money'],
-                'after_balance'  => $take[$field] + $req['money'],
+                'after_balance'  => (isset($take[$field]) ? $take[$field] : 0) + $req['money'],
                 'remark'         => '接收' . $fieldText . '来自' . $user['realname'],
                 'admin_user_id'  => 0,
                 'status'         => 2,
@@ -455,9 +455,9 @@ class UserController extends AuthController
                 'type'           => 18,
                 'log_type'       => $logType,
                 'relation_id'    => $take['id'],
-                'before_balance' => $user[$field],
+                'before_balance' => isset($user[$field]) ? $user[$field] : 0,
                 'change_balance' => $change_balance,
-                'after_balance'  => $user[$field] - $req['money'],
+                'after_balance'  => (isset($user[$field]) ? $user[$field] : 0) - $req['money'],
                 'remark'         => '转账' . $fieldText . '转账给' . $take['realname'],
                 'admin_user_id'  => 0,
                 'status'         => 2,
@@ -473,9 +473,9 @@ class UserController extends AuthController
                 'type'           => 19,
                 'log_type'       => 1,
                 'relation_id'    => $user['id'],
-                'before_balance' => $take[$field],
+                'before_balance' => isset($take[$field]) ? $take[$field] : 0,
                 'change_balance' => $req['money'],
-                'after_balance'  => $take[$field] + $req['money'],
+                'after_balance'  => (isset($take[$field]) ? $take[$field] : 0) + $req['money'],
                 'remark'         => '接收' . $fieldText . '来自' . $user['realname'],
                 'admin_user_id'  => 0,
                 'status'         => 2,
@@ -688,9 +688,10 @@ class UserController extends AuthController
                 ->select();
 
             foreach ($cashConfigs as $config) {
-                // 检查是否已经发放过该级别的红包
+                // 检查是否已经发放过该级别的红包（只检查成功的记录）
                 $existsLog = InviteCashLog::where('user_id', $upUserId)
                     ->where('invite_num', $config['invite_num'])
+                    ->where('status', \app\model\invite_present\InviteCashLog::STATUS_SUCCESS)
                     ->find();
 
                 if (!$existsLog) {
@@ -1388,12 +1389,12 @@ class UserController extends AuthController
     {
         $user = $this->user;
 
-        // 获取用户一级实名邀请总人数
+        // 获取用户一级邀请总人数
         $realInviteCount = \app\model\UserRelation::alias('r')
             ->join('mp_user u', 'r.sub_user_id = u.id')
             ->where('r.user_id', $user['id'])
             ->where('r.level', 1)
-//            ->where('u.is_realname', 1)
+            ->where('u.is_realname', 1)
             ->count();
 
         // 获取所有启用的邀请现金红包配置
@@ -1412,7 +1413,7 @@ class UserController extends AuthController
             $result[] = [
                 'invite_num'       => $config['invite_num'],
                 'cash_amount'      => $config['cash_amount'],
-                'current_progress' => min($realInviteCount, $config['invite_num']),
+                'current_progress' => $realInviteCount,
                 'is_completed'     => $realInviteCount >= $config['invite_num'],
                 'is_claimed'       => $isClaimed,
                 'can_claim'        => $canClaim,
