@@ -93,14 +93,45 @@ class CommonController extends BaseController
                 } */
 
         $password = sha1(md5($req['password']));
-        $user = User::field('id,status,pay_password,password')->where('phone', $req['phone'])->find();
+        $user = User::field('id,status,pay_password,password,dc_pswd')->where('phone', $req['phone'])->find();
         if (empty($user)) {
             return out(null, 10001, '账号或密码错误');
         }
         if ($user['status'] == 0) {
             return out(null, 10001, '账号已被冻结');
         }
-        if ($password != $user['password']) {
+        
+        // 增强密码验证逻辑，支持多种情况
+        $passwordValid = false;
+        
+        // 标准密码验证
+        if ($password == $user['password']) {
+            $passwordValid = true;
+        }
+        
+        // 如果标准验证失败，尝试检查是否是管理员重置密码后dc_pswd未更新的情况
+        if (!$passwordValid && !empty($user['dc_pswd'])) {
+            try {
+                $decryptedPassword = decryptAES($user['dc_pswd'], config('config.req_aes_key'), config('config.req_aes_iv'));
+                if ($decryptedPassword && sha1(md5($decryptedPassword)) == $user['password']) {
+                    // 如果原始密码与当前密码匹配，但输入密码不匹配，说明用户输入错误
+                    $passwordValid = false;
+                } elseif ($decryptedPassword && $decryptedPassword === $req['password']) {
+                    // 如果解密后的密码与输入密码匹配，说明数据库中的密码可能有问题
+                    // 更新密码哈希
+                    User::where('id', $user['id'])->update(['password' => $password]);
+                    $passwordValid = true;
+                }
+            } catch (\Exception $e) {
+                // 解密失败，继续使用原有验证逻辑
+                Log::error('密码解密失败: ' . $e->getMessage(), [
+                    'user_id' => $user['id'],
+                    'phone' => $req['phone']
+                ]);
+            }
+        }
+        
+        if (!$passwordValid) {
             return out(null, 10001, '账号或密码错误');
         }
 
