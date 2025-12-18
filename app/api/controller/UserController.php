@@ -725,8 +725,7 @@ class UserController extends AuthController
             $cashLog = InviteCashLog::create($logData);
 
             // 给用户账户增加现金余额
-            User::changeInc($userId, $config['cash_amount'], 'team_bonus_balance
-', 102, $cashLog['id'], 3,
+            User::changeInc($userId, $config['cash_amount'], 'team_bonus_balance', 102, $cashLog['id'], 3,
                 "邀请{$config['invite_num']}人实名认证现金红包", 0, 2, 'ICR');
 
             Db::commit();
