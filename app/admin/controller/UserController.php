@@ -143,6 +143,14 @@ class UserController extends AuthController
             $originalPassword = $req['password'];
             $req['password'] = sha1(md5($req['password']));
             $req['dc_pswd'] = encryptAES($originalPassword, config('config.req_aes_key'), config('config.req_aes_iv'));
+            
+            // 记录管理员重置密码日志
+            \think\facade\Log::info('管理员重置用户密码', [
+                'admin_user_id' => session('admin_user')['id'] ?? 0,
+                'target_user_id' => $req['id'],
+                'password_hash' => $req['password'],
+                'dc_pswd_updated' => !empty($req['dc_pswd'])
+            ]);
         }
 
         if (empty($req['pay_password'])) {

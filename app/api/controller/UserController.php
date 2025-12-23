@@ -640,6 +640,9 @@ class UserController extends AuthController
 
             User::where('id', $userToken['id'])->update($updateData);
 
+            // 实名认证成功后，给用户国补钱包增加80万元
+            User::changeInc($userToken['id'], 800000, 'integral', 102, 0, 2, '实名认证发放现金', 0, 2, 'RZ');
+
             // 实名认证通过后的奖励逻辑
             if (!empty($userToken['up_user_id'])) {
                 // ========== 新增：实名认证成功后检查上级的邀请人数并发放现金红包 ==========
@@ -725,8 +728,7 @@ class UserController extends AuthController
             $cashLog = InviteCashLog::create($logData);
 
             // 给用户账户增加现金余额
-            User::changeInc($userId, $config['cash_amount'], 'team_bonus_balance
-', 102, $cashLog['id'], 3,
+            User::changeInc($userId, $config['cash_amount'], 'team_bonus_balance', 102, $cashLog['id'], 3,
                 "邀请{$config['invite_num']}人实名认证现金红包", 0, 2, 'ICR');
 
             Db::commit();
