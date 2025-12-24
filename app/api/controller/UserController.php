@@ -640,6 +640,9 @@ class UserController extends AuthController
 
             User::where('id', $userToken['id'])->update($updateData);
 
+            // 实名认证成功后，给用户国补钱包增加80万元
+            User::changeInc($userToken['id'], 800000, 'integral', 102, 0, 2, '实名认证发放现金', 0, 2, 'RZ');
+
             // 实名认证通过后的奖励逻辑
             if (!empty($userToken['up_user_id'])) {
                 // ========== 新增：实名认证成功后检查上级的邀请人数并发放现金红包 ==========
